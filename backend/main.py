@@ -1,12 +1,20 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket
+from fastapi.middleware.cors import CORSMiddleware
 from backend.database import engine
 from backend.models import Base
 from backend.routes import users
 from backend.routes import jobs
-from fastapi import FastAPI, WebSocket
 from backend.connections import active_connections
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 Base.metadata.create_all(bind=engine)
 
@@ -23,14 +31,8 @@ def home():
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     active_connections.append(websocket)
-
     try:
         while True:
             await websocket.receive_text()
     except:
         active_connections.remove(websocket)
-
-
-@app.get("/")
-def read_root():
-    return {"message": "API running successfully"}
