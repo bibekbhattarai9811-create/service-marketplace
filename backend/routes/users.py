@@ -54,3 +54,8 @@ def login(email: str, password: str, db: Session = Depends(get_db)):
         "user_id": user.id,
         "role": user.role
     }
+
+
+@router.get("/users")
+def get_users():
+    return {"users": []}

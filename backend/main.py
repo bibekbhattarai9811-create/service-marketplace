@@ -29,3 +29,8 @@ async def websocket_endpoint(websocket: WebSocket):
             await websocket.receive_text()
     except:
         active_connections.remove(websocket)
+
+
+@app.get("/")
+def read_root():
+    return {"message": "API running successfully"}
