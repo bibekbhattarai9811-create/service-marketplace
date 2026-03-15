@@ -4,7 +4,7 @@ from backend.models import Base
 from backend.routes import users
 from backend.routes import jobs
 from fastapi import FastAPI, WebSocket
-from connections import active_connections
+from backend.connections import active_connections
 
 app = FastAPI()
 
