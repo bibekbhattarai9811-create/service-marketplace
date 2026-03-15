@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from backend.database import SessionLocal
 from backend.models import Job, JobAcceptance, Rating, Notification, Payment, ChatMessage, User, Availability
-from connections import active_connections
+from backend.connections import active_connections
 from sqlalchemy import func
 router = APIRouter()
 
