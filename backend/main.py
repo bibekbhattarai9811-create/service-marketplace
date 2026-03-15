@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from backend.database import engine
 from backend.models import Base
-from routes import users
-from routes import jobs
+from backend.routes import users
+from backend.routes import jobs
 from fastapi import FastAPI, WebSocket
 from connections import active_connections
 
