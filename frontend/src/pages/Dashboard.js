@@ -11,33 +11,55 @@ function Dashboard() {
 
     const userId = localStorage.getItem("user_id");
 
-    // Fetch jobs
+    // -----------------------------
+    // Fetch Available Jobs
+    // -----------------------------
     const fetchAvailableJobs = async () => {
         try {
-            const response = await axios.get(`${API}/available-jobs`);
+
+            const response = await axios.get(`${API}/jobs/available-jobs`);
+
             setJobs(response.data);
+
         } catch (error) {
+
+            console.log(error);
             setMessage("Failed to load jobs.");
+
         }
     };
 
-    // Fetch earnings
+    // -----------------------------
+    // Fetch Worker Earnings
+    // -----------------------------
     const fetchEarnings = async () => {
+
+        if (!userId) return;
+
         try {
+
             const response = await axios.get(
                 `${API}/worker-earnings?worker_id=${userId}`
             );
+
             setEarnings(response.data);
+
         } catch (error) {
-            console.log("Failed to load earnings");
+
+            console.log("Failed to load earnings", error);
+
         }
     };
 
-    // Accept job
+    // -----------------------------
+    // Accept Job
+    // -----------------------------
     const acceptJob = async (jobId) => {
+
         try {
+
             await axios.post(
-                `${API}/accept-job?job_id=${jobId}&worker_id=${userId}`
+                `${API}/jobs/accept-job?job_id=${jobId}&worker_id=${userId}`
             );
 
             setMessage("Job accepted successfully!");
@@ -46,11 +68,16 @@ function Dashboard() {
             fetchEarnings();
 
         } catch (error) {
+
+            console.log(error);
             setMessage("Failed to accept job.");
+
         }
     };
 
-    // Load data + WebSocket
+    // -----------------------------
+    // WebSocket + Initial Load
+    // -----------------------------
     useEffect(() => {
 
         fetchAvailableJobs();
@@ -78,7 +105,9 @@ function Dashboard() {
                 }
 
             } catch (error) {
+
                 console.log("Non JSON message:", event.data);
+
             }
 
         };
@@ -118,7 +147,9 @@ function Dashboard() {
                     }}
                 >
                     <h3>Worker Statistics</h3>
+
                     <p>Completed Jobs: {earnings.completed_jobs}</p>
+
                     <p>Total Earnings: ${earnings.total_earnings}</p>
                 </div>
             )}
@@ -138,6 +169,7 @@ function Dashboard() {
                             borderRadius: "8px"
                         }}
                     >
+
                         <h3>{job.title}</h3>
 
                         <p>{job.description}</p>
