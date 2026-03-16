@@ -3,9 +3,9 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 import json
 
-from backend.database import SessionLocal
-from backend.models import Job, JobAcceptance, Rating, Notification, Payment, ChatMessage, User, Availability
-from backend.connections import active_connections
+from database import SessionLocal
+from models import Job, JobAcceptance, Rating, Notification, Payment, ChatMessage, User, Availability
+from connections import active_connections
 
 router = APIRouter()
 
