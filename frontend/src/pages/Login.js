@@ -11,14 +11,16 @@ function Login() {
     const handleLogin = async () => {
         try {
             const response = await axios.post(
-                `${API}/login`,
-                null,
-                { params: { email: email, password: password } }
+                `${API}/login?email=${email}&password=${password}`
             );
-            setMessage('Login successful! User ID: ' + response.data.user_id);
+            const userId = response.data.user_id;
+            localStorage.setItem('user_id', userId);
+            setMessage('Login successful! Redirecting...');
+            setTimeout(() => {
+                window.location.href = '/home';
+            }, 1000);
         } catch (error) {
-            console.log(error);
-            setMessage('Login failed: ' + error.message);
+            setMessage('Login failed. Please try again.');
         }
     };
 
@@ -46,6 +48,7 @@ function Login() {
                 Login
             </button>
             <p>{message}</p>
+            <p>Don't have an account? <a href="/register">Register</a></p>
         </div>
     );
 }
