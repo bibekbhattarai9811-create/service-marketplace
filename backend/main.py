@@ -52,7 +52,7 @@ Base.metadata.create_all(bind=engine)
 # Include Routers
 # -----------------------------
 app.include_router(users.router)
-app.include_router(jobs.router)
+app.include_router(jobs.router, prefix="/jobs")
 
 # -----------------------------
 # Root Endpoint
