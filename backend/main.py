@@ -2,12 +2,12 @@ from fastapi import FastAPI, WebSocket, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
-from database import engine, SessionLocal
-from models import Base, Job
+from backend.database import engine, SessionLocal
+from backend.models import Base, Job
 
-from routes import users
-from routes import jobs
-from connections import active_connections
+from backend.routes import users
+from backend.routes import jobs
+from backend.connections import active_connections
 
 # -----------------------------
 # Create FastAPI App
