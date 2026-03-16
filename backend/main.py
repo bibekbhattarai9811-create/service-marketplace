@@ -7,6 +7,7 @@ from models import Base, Job
 
 from routes import users
 from routes import jobs
+from connections import active_connections
 
 # -----------------------------
 # Create FastAPI App
@@ -16,7 +17,7 @@ app = FastAPI()
 # -----------------------------
 # Active WebSocket Connections
 # -----------------------------
-active_connections = []
+
 
 # -----------------------------
 # Database Dependency
@@ -73,15 +74,20 @@ async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     active_connections.append(websocket)
 
-    print("WebSocket client connected")
+    print("WebSocket connected")
 
     try:
         while True:
+            # keep connection alive
             await websocket.receive_text()
 
-    except:
-        active_connections.remove(websocket)
-        print("WebSocket client disconnected")
+    except Exception as e:
+        print("WebSocket error:", e)
+
+    finally:
+        if websocket in active_connections:
+            active_connections.remove(websocket)
+        print("WebSocket disconnected")
 
 # -----------------------------
 # Complete Job
