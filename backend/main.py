@@ -61,7 +61,7 @@ app.include_router(jobs.router, prefix="/jobs")
 
 @app.get("/")
 def home():
-    return {"message": "Service Marketplace API is running"}
+    return {"message": "NEW VERSION WORKING"}
 
 # -----------------------------
 # WebSocket Endpoint
