@@ -15,11 +15,6 @@ from connections import active_connections
 app = FastAPI()
 
 # -----------------------------
-# Active WebSocket Connections
-# -----------------------------
-
-
-# -----------------------------
 # Database Dependency
 # -----------------------------
 
@@ -70,7 +65,6 @@ def home():
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
-
     await websocket.accept()
     active_connections.append(websocket)
 
@@ -78,23 +72,20 @@ async def websocket_endpoint(websocket: WebSocket):
 
     try:
         while True:
-            # keep connection alive
             await websocket.receive_text()
-
     except Exception as e:
         print("WebSocket error:", e)
-
     finally:
         if websocket in active_connections:
             active_connections.remove(websocket)
         print("WebSocket disconnected")
 
 # -----------------------------
-# Complete Job
+# Complete Job (Phase 22)
 # -----------------------------
 
 
-@app.post("/complete-job")
+@app.post("/jobs/{job_id}/complete")
 def complete_job(job_id: int, db: Session = Depends(get_db)):
 
     job = db.query(Job).filter(Job.id == job_id).first()
@@ -104,8 +95,51 @@ def complete_job(job_id: int, db: Session = Depends(get_db)):
 
     job.status = "completed"
     db.commit()
+    db.refresh(job)
 
-    return {"message": "Job completed successfully"}
+    return {
+        "message": "Job completed",
+        "job_id": job.id,
+        "status": job.status
+    }
+
+# -----------------------------
+# Pay for Job (Phase 22)
+# -----------------------------
+
+
+@app.post("/jobs/{job_id}/pay")
+def pay_job(job_id: int, db: Session = Depends(get_db)):
+
+    job = db.query(Job).filter(Job.id == job_id).first()
+
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    if job.status != "completed":
+        raise HTTPException(status_code=400, detail="Job not completed")
+
+    job.paid = True
+    db.commit()
+    db.refresh(job)
+
+    return {
+        "message": "Payment successful",
+        "job_id": job.id,
+        "paid": job.paid
+    }
+
+# -----------------------------
+# Transactions (Phase 22)
+# -----------------------------
+
+
+@app.get("/transactions")
+def get_transactions(db: Session = Depends(get_db)):
+
+    jobs = db.query(Job).filter(Job.paid == True).all()
+
+    return jobs
 
 # -----------------------------
 # Worker Jobs
@@ -138,22 +172,3 @@ def worker_earnings(worker_id: int, db: Session = Depends(get_db)):
         "completed_jobs": len(jobs),
         "total_earnings": total
     }
-
-
-@app.post("/jobs/{job_id}/complete")
-def complete_job(job_id: int):
-    try:
-        for job in jobs:
-            if str(job.get("id")) == str(job_id):
-                job["status"] = "completed"
-                return {"message": "Job completed"}
-
-        return {"error": "Job not found"}
-
-    except Exception as e:
-        return {"error": str(e)}
-
-
-@app.get("/debug")
-def debug():
-    return {"jobs": jobs}
