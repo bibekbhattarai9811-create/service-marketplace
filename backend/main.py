@@ -172,3 +172,32 @@ def worker_earnings(worker_id: int, db: Session = Depends(get_db)):
         "completed_jobs": len(jobs),
         "total_earnings": total
     }
+
+
+@app.post("/jobs/{job_id}/rate")
+def rate_worker(job_id: int, rating: int, db: Session = Depends(get_db)):
+
+    job = db.query(Job).filter(Job.id == job_id).first()
+
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    if job.status != "completed":
+        raise HTTPException(status_code=400, detail="Job not completed")
+
+    if not job.paid:
+        raise HTTPException(status_code=400, detail="Job not paid")
+
+    if rating < 1 or rating > 5:
+        raise HTTPException(
+            status_code=400, detail="Rating must be between 1 and 5")
+
+    job.rating = rating
+    db.commit()
+    db.refresh(job)
+
+    return {
+        "message": "Worker rated successfully",
+        "job_id": job.id,
+        "rating": job.rating
+    }
