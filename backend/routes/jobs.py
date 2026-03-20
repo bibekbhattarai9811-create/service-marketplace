@@ -21,6 +21,24 @@ def get_db():
         db.close()
 
 
+@router.post("/complete-job")
+def complete_job(job_id: int, db: Session = Depends(get_db)):
+
+    job = db.query(Job).filter(Job.id == job_id).first()
+
+    if not job:
+        return {"message": "Job not found"}
+
+    job.status = "COMPLETED"
+
+    db.commit()
+
+    return {
+        "message": "Job completed successfully",
+        "job_id": job.id
+    }
+
+
 # -------------------------
 # Create Job + WebSocket Notification
 # -------------------------
