@@ -142,8 +142,13 @@ def worker_earnings(worker_id: int, db: Session = Depends(get_db)):
 
 @app.post("/jobs/{job_id}/complete")
 def complete_job(job_id: int):
-    for job in jobs:
-        if job["id"] == job_id:
-            job["status"] = "completed"
-            return {"message": "Job completed"}
-    return {"error": "Job not found"}
+    try:
+        for job in jobs:
+            if str(job.get("id")) == str(job_id):
+                job["status"] = "completed"
+                return {"message": "Job completed"}
+
+        return {"error": "Job not found"}
+
+    except Exception as e:
+        return {"error": str(e)}
