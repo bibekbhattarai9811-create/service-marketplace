@@ -163,7 +163,7 @@ def worker_earnings(worker_id: int, db: Session = Depends(get_db)):
 
     jobs = db.query(Job).filter(
         Job.worker_id == worker_id,
-        Job.status == "completed"
+        Job.status == "COMPLETED"
     ).all()
 
     total = sum(int(job.price) for job in jobs if job.price)
