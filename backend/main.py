@@ -152,3 +152,8 @@ def complete_job(job_id: int):
 
     except Exception as e:
         return {"error": str(e)}
+
+
+@app.get("/debug")
+def debug():
+    return {"jobs": jobs}
