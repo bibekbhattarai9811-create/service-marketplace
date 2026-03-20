@@ -35,6 +35,7 @@ class Job(Base):
     customer_id = Column(Integer)
     worker_id = Column(Integer, nullable=True)
     paid = Column(Boolean, default=False)
+    rating = Column(Integer, nullable=True)
 
 
 # ---------------------------
