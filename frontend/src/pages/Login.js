@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-const API = 'https://service-marketplace-11.onrender.com';
+const API = 'https://service-marketplace-16.onrender.com';
 
 function Login() {
     const [email, setEmail] = useState('');
@@ -14,11 +14,12 @@ function Login() {
                 `${API}/login?email=${email}&password=${password}`
             );
             const userId = response.data.user_id;
+            console.log("Login response:", response.data);
             localStorage.setItem('user_id', userId);
             setMessage('Login successful! Redirecting...');
             setTimeout(() => {
                 window.location.href = '/home';
-            }, 1000);
+            }, 5000);
         } catch (error) {
             setMessage('Login failed. Please try again.');
         }

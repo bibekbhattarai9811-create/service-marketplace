@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Navbar from "../components/Navbar";
 
-const API = 'https://service-marketplace-11.onrender.com';
+const API = 'https://service-marketplace-16.onrender.com';
 
 function Home() {
     const [jobs, setJobs] = useState([]);
@@ -14,7 +14,7 @@ function Home() {
 
     const fetchJobs = async () => {
         try {
-            const response = await axios.get(`${API}/jobs`);
+            const response = await axios.get(`${API}/jobs/available-jobs`);
             setJobs(response.data);
         } catch (error) {
             setMessage('Failed to load jobs.');

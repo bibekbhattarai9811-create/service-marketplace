@@ -93,7 +93,7 @@ def complete_job(job_id: int, db: Session = Depends(get_db)):
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
 
-    job.status = "completed"
+    job.status = "COMPLETED"
     db.commit()
     db.refresh(job)
 
@@ -116,7 +116,7 @@ def pay_job(job_id: int, db: Session = Depends(get_db)):
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
 
-    if job.status != "completed":
+    if job.status != "COMPLETED":
         raise HTTPException(status_code=400, detail="Job not completed")
 
     job.paid = True
@@ -163,7 +163,7 @@ def worker_earnings(worker_id: int, db: Session = Depends(get_db)):
 
     jobs = db.query(Job).filter(
         Job.worker_id == worker_id,
-        Job.status == "completed"
+        Job.status == "COMPLETED"
     ).all()
 
     total = sum(int(job.price) for job in jobs if job.price)
@@ -182,7 +182,7 @@ def rate_worker(job_id: int, rating: int, db: Session = Depends(get_db)):
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
 
-    if job.status != "completed":
+    if job.status != "COMPLETED":
         raise HTTPException(status_code=400, detail="Job not completed")
 
     if not job.paid:
