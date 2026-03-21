@@ -1,3 +1,5 @@
+from sqlalchemy import create_engine
+from sqlalchemy.orm import declarative_base, sessionmaker
 from fastapi import FastAPI, WebSocket, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -201,3 +203,12 @@ def rate_worker(job_id: int, rating: int, db: Session = Depends(get_db)):
         "job_id": job.id,
         "rating": job.rating
     }
+
+
+DATABASE_URL = "sqlite:///./test.db"
+
+engine = create_engine(DATABASE_URL)
+
+SessionLocal = sessionmaker(bind=engine)
+
+Base = declarative_base()
