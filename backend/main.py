@@ -212,3 +212,12 @@ engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(bind=engine)
 
 Base = declarative_base()
+
+
+@app.get("/debug")
+def debug(db: Session = Depends(get_db)):
+    try:
+        jobs = db.query(Job).all()
+        return {"status": "ok", "job_count": len(jobs)}
+    except Exception as e:
+        return {"status": "error", "detail": str(e)}
