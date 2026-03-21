@@ -1,5 +1,3 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base, sessionmaker
 from fastapi import FastAPI, WebSocket, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -41,8 +39,9 @@ app.add_middleware(
 )
 
 # -----------------------------
-# Create Tables
+# Reset & Create Tables
 # -----------------------------
+Base.metadata.drop_all(bind=engine)
 Base.metadata.create_all(bind=engine)
 
 # -----------------------------
@@ -61,6 +60,19 @@ def home():
     return {"message": "NEW VERSION WORKING"}
 
 # -----------------------------
+# Debug Endpoint
+# -----------------------------
+
+
+@app.get("/debug")
+def debug(db: Session = Depends(get_db)):
+    try:
+        jobs = db.query(Job).all()
+        return {"status": "ok", "job_count": len(jobs)}
+    except Exception as e:
+        return {"status": "error", "detail": str(e)}
+
+# -----------------------------
 # WebSocket Endpoint
 # -----------------------------
 
@@ -69,9 +81,7 @@ def home():
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     active_connections.append(websocket)
-
     print("WebSocket connected")
-
     try:
         while True:
             await websocket.receive_text()
@@ -83,64 +93,45 @@ async def websocket_endpoint(websocket: WebSocket):
         print("WebSocket disconnected")
 
 # -----------------------------
-# Complete Job (Phase 22)
+# Complete Job
 # -----------------------------
 
 
 @app.post("/jobs/{job_id}/complete")
 def complete_job(job_id: int, db: Session = Depends(get_db)):
-
     job = db.query(Job).filter(Job.id == job_id).first()
-
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
-
     job.status = "COMPLETED"
     db.commit()
     db.refresh(job)
-
-    return {
-        "message": "Job completed",
-        "job_id": job.id,
-        "status": job.status
-    }
+    return {"message": "Job completed", "job_id": job.id, "status": job.status}
 
 # -----------------------------
-# Pay for Job (Phase 22)
+# Pay for Job
 # -----------------------------
 
 
 @app.post("/jobs/{job_id}/pay")
 def pay_job(job_id: int, db: Session = Depends(get_db)):
-
     job = db.query(Job).filter(Job.id == job_id).first()
-
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
-
     if job.status != "COMPLETED":
         raise HTTPException(status_code=400, detail="Job not completed")
-
     job.paid = True
     db.commit()
     db.refresh(job)
-
-    return {
-        "message": "Payment successful",
-        "job_id": job.id,
-        "paid": job.paid
-    }
+    return {"message": "Payment successful", "job_id": job.id, "paid": job.paid}
 
 # -----------------------------
-# Transactions (Phase 22)
+# Transactions
 # -----------------------------
 
 
 @app.get("/transactions")
 def get_transactions(db: Session = Depends(get_db)):
-
     jobs = db.query(Job).filter(Job.paid == True).all()
-
     return jobs
 
 # -----------------------------
@@ -150,9 +141,7 @@ def get_transactions(db: Session = Depends(get_db)):
 
 @app.get("/worker-jobs")
 def worker_jobs(worker_id: int, db: Session = Depends(get_db)):
-
     jobs = db.query(Job).filter(Job.worker_id == worker_id).all()
-
     return jobs
 
 # -----------------------------
@@ -162,62 +151,31 @@ def worker_jobs(worker_id: int, db: Session = Depends(get_db)):
 
 @app.get("/worker-earnings")
 def worker_earnings(worker_id: int, db: Session = Depends(get_db)):
-
     jobs = db.query(Job).filter(
         Job.worker_id == worker_id,
         Job.status == "COMPLETED"
     ).all()
-
     total = sum(int(job.price) for job in jobs if job.price)
+    return {"completed_jobs": len(jobs), "total_earnings": total}
 
-    return {
-        "completed_jobs": len(jobs),
-        "total_earnings": total
-    }
+# -----------------------------
+# Rate Worker
+# -----------------------------
 
 
 @app.post("/jobs/{job_id}/rate")
 def rate_worker(job_id: int, rating: int, db: Session = Depends(get_db)):
-
     job = db.query(Job).filter(Job.id == job_id).first()
-
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
-
     if job.status != "COMPLETED":
         raise HTTPException(status_code=400, detail="Job not completed")
-
     if not job.paid:
         raise HTTPException(status_code=400, detail="Job not paid")
-
     if rating < 1 or rating > 5:
         raise HTTPException(
             status_code=400, detail="Rating must be between 1 and 5")
-
     job.rating = rating
     db.commit()
     db.refresh(job)
-
-    return {
-        "message": "Worker rated successfully",
-        "job_id": job.id,
-        "rating": job.rating
-    }
-
-
-DATABASE_URL = "sqlite:///./test.db"
-
-engine = create_engine(DATABASE_URL)
-
-SessionLocal = sessionmaker(bind=engine)
-
-Base = declarative_base()
-
-
-@app.get("/debug")
-def debug(db: Session = Depends(get_db)):
-    try:
-        jobs = db.query(Job).all()
-        return {"status": "ok", "job_count": len(jobs)}
-    except Exception as e:
-        return {"status": "error", "detail": str(e)}
+    return {"message": "Worker rated successfully", "job_id": job.id, "rating": job.rating}
