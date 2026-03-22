@@ -14,12 +14,18 @@ function Login() {
                 `${API}/login?email=${email}&password=${password}`
             );
             const userId = response.data.user_id;
+            const role = response.data.role;
             console.log("Login response:", response.data);
             localStorage.setItem('user_id', userId);
+            localStorage.setItem('role', role);
             setMessage('Login successful! Redirecting...');
             setTimeout(() => {
-                window.location.href = '/home';
-            }, 5000);
+                if (role === 'customer') {
+                    window.location.href = '/customer-dashboard';
+                } else {
+                    window.location.href = '/dashboard';
+                }
+            }, 1000);
         } catch (error) {
             setMessage('Login failed. Please try again.');
         }

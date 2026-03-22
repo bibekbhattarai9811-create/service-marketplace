@@ -13,104 +13,75 @@ function Dashboard() {
 
     const userId = Number(localStorage.getItem("user_id") || 0);
 
-    // -------------------------
-    // Available Jobs
-    // -------------------------
     const fetchAvailableJobs = async () => {
         try {
-            const response = await axios.get(`${API}/jobs/available-jobs`);
+            const response = await axios.get(API + "/jobs/available-jobs");
             setJobs(response.data);
         } catch (error) {
-            console.log("Load jobs error:", error);
             setMessage({ text: "Failed to load jobs.", isError: true });
         }
     };
 
-    // -------------------------
-    // Worker Accepted Jobs
-    // -------------------------
     const fetchWorkerJobs = async () => {
         try {
-            const response = await axios.get(`${API}/jobs/worker-jobs/${userId}`);
+            const response = await axios.get(API + "/jobs/worker-jobs/" + userId);
             setWorkerJobs(response.data);
         } catch (error) {
             console.log("Load worker jobs error:", error);
         }
     };
 
-    // -------------------------
-    // Earnings
-    // -------------------------
     const fetchEarnings = async () => {
         if (!userId) return;
         try {
-            const response = await axios.get(
-                `${API}/worker-earnings?worker_id=${userId}`
-            );
+            const response = await axios.get(API + "/worker-earnings?worker_id=" + userId);
             setEarnings(response.data);
         } catch (error) {
             console.log("Failed to load earnings:", error);
         }
     };
 
-    // -------------------------
-    // Worker Rating
-    // -------------------------
     const fetchRating = async () => {
         try {
-            const response = await axios.get(`${API}/jobs/worker-rating/${userId}`);
+            const response = await axios.get(API + "/jobs/worker-rating/" + userId);
             setRating(response.data.average_rating);
         } catch (error) {
             console.log("Rating error:", error);
         }
     };
 
-    // -------------------------
-    // Accept Job
-    // -------------------------
     const acceptJob = async (jobId) => {
         try {
-            await axios.post(`${API}/jobs/accept-job`, null, {
+            await axios.post(API + "/jobs/accept-job", null, {
                 params: { job_id: jobId, worker_id: userId },
             });
-
             setMessage({ text: "Job accepted successfully!", isError: false });
-
             fetchAvailableJobs();
             fetchWorkerJobs();
             fetchEarnings();
-
         } catch (error) {
-            console.log("Accept job error:", error.response?.data || error);
             setMessage({ text: "Failed to accept job.", isError: true });
         }
     };
 
-    // -------------------------
-    // Complete Job
-    // -------------------------
     const completeJob = async (jobId) => {
         try {
-            await axios.post(`${API}/jobs/complete-job`, null, {
+            await axios.post(API + "/jobs/complete-job", null, {
                 params: { job_id: jobId },
             });
-
             setMessage({ text: "Job completed!", isError: false });
-
             fetchWorkerJobs();
             fetchEarnings();
-
         } catch (error) {
-            console.log("Complete job error:", error);
             setMessage({ text: "Failed to complete job.", isError: true });
         }
     };
 
-    // -------------------------
-    // WebSocket
-    // -------------------------
-    useEffect(() => {
+    const chatLink = (job) => {
+        return "/chat?job_id=" + job.id + "&receiver_id=" + job.customer_id;
+    };
 
+    useEffect(() => {
         fetchAvailableJobs();
         fetchWorkerJobs();
         fetchEarnings();
@@ -124,12 +95,10 @@ function Dashboard() {
         ws.onmessage = (event) => {
             try {
                 const data = JSON.parse(event.data);
-
                 if (data.type === "new_job") {
-                    alert(`New Job Available\n${data.title} - $${data.price}`);
+                    alert("New Job: " + data.title + " $" + data.price);
                     fetchAvailableJobs();
                 }
-
             } catch (error) {
                 console.log("Non-JSON message:", event.data);
             }
@@ -141,12 +110,10 @@ function Dashboard() {
         return () => {
             if (wsRef.current) wsRef.current.close();
         };
-
     }, [userId]);
 
     return (
         <div style={{ padding: "40px", maxWidth: "900px", margin: "auto" }}>
-
             <h2>Worker Dashboard</h2>
 
             <div style={{ marginBottom: "20px" }}>
@@ -160,7 +127,6 @@ function Dashboard() {
                 </p>
             )}
 
-            {/* Worker Stats */}
             {earnings && (
                 <div style={{
                     border: "1px solid #ccc",
@@ -172,23 +138,24 @@ function Dashboard() {
                     <h3>Worker Statistics</h3>
                     <p>Completed Jobs: {earnings.completed_jobs}</p>
                     <p>Total Earnings: ${earnings.total_earnings}</p>
-                    <p>Average Rating: ⭐ {rating || 0}</p>
+                    <p>Average Rating: {rating || 0}</p>
                 </div>
             )}
 
-            {/* Available Jobs */}
             <h3>Available Jobs</h3>
-
             {jobs.length === 0 ? (
                 <p>No available jobs right now.</p>
             ) : (
                 jobs.map((job) => (
-                    <div key={job.id} style={{
-                        border: "1px solid #ccc",
-                        padding: "20px",
-                        marginBottom: "10px",
-                        borderRadius: "8px"
-                    }}>
+                    <div
+                        key={job.id}
+                        style={{
+                            border: "1px solid #ccc",
+                            padding: "20px",
+                            marginBottom: "10px",
+                            borderRadius: "8px"
+                        }}
+                    >
                         <h3>{job.title}</h3>
                         <p>{job.description}</p>
                         <p>Location: {job.location}</p>
@@ -211,22 +178,40 @@ function Dashboard() {
                 ))
             )}
 
-            {/* Worker Accepted Jobs */}
             <h3 style={{ marginTop: "40px" }}>Your Jobs</h3>
-
             {workerJobs.length === 0 ? (
                 <p>No accepted jobs.</p>
             ) : (
                 workerJobs.map((job) => (
-                    <div key={job.id} style={{
-                        border: "1px solid #ccc",
-                        padding: "20px",
-                        marginBottom: "10px",
-                        borderRadius: "8px"
-                    }}>
+                    <div
+                        key={job.id}
+                        style={{
+                            border: "1px solid #ccc",
+                            padding: "20px",
+                            marginBottom: "10px",
+                            borderRadius: "8px"
+                        }}
+                    >
                         <h3>{job.title}</h3>
                         <p>Status: {job.status}</p>
                         <p>Price: ${job.price}</p>
+
+                        {/* FIXED LINK */}
+                        <a
+                            href={chatLink(job)}
+                            style={{
+                                display: "inline-block",
+                                marginBottom: "10px",
+                                padding: "6px 14px",
+                                backgroundColor: "#007bff",
+                                color: "white",
+                                borderRadius: "20px",
+                                textDecoration: "none",
+                                marginRight: "10px"
+                            }}
+                        >
+                            Chat with Customer
+                        </a>
 
                         {job.status !== "COMPLETED" && (
                             <button
@@ -243,11 +228,9 @@ function Dashboard() {
                                 Complete Job
                             </button>
                         )}
-
                     </div>
                 ))
             )}
-
         </div>
     );
 }

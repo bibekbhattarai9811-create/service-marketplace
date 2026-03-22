@@ -5,6 +5,8 @@ import Register from './pages/Register';
 import Home from './pages/Home';
 import PostJob from './pages/PostJob';
 import Dashboard from './pages/Dashboard';
+import CustomerDashboard from './pages/CustomerDashboard';
+import Chat from './pages/Chat';
 
 function App() {
   return (
@@ -15,6 +17,8 @@ function App() {
         <Route path="/home" element={<Home />} />
         <Route path="/post-job" element={<PostJob />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/customer-dashboard" element={<CustomerDashboard />} />
+        <Route path="/chat" element={<Chat />} />
       </Routes>
     </Router>
   );

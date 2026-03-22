@@ -282,11 +282,42 @@ def make_payment(job_id: int, customer_id: int, worker_id: int, amount: int, db:
         "platform_fee": platform_fee,
         "worker_received": worker_amount
     }
+# -------------------------
+# Cancel Job
+# -------------------------
 
+
+@router.post("/cancel-job")
+def cancel_job(job_id: int, customer_id: int, db: Session = Depends(get_db)):
+
+    job = db.query(Job).filter(Job.id == job_id).first()
+
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    if job.customer_id != customer_id:
+        raise HTTPException(
+            status_code=403, detail="Not authorized to cancel this job")
+
+    if job.status == "COMPLETED":
+        raise HTTPException(
+            status_code=400, detail="Cannot cancel a completed job")
+
+    job.status = "CANCELLED"
+    job.worker_id = None
+
+    db.commit()
+
+    return {
+        "message": "Job cancelled successfully",
+        "job_id": job.id
+    }
 
 # -------------------------
 # Platform Analytics
 # -------------------------
+
+
 @router.get("/platform-summary")
 def platform_summary(db: Session = Depends(get_db)):
 
