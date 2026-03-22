@@ -11,6 +11,7 @@ function CustomerDashboard() {
     const [ratedJobs, setRatedJobs] = useState([]);
     const [paidJobs, setPaidJobs] = useState([]);
     const [paymentDetails, setPaymentDetails] = useState({});
+    const [transactions, setTransactions] = useState([]);
 
     const customerId = localStorage.getItem('user_id');
 
@@ -23,9 +24,24 @@ function CustomerDashboard() {
         }
     };
 
+    const fetchTransactions = async () => {
+        try {
+            const response = await axios.get(API + '/transactions');
+            // Filter only this customer's transactions
+            const myTransactions = response.data.filter(t => String(t.customer_id) === String(customerId));
+            setTransactions(myTransactions);
+        } catch (error) {
+            console.log('Failed to load transactions.');
+        }
+    };
+
     useEffect(() => {
         fetchMyJobs();
-        const interval = setInterval(fetchMyJobs, 5000);
+        fetchTransactions();
+        const interval = setInterval(() => {
+            fetchMyJobs();
+            fetchTransactions();
+        }, 5000);
         return () => clearInterval(interval);
     }, []);
 
@@ -43,6 +59,7 @@ function CustomerDashboard() {
                 }
             });
             setMessage('Payment successful!');
+            fetchTransactions();
         } catch (error) {
             setMessage('Failed to process payment.');
         }
@@ -178,8 +195,56 @@ function CustomerDashboard() {
                     </div>
                 ))
             )}
+
+            {/* Payment History Section */}
+            <hr />
+            <h3>💳 Payment History</h3>
+            {transactions.length === 0 ? (
+                <p style={{ color: '#888' }}>No payments made yet.</p>
+            ) : (
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                        <tr style={{ backgroundColor: '#f0f0f0' }}>
+                            <th style={thStyle}>Job</th>
+                            <th style={thStyle}>Total Paid</th>
+                            <th style={thStyle}>Worker Got</th>
+                            <th style={thStyle}>Platform Fee</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {transactions.map(t => (
+                            <tr key={t.payment_id} style={{ borderBottom: '1px solid #eee' }}>
+                                <td style={tdStyle}>{t.job_title}</td>
+                                <td style={tdStyle}>${t.total_amount}</td>
+                                <td style={{ ...tdStyle, color: '#28a745', fontWeight: 'bold' }}>${t.worker_received}</td>
+                                <td style={{ ...tdStyle, color: '#dc3545' }}>${t.platform_fee}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                    <tfoot>
+                        <tr style={{ backgroundColor: '#f9f9f9', fontWeight: 'bold' }}>
+                            <td style={tdStyle}>Total</td>
+                            <td style={tdStyle}>${transactions.reduce((sum, t) => sum + t.total_amount, 0)}</td>
+                            <td style={{ ...tdStyle, color: '#28a745' }}>${transactions.reduce((sum, t) => sum + t.worker_received, 0)}</td>
+                            <td style={{ ...tdStyle, color: '#dc3545' }}>${transactions.reduce((sum, t) => sum + t.platform_fee, 0)}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            )}
         </div>
     );
 }
+
+const thStyle = {
+    padding: '10px',
+    textAlign: 'left',
+    borderBottom: '2px solid #ddd',
+    fontSize: '14px'
+};
+
+const tdStyle = {
+    padding: '10px',
+    fontSize: '14px'
+};
 
 export default CustomerDashboard;
