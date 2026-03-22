@@ -9,6 +9,8 @@ function CustomerDashboard() {
     const [ratingData, setRatingData] = useState({});
     const [reviewData, setReviewData] = useState({});
     const [ratedJobs, setRatedJobs] = useState([]);
+    const [paidJobs, setPaidJobs] = useState([]);
+    const [paymentDetails, setPaymentDetails] = useState({});
 
     const customerId = localStorage.getItem('user_id');
 
@@ -27,6 +29,25 @@ function CustomerDashboard() {
         return () => clearInterval(interval);
     }, []);
 
+    const handlePay = async (job) => {
+        try {
+            const response = await axios.post(
+                API + '/jobs/pay?job_id=' + job.id + '&customer_id=' + customerId + '&worker_id=' + job.worker_id + '&amount=' + job.price
+            );
+            setPaidJobs([...paidJobs, job.id]);
+            setPaymentDetails({
+                ...paymentDetails,
+                [job.id]: {
+                    workerReceived: response.data.worker_received,
+                    platformFee: response.data.platform_fee
+                }
+            });
+            setMessage('Payment successful!');
+        } catch (error) {
+            setMessage('Failed to process payment.');
+        }
+    };
+
     const handleRate = async (job) => {
         const rating = ratingData[job.id];
         const review = reviewData[job.id];
@@ -42,6 +63,18 @@ function CustomerDashboard() {
             setMessage('Rating submitted successfully!');
         } catch (error) {
             setMessage('Failed to submit rating.');
+        }
+    };
+
+    const handleCancel = async (job) => {
+        try {
+            await axios.post(
+                API + '/jobs/cancel-job?job_id=' + job.id + '&customer_id=' + customerId
+            );
+            setMessage('Job cancelled successfully!');
+            fetchMyJobs();
+        } catch (error) {
+            setMessage('Failed to cancel job.');
         }
     };
 
@@ -69,12 +102,52 @@ function CustomerDashboard() {
                         {job.worker_id && (
                             <p>Worker ID: {job.worker_id}</p>
                         )}
+
+                        {/* Chat Button */}
                         {job.worker_id && (
                             <a href={chatLink(job)} style={{ display: 'inline-block', marginBottom: '10px', padding: '6px 14px', backgroundColor: '#007bff', color: 'white', borderRadius: '20px', textDecoration: 'none' }}>
                                 Chat with Worker
                             </a>
                         )}
-                        {job.status === 'COMPLETED' && !ratedJobs.includes(job.id) && (
+
+                        {/* Cancel Button */}
+                        {job.status !== 'COMPLETED' && job.status !== 'CANCELLED' && (
+                            <button
+                                onClick={() => handleCancel(job)}
+                                style={{ display: 'inline-block', marginBottom: '10px', padding: '6px 14px', backgroundColor: 'red', color: 'white', border: 'none', borderRadius: '20px', cursor: 'pointer', marginLeft: '10px' }}
+                            >
+                                Cancel Job
+                            </button>
+                        )}
+
+                        {/* Pay Button — shows when COMPLETED and not yet paid */}
+                        {job.status === 'COMPLETED' && !paidJobs.includes(job.id) && (
+                            <div style={{ marginTop: '10px', padding: '15px', backgroundColor: '#e8f5e9', borderRadius: '8px', border: '1px solid #a5d6a7' }}>
+                                <h5 style={{ margin: '0 0 10px 0' }}>💰 Pay Worker</h5>
+                                <p style={{ margin: '0 0 10px 0' }}>Amount: <strong>${job.price}</strong></p>
+                                <p style={{ margin: '0 0 10px 0', fontSize: '13px', color: '#555' }}>
+                                    Worker receives: <strong>${(job.price * 0.9).toFixed(2)}</strong> &nbsp;|&nbsp; Platform fee: <strong>${(job.price * 0.1).toFixed(2)}</strong>
+                                </p>
+                                <button
+                                    onClick={() => handlePay(job)}
+                                    style={{ padding: '8px 20px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '20px', cursor: 'pointer', fontWeight: 'bold' }}
+                                >
+                                    Pay Now
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Payment Success Message */}
+                        {paidJobs.includes(job.id) && paymentDetails[job.id] && (
+                            <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#d4edda', borderRadius: '8px', border: '1px solid #c3e6cb' }}>
+                                <p style={{ margin: 0, color: '#155724' }}>
+                                    ✅ Payment sent! Worker received <strong>${paymentDetails[job.id].workerReceived}</strong> — Platform fee: <strong>${paymentDetails[job.id].platformFee}</strong>
+                                </p>
+                            </div>
+                        )}
+
+                        {/* Rating Section — shows after payment */}
+                        {job.status === 'COMPLETED' && paidJobs.includes(job.id) && !ratedJobs.includes(job.id) && (
                             <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#f9f9f9', borderRadius: '6px' }}>
                                 <h5>Rate this Worker</h5>
                                 <input
@@ -98,8 +171,9 @@ function CustomerDashboard() {
                                 </button>
                             </div>
                         )}
+
                         {ratedJobs.includes(job.id) && (
-                            <p style={{ color: 'green' }}>Rating submitted!</p>
+                            <p style={{ color: 'green' }}>⭐ Rating submitted!</p>
                         )}
                     </div>
                 ))

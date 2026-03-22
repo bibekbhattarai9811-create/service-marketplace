@@ -151,11 +151,13 @@ def worker_jobs(worker_id: int, db: Session = Depends(get_db)):
 
 @app.get("/worker-earnings")
 def worker_earnings(worker_id: int, db: Session = Depends(get_db)):
+    from models import Payment
     jobs = db.query(Job).filter(
         Job.worker_id == worker_id,
         Job.status == "COMPLETED"
     ).all()
-    total = sum(int(job.price) for job in jobs if job.price)
+    payments = db.query(Payment).filter(Payment.worker_id == worker_id).all()
+    total = sum(p.worker_amount for p in payments if p.worker_amount)
     return {"completed_jobs": len(jobs), "total_earnings": total}
 
 # -----------------------------

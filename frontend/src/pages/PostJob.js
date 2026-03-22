@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-const API = 'https://service-marketplace-11.onrender.com';
+const API = 'https://service-marketplace-16.onrender.com';
 
 function PostJob() {
     const [title, setTitle] = useState('');
@@ -14,7 +14,7 @@ function PostJob() {
         try {
             const customerId = localStorage.getItem('user_id');
             const response = await axios.post(
-                `${API}/create-job?title=${title}&description=${description}&location=${location}&price=${price}&customer_id=${customerId}`
+                API + '/jobs/create-job?title=' + title + '&description=' + description + '&location=' + location + '&price=' + price + '&customer_id=' + customerId
             );
             setMessage('Job posted successfully! Job ID: ' + response.data.job_id);
         } catch (error) {

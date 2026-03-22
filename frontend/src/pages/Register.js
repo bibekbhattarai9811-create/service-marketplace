@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-const API = 'https://service-marketplace-11.onrender.com';
+const API = 'https://service-marketplace-16.onrender.com';
 
 function Register() {
     const [name, setName] = useState('');
