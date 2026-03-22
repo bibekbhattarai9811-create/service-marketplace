@@ -9,6 +9,7 @@ function Dashboard() {
     const [message, setMessage] = useState({ text: "", isError: false });
     const [earnings, setEarnings] = useState(null);
     const [rating, setRating] = useState(null);
+    const [transactions, setTransactions] = useState([]);
     const wsRef = useRef(null);
 
     const userId = Number(localStorage.getItem("user_id") || 0);
@@ -50,6 +51,17 @@ function Dashboard() {
         }
     };
 
+    const fetchTransactions = async () => {
+        if (!userId) return;
+        try {
+            const response = await axios.get(API + "/transactions");
+            const myTransactions = response.data.filter(t => Number(t.worker_id) === userId);
+            setTransactions(myTransactions);
+        } catch (error) {
+            console.log("Failed to load transactions:", error);
+        }
+    };
+
     const acceptJob = async (jobId) => {
         try {
             await axios.post(API + "/jobs/accept-job", null, {
@@ -86,6 +98,12 @@ function Dashboard() {
         fetchWorkerJobs();
         fetchEarnings();
         fetchRating();
+        fetchTransactions();
+
+        const interval = setInterval(() => {
+            fetchTransactions();
+            fetchEarnings();
+        }, 5000);
 
         const ws = new WebSocket("wss://service-marketplace-16.onrender.com/ws");
         wsRef.current = ws;
@@ -109,6 +127,7 @@ function Dashboard() {
 
         return () => {
             if (wsRef.current) wsRef.current.close();
+            clearInterval(interval);
         };
     }, [userId]);
 
@@ -196,7 +215,6 @@ function Dashboard() {
                         <p>Status: {job.status}</p>
                         <p>Price: ${job.price}</p>
 
-                        {/* FIXED LINK */}
                         <a
                             href={chatLink(job)}
                             style={{
@@ -231,8 +249,56 @@ function Dashboard() {
                     </div>
                 ))
             )}
+
+            {/* Payment History Section */}
+            <hr style={{ marginTop: "40px" }} />
+            <h3>💳 Payment History</h3>
+            {transactions.length === 0 ? (
+                <p style={{ color: "#888" }}>No payments received yet.</p>
+            ) : (
+                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                    <thead>
+                        <tr style={{ backgroundColor: "#f0f0f0" }}>
+                            <th style={thStyle}>Job</th>
+                            <th style={thStyle}>Total Job Price</th>
+                            <th style={thStyle}>You Received</th>
+                            <th style={thStyle}>Platform Fee</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {transactions.map(t => (
+                            <tr key={t.payment_id} style={{ borderBottom: "1px solid #eee" }}>
+                                <td style={tdStyle}>{t.job_title}</td>
+                                <td style={tdStyle}>${t.total_amount}</td>
+                                <td style={{ ...tdStyle, color: "#28a745", fontWeight: "bold" }}>${t.worker_received}</td>
+                                <td style={{ ...tdStyle, color: "#dc3545" }}>${t.platform_fee}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                    <tfoot>
+                        <tr style={{ backgroundColor: "#f9f9f9", fontWeight: "bold" }}>
+                            <td style={tdStyle}>Total</td>
+                            <td style={tdStyle}>${transactions.reduce((sum, t) => sum + t.total_amount, 0)}</td>
+                            <td style={{ ...tdStyle, color: "#28a745" }}>${transactions.reduce((sum, t) => sum + t.worker_received, 0)}</td>
+                            <td style={{ ...tdStyle, color: "#dc3545" }}>${transactions.reduce((sum, t) => sum + t.platform_fee, 0)}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            )}
         </div>
     );
 }
+
+const thStyle = {
+    padding: "10px",
+    textAlign: "left",
+    borderBottom: "2px solid #ddd",
+    fontSize: "14px"
+};
+
+const tdStyle = {
+    padding: "10px",
+    fontSize: "14px"
+};
 
 export default Dashboard;
