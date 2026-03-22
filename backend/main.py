@@ -131,8 +131,22 @@ def pay_job(job_id: int, db: Session = Depends(get_db)):
 
 @app.get("/transactions")
 def get_transactions(db: Session = Depends(get_db)):
-    jobs = db.query(Job).filter(Job.paid == True).all()
-    return jobs
+    from models import Payment
+    payments = db.query(Payment).all()
+    result = []
+    for p in payments:
+        job = db.query(Job).filter(Job.id == p.job_id).first()
+        result.append({
+            "payment_id": p.id,
+            "job_id": p.job_id,
+            "job_title": job.title if job else "Unknown",
+            "customer_id": p.customer_id,
+            "worker_id": p.worker_id,
+            "total_amount": p.amount,
+            "worker_received": p.worker_amount,
+            "platform_fee": p.platform_fee,
+        })
+    return result
 
 # -----------------------------
 # Worker Jobs
