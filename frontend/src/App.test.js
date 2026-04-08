@@ -68,3 +68,28 @@ test('logs in a worker and saves the session details', async () => {
   expect(localStorage.getItem('role')).toBe('worker');
   expect(localStorage.getItem('token')).toBe('test-token');
 });
+
+test('shows an error message when login fails', async () => {
+  apiClient.post.mockRejectedValue({
+    response: {
+      data: {
+        detail: 'Invalid email or password',
+      },
+    },
+  });
+
+  render(<App />);
+
+  fireEvent.change(screen.getByPlaceholderText(/email/i), {
+    target: { value: 'worker1@test.com' },
+  });
+  fireEvent.change(screen.getByPlaceholderText(/password/i), {
+    target: { value: 'wrong-password' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: /login/i }));
+
+  expect(await screen.findByText(/invalid email or password/i)).toBeInTheDocument();
+  expect(localStorage.getItem('user_id')).toBeNull();
+  expect(localStorage.getItem('role')).toBeNull();
+  expect(localStorage.getItem('token')).toBeNull();
+});
