@@ -1,14 +1,13 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import App from './App';
+import { apiClient } from './api';
 
-jest.mock(
-  'axios',
-  () => ({
+jest.mock('./api', () => ({
+  apiClient: {
     post: jest.fn(),
-    get: jest.fn(),
-  }),
-  { virtual: true }
-);
+  },
+  clearSession: jest.fn(),
+}));
 
 jest.mock(
   'react-router-dom',
@@ -24,6 +23,11 @@ jest.mock(
   { virtual: true }
 );
 
+beforeEach(() => {
+  localStorage.clear();
+  jest.clearAllMocks();
+});
+
 test('renders the login screen on the default route', () => {
   render(<App />);
 
@@ -31,4 +35,36 @@ test('renders the login screen on the default route', () => {
   expect(screen.getByPlaceholderText(/email/i)).toBeInTheDocument();
   expect(screen.getByPlaceholderText(/password/i)).toBeInTheDocument();
   expect(screen.getByRole('button', { name: /login/i })).toBeInTheDocument();
+});
+
+test('logs in a worker and saves the session details', async () => {
+  apiClient.post.mockResolvedValue({
+    data: {
+      user_id: 3,
+      role: 'worker',
+      token: 'test-token',
+    },
+  });
+
+  render(<App />);
+
+  fireEvent.change(screen.getByPlaceholderText(/email/i), {
+    target: { value: 'worker1@test.com' },
+  });
+  fireEvent.change(screen.getByPlaceholderText(/password/i), {
+    target: { value: '1234' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: /login/i }));
+
+  await waitFor(() => {
+    expect(apiClient.post).toHaveBeenCalledWith('/login', {
+      email: 'worker1@test.com',
+      password: '1234',
+    });
+  });
+
+  expect(await screen.findByText(/login successful! redirecting/i)).toBeInTheDocument();
+  expect(localStorage.getItem('user_id')).toBe('3');
+  expect(localStorage.getItem('role')).toBe('worker');
+  expect(localStorage.getItem('token')).toBe('test-token');
 });
