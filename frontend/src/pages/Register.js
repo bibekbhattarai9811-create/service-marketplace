@@ -25,37 +25,80 @@ function Register() {
     };
 
     return (
-        <div style={{ padding: '40px', maxWidth: '400px', margin: 'auto' }}>
-            <h2>Register</h2>
-            <input type="text" placeholder="Full Name" value={name}
-                onChange={(e) => setName(e.target.value)}
-                style={{ display: 'block', width: '100%', marginBottom: '10px', padding: '8px' }}
-            />
-            <input type="email" placeholder="Email" value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                style={{ display: 'block', width: '100%', marginBottom: '10px', padding: '8px' }}
-            />
-            <input type="text" placeholder="Phone" value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                style={{ display: 'block', width: '100%', marginBottom: '10px', padding: '8px' }}
-            />
-            <select value={role} onChange={(e) => setRole(e.target.value)}
-                style={{ display: 'block', width: '100%', marginBottom: '10px', padding: '8px' }}
-            >
-                <option value="customer">Customer</option>
-                <option value="worker">Worker</option>
-            </select>
-            <input type="password" placeholder="Password" value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                style={{ display: 'block', width: '100%', marginBottom: '10px', padding: '8px' }}
-            />
-            <button onClick={handleRegister}
-                style={{ padding: '10px 20px', backgroundColor: 'green', color: 'white', border: 'none', cursor: 'pointer' }}
-            >
-                Register
-            </button>
-            <p>{message}</p>
-            <p>Already have an account? <a href="/">Login</a></p>
+        <div className="auth-shell">
+            <section className="auth-showcase">
+                <div>
+                    <div className="auth-brand">
+                        <span className="auth-brand-badge">SM</span>
+                        Service Marketplace
+                    </div>
+                    <div className="auth-copy">
+                        <p className="auth-kicker">Join the network</p>
+                        <h1>Create an account and start booking local services.</h1>
+                        <p>
+                            Sign up as a customer to post jobs or as a worker to accept projects,
+                            complete them, and grow your reputation.
+                        </p>
+                    </div>
+                </div>
+
+                <div className="auth-feature-grid">
+                    <div className="auth-feature-card">
+                        <strong>Customer tools</strong>
+                        <span>Post jobs, review worker progress, pay securely, and leave ratings.</span>
+                    </div>
+                    <div className="auth-feature-card">
+                        <strong>Worker tools</strong>
+                        <span>Browse available jobs, accept work, and track your earnings dashboard.</span>
+                    </div>
+                    <div className="auth-feature-card">
+                        <strong>Built-in chat</strong>
+                        <span>Keep customers and workers connected during the job without leaving the app.</span>
+                    </div>
+                </div>
+            </section>
+
+            <section className="auth-panel">
+                <div className="auth-card">
+                    <h2>Register</h2>
+                    <p className="auth-subtitle">Set up your profile and start using the marketplace.</p>
+                    <div className="auth-form">
+                        <input
+                            type="text"
+                            placeholder="Full Name"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                        />
+                        <input
+                            type="email"
+                            placeholder="Email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                        />
+                        <input
+                            type="text"
+                            placeholder="Phone"
+                            value={phone}
+                            onChange={(e) => setPhone(e.target.value)}
+                        />
+                        <select value={role} onChange={(e) => setRole(e.target.value)}>
+                            <option value="customer">Customer</option>
+                            <option value="worker">Worker</option>
+                        </select>
+                        <input
+                            type="password"
+                            placeholder="Password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                        />
+                        <button className="auth-button" onClick={handleRegister}>
+                            Register
+                        </button>
+                    </div>
+                    <p className="auth-message">{message}</p>
+                    <p className="auth-switch">Already have an account? <a href="/">Login</a></p>
+                </div>
+            </section>
         </div>
     );
 }
