@@ -133,3 +133,31 @@ test('registers a customer and shows the created user id', async () => {
 
   expect(await screen.findByText(/registration successful! user id: 7/i)).toBeInTheDocument();
 });
+
+test('shows an error message when registration fails', async () => {
+  apiClient.post.mockRejectedValue({
+    response: {
+      data: {
+        detail: 'Email already registered',
+      },
+    },
+  });
+
+  render(<Register />);
+
+  fireEvent.change(screen.getByPlaceholderText(/full name/i), {
+    target: { value: 'Test Customer' },
+  });
+  fireEvent.change(screen.getByPlaceholderText(/email/i), {
+    target: { value: 'customer7@test.com' },
+  });
+  fireEvent.change(screen.getByPlaceholderText(/phone/i), {
+    target: { value: '1234567890' },
+  });
+  fireEvent.change(screen.getByPlaceholderText(/password/i), {
+    target: { value: '1234' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: /register/i }));
+
+  expect(await screen.findByText(/email already registered/i)).toBeInTheDocument();
+});
