@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
-
-const API = "https://service-marketplace-16.onrender.com";
+import { API, WS_API } from "../api";
 
 function Dashboard() {
     const [jobs, setJobs] = useState([]);
@@ -105,7 +104,7 @@ function Dashboard() {
             fetchEarnings();
         }, 5000);
 
-        const ws = new WebSocket("wss://service-marketplace-16.onrender.com/ws");
+        const ws = new WebSocket(WS_API);
         wsRef.current = ws;
 
         ws.onopen = () => console.log("WebSocket connected");

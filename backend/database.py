@@ -1,10 +1,12 @@
+import tempfile
 from pathlib import Path
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-BASE_DIR = Path(__file__).resolve().parent
-DATABASE_URL = f"sqlite:///{BASE_DIR / 'test.db'}"
+DB_DIR = Path(tempfile.gettempdir()) / "service-marketplace"
+DB_DIR.mkdir(parents=True, exist_ok=True)
+DATABASE_URL = f"sqlite:///{DB_DIR / 'test.db'}"
 
 engine = create_engine(DATABASE_URL)
 

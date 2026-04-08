@@ -325,7 +325,7 @@ def platform_summary(db: Session = Depends(get_db)):
     total_jobs = db.query(func.count(Job.id)).scalar()
 
     completed_jobs = db.query(func.count(Job.id)).filter(
-        Job.status == "completed"
+        Job.status == "COMPLETED"
     ).scalar()
 
     revenue = db.query(func.sum(Payment.platform_fee)).scalar()

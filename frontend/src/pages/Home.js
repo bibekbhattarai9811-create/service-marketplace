@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Navbar from "../components/Navbar";
-
-const API = 'https://service-marketplace-16.onrender.com';
+import { API } from '../api';
 
 function Home() {
     const [jobs, setJobs] = useState([]);

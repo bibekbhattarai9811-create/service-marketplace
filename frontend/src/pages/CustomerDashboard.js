@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-
-const API = 'https://service-marketplace-16.onrender.com';
+import { API } from '../api';
 
 function CustomerDashboard() {
     const [myJobs, setMyJobs] = useState([]);

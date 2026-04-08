@@ -56,7 +56,7 @@ app.include_router(jobs.router, prefix="/jobs")
 
 @app.get("/")
 def home():
-    return {"message": "NEW VERSION WORKING"}
+    return {"message": "Service Marketplace backend version 2 is running"}
 
 # -----------------------------
 # Debug Endpoint
