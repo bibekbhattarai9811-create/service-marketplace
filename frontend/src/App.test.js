@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import App from './App';
 import { apiClient } from './api';
+import Register from './pages/Register';
 
 jest.mock('./api', () => ({
   apiClient: {
@@ -92,4 +93,43 @@ test('shows an error message when login fails', async () => {
   expect(localStorage.getItem('user_id')).toBeNull();
   expect(localStorage.getItem('role')).toBeNull();
   expect(localStorage.getItem('token')).toBeNull();
+});
+
+test('registers a customer and shows the created user id', async () => {
+  apiClient.post.mockResolvedValue({
+    data: {
+      user_id: 7,
+    },
+  });
+
+  render(<Register />);
+
+  fireEvent.change(screen.getByPlaceholderText(/full name/i), {
+    target: { value: 'Test Customer' },
+  });
+  fireEvent.change(screen.getByPlaceholderText(/email/i), {
+    target: { value: 'customer7@test.com' },
+  });
+  fireEvent.change(screen.getByPlaceholderText(/phone/i), {
+    target: { value: '1234567890' },
+  });
+  fireEvent.change(screen.getByRole('combobox'), {
+    target: { value: 'customer' },
+  });
+  fireEvent.change(screen.getByPlaceholderText(/password/i), {
+    target: { value: '1234' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: /register/i }));
+
+  await waitFor(() => {
+    expect(apiClient.post).toHaveBeenCalledWith('/register', {
+      name: 'Test Customer',
+      email: 'customer7@test.com',
+      phone: '1234567890',
+      role: 'customer',
+      password: '1234',
+    });
+  });
+
+  expect(await screen.findByText(/registration successful! user id: 7/i)).toBeInTheDocument();
 });
