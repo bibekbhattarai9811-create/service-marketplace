@@ -1,7 +1,9 @@
 import axios from 'axios';
 
-export const API = 'http://127.0.0.1:8000';
-export const WS_API = 'ws://127.0.0.1:8000/ws';
+const defaultApi = 'http://127.0.0.1:8000';
+
+export const API = process.env.REACT_APP_API_URL || defaultApi;
+export const WS_API = process.env.REACT_APP_WS_URL || API.replace(/^http/i, 'ws') + '/ws';
 
 export const apiClient = axios.create({
   baseURL: API,
