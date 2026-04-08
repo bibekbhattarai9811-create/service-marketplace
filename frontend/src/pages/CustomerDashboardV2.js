@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { apiClient } from '../api';
 
@@ -116,7 +117,7 @@ function CustomerDashboardV2() {
                             Post new work, jump into chat, complete payments, and leave ratings
                             once a job is done.
                         </p>
-                        <a href="/post-job" className="primary-button">Post a New Job</a>
+                        <Link to="/post-job" className="primary-button">Post a New Job</Link>
                     </aside>
                 </div>
 
@@ -171,7 +172,7 @@ function CustomerDashboardV2() {
 
                                     <div className="button-row">
                                         {job.worker_id && (
-                                            <a href={chatLink(job)} className="secondary-button">Chat with Worker</a>
+                                            <Link to={chatLink(job)} className="secondary-button">Chat with Worker</Link>
                                         )}
 
                                         {job.status !== 'COMPLETED' && job.status !== 'CANCELLED' && (

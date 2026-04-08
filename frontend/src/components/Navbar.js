@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import { clearSession } from "../api";
 
 function Navbar() {
@@ -6,34 +7,34 @@ function Navbar() {
 
     return (
         <nav className="app-topbar">
-            <a className="app-brand" href="/home">
+            <Link className="app-brand" to="/home">
                 <span className="auth-brand-badge">SM</span>
                 Service Marketplace
-            </a>
+            </Link>
 
             <div className="app-nav">
-                <a className="app-nav-link" href="/home">
+                <Link className="app-nav-link" to="/home">
                     Home
-                </a>
+                </Link>
 
                 {role === "customer" ? (
                     <>
-                        <a className="app-nav-link" href="/customer-dashboard">
+                        <Link className="app-nav-link" to="/customer-dashboard">
                             Customer Dashboard
-                        </a>
-                        <a className="app-nav-link app-nav-link-primary" href="/post-job">
+                        </Link>
+                        <Link className="app-nav-link app-nav-link-primary" to="/post-job">
                             Post Job
-                        </a>
+                        </Link>
                     </>
                 ) : (
-                    <a className="app-nav-link" href="/dashboard">
+                    <Link className="app-nav-link" to="/dashboard">
                         Worker Dashboard
-                    </a>
+                    </Link>
                 )}
 
-                <a className="app-nav-link" href="/" onClick={clearSession}>
+                <Link className="app-nav-link" to="/" onClick={clearSession}>
                     Logout
-                </a>
+                </Link>
             </div>
         </nav>
     );

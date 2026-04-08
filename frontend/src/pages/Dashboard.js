@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { WS_API, apiClient } from "../api";
 
@@ -233,7 +234,7 @@ function Dashboard() {
                                         <span className="job-meta-chip">Price: ${job.price}</span>
                                     </div>
                                     <div className="button-row">
-                                        <a href={chatLink(job)} className="secondary-button">Chat with Customer</a>
+                                        <Link to={chatLink(job)} className="secondary-button">Chat with Customer</Link>
                                         {job.status !== "COMPLETED" && (
                                             <button className="primary-button" onClick={() => completeJob(job.id)}>
                                                 Complete Job

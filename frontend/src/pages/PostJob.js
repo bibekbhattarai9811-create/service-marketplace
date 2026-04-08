@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { apiClient } from '../api';
 
@@ -44,7 +45,7 @@ function PostJob() {
                             Include the exact task, where the work should happen, and the price
                             you are offering so the right worker can respond quickly.
                         </p>
-                        <a href="/home" className="ghost-button">Back to Home</a>
+                        <Link to="/home" className="ghost-button">Back to Home</Link>
                     </aside>
                 </div>
 
@@ -85,7 +86,7 @@ function PostJob() {
                             <button className="primary-button" onClick={handlePostJob}>
                                 Post Job
                             </button>
-                            <a href="/home" className="ghost-button">Back to Home</a>
+                            <Link to="/home" className="ghost-button">Back to Home</Link>
                         </div>
                     </div>
 

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { apiClient } from '../api';
 
 function Register() {
@@ -96,7 +97,7 @@ function Register() {
                         </button>
                     </div>
                     <p className="auth-message">{message}</p>
-                    <p className="auth-switch">Already have an account? <a href="/">Login</a></p>
+                    <p className="auth-switch">Already have an account? <Link to="/">Login</Link></p>
                 </div>
             </section>
         </div>

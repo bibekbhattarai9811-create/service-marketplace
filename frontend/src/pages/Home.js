@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { apiClient } from '../api';
 
@@ -46,11 +47,11 @@ function Home() {
                         <div className="button-row">
                             {role === 'customer' ? (
                                 <>
-                                    <a href="/post-job" className="primary-button">Post a Job</a>
-                                    <a href="/customer-dashboard" className="ghost-button">My Dashboard</a>
+                                    <Link to="/post-job" className="primary-button">Post a Job</Link>
+                                    <Link to="/customer-dashboard" className="ghost-button">My Dashboard</Link>
                                 </>
                             ) : (
-                                <a href="/dashboard" className="secondary-button">Worker Dashboard</a>
+                                <Link to="/dashboard" className="secondary-button">Worker Dashboard</Link>
                             )}
                         </div>
                     </aside>

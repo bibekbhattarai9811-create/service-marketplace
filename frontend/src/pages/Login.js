@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { apiClient } from '../api';
 
 function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [message, setMessage] = useState('');
+    const navigate = useNavigate();
 
     const handleLogin = async () => {
         try {
@@ -22,9 +24,9 @@ function Login() {
             setMessage('Login successful! Redirecting...');
             setTimeout(() => {
                 if (role === 'customer') {
-                    window.location.href = '/customer-dashboard';
+                    navigate('/customer-dashboard');
                 } else {
-                    window.location.href = '/dashboard';
+                    navigate('/dashboard');
                 }
             }, 1000);
         } catch (error) {
@@ -88,7 +90,7 @@ function Login() {
                         </button>
                     </div>
                     <p className="auth-message">{message}</p>
-                    <p className="auth-switch">Don't have an account? <a href="/register">Register</a></p>
+                    <p className="auth-switch">Don't have an account? <Link to="/register">Register</Link></p>
                 </div>
             </section>
         </div>

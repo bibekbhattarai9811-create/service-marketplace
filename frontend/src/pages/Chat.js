@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { apiClient } from '../api';
 
 function Chat() {
@@ -61,9 +62,9 @@ function Chat() {
                             <h2>Job Chat</h2>
                             <p className="section-subtitle">Job ID: {jobId}</p>
                         </div>
-                        <a href={role === 'customer' ? '/customer-dashboard' : '/dashboard'} className="ghost-button">
+                        <Link to={role === 'customer' ? '/customer-dashboard' : '/dashboard'} className="ghost-button">
                             Back to Dashboard
-                        </a>
+                        </Link>
                     </div>
 
                     {message && <div className="message-banner error">{message}</div>}
