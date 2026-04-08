@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { apiClient } from '../api';
 
 function Chat() {
@@ -13,20 +13,20 @@ function Chat() {
 
     const bottomRef = useRef(null);
 
-    const fetchMessages = async () => {
+    const fetchMessages = useCallback(async () => {
         try {
             const response = await apiClient.get(`/jobs/chat/${jobId}`);
             setMessages(response.data);
         } catch (error) {
             setMessage('Failed to load messages.');
         }
-    };
+    }, [jobId]);
 
     useEffect(() => {
         fetchMessages();
         const interval = setInterval(fetchMessages, 3000);
         return () => clearInterval(interval);
-    }, []);
+    }, [fetchMessages]);
 
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' });

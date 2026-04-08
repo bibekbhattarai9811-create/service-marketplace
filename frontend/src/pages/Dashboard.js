@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { WS_API, apiClient, clearSession } from "../api";
 
 function Dashboard() {
@@ -12,25 +12,25 @@ function Dashboard() {
 
     const userId = Number(localStorage.getItem("user_id") || 0);
 
-    const fetchAvailableJobs = async () => {
+    const fetchAvailableJobs = useCallback(async () => {
         try {
             const response = await apiClient.get("/jobs/available-jobs");
             setJobs(response.data);
         } catch (error) {
             setMessage({ text: "Failed to load jobs.", isError: true });
         }
-    };
+    }, []);
 
-    const fetchWorkerJobs = async () => {
+    const fetchWorkerJobs = useCallback(async () => {
         try {
             const response = await apiClient.get("/jobs/worker-jobs/me");
             setWorkerJobs(response.data);
         } catch (error) {
             console.log("Load worker jobs error:", error);
         }
-    };
+    }, []);
 
-    const fetchEarnings = async () => {
+    const fetchEarnings = useCallback(async () => {
         if (!userId) return;
         try {
             const response = await apiClient.get("/worker-earnings");
@@ -38,18 +38,18 @@ function Dashboard() {
         } catch (error) {
             console.log("Failed to load earnings:", error);
         }
-    };
+    }, [userId]);
 
-    const fetchRating = async () => {
+    const fetchRating = useCallback(async () => {
         try {
             const response = await apiClient.get("/jobs/worker-rating/" + userId);
             setRating(response.data.average_rating);
         } catch (error) {
             console.log("Rating error:", error);
         }
-    };
+    }, [userId]);
 
-    const fetchTransactions = async () => {
+    const fetchTransactions = useCallback(async () => {
         if (!userId) return;
         try {
             const response = await apiClient.get("/transactions");
@@ -57,7 +57,7 @@ function Dashboard() {
         } catch (error) {
             console.log("Failed to load transactions:", error);
         }
-    };
+    }, [userId]);
 
     const acceptJob = async (jobId) => {
         try {
@@ -126,7 +126,7 @@ function Dashboard() {
             if (wsRef.current) wsRef.current.close();
             clearInterval(interval);
         };
-    }, [userId]);
+    }, [fetchAvailableJobs, fetchWorkerJobs, fetchEarnings, fetchRating, fetchTransactions]);
 
     return (
         <div style={{ padding: "40px", maxWidth: "900px", margin: "auto" }}>
