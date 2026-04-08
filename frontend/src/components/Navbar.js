@@ -1,32 +1,39 @@
 import React from "react";
+import { clearSession } from "../api";
 
 function Navbar() {
-    return (
-        <nav className="navbar navbar-dark bg-dark">
-            <div className="container">
+    const role = localStorage.getItem("role");
 
-                <a className="navbar-brand" href="/home">
-                    Service Marketplace
+    return (
+        <nav className="app-topbar">
+            <a className="app-brand" href="/home">
+                <span className="auth-brand-badge">SM</span>
+                Service Marketplace
+            </a>
+
+            <div className="app-nav">
+                <a className="app-nav-link" href="/home">
+                    Home
                 </a>
 
-                <div>
-                    <a className="btn btn-outline-light me-2" href="/home">
-                        Home
+                {role === "customer" ? (
+                    <>
+                        <a className="app-nav-link" href="/customer-dashboard">
+                            Customer Dashboard
+                        </a>
+                        <a className="app-nav-link app-nav-link-primary" href="/post-job">
+                            Post Job
+                        </a>
+                    </>
+                ) : (
+                    <a className="app-nav-link" href="/dashboard">
+                        Worker Dashboard
                     </a>
+                )}
 
-                    <a className="btn btn-outline-light me-2" href="/dashboard">
-                        Dashboard
-                    </a>
-
-                    <a className="btn btn-success me-2" href="/post-job">
-                        Post Job
-                    </a>
-
-                    <a className="btn btn-danger" href="/">
-                        Logout
-                    </a>
-                </div>
-
+                <a className="app-nav-link" href="/" onClick={clearSession}>
+                    Logout
+                </a>
             </div>
         </nav>
     );

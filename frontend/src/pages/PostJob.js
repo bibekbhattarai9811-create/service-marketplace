@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Navbar from '../components/Navbar';
 import { apiClient } from '../api';
 
 function PostJob() {
@@ -23,31 +24,74 @@ function PostJob() {
     };
 
     return (
-        <div style={{ padding: '40px', maxWidth: '400px', margin: 'auto' }}>
-            <h2>Post a Job</h2>
-            <input type="text" placeholder="Job Title" value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                style={{ display: 'block', width: '100%', marginBottom: '10px', padding: '8px' }}
-            />
-            <textarea placeholder="Job Description" value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                style={{ display: 'block', width: '100%', marginBottom: '10px', padding: '8px', height: '100px' }}
-            />
-            <input type="text" placeholder="Location" value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                style={{ display: 'block', width: '100%', marginBottom: '10px', padding: '8px' }}
-            />
-            <input type="number" placeholder="Price ($)" value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                style={{ display: 'block', width: '100%', marginBottom: '10px', padding: '8px' }}
-            />
-            <button onClick={handlePostJob}
-                style={{ padding: '10px 20px', backgroundColor: 'blue', color: 'white', border: 'none', cursor: 'pointer' }}
-            >
-                Post Job
-            </button>
-            <p>{message}</p>
-            <a href="/home">← Back to Home</a>
+        <div className="app-shell">
+            <Navbar />
+
+            <div className="page-wrap">
+                <div className="page-hero">
+                    <section className="hero-panel">
+                        <span className="hero-label">Create a request</span>
+                        <h1>Post a job with all the details a worker needs.</h1>
+                        <p>
+                            Clear descriptions, location details, and a fair budget help workers
+                            accept your request faster and reduce back-and-forth.
+                        </p>
+                    </section>
+
+                    <aside className="hero-side-panel">
+                        <h3>Before you publish</h3>
+                        <p>
+                            Include the exact task, where the work should happen, and the price
+                            you are offering so the right worker can respond quickly.
+                        </p>
+                        <a href="/home" className="ghost-button">Back to Home</a>
+                    </aside>
+                </div>
+
+                <section className="section-card form-card">
+                    <div className="section-header">
+                        <div>
+                            <h2>Post a Job</h2>
+                            <p className="section-subtitle">Fill in the job details below and publish it to the marketplace.</p>
+                        </div>
+                    </div>
+
+                    <div className="page-form">
+                        <input
+                            type="text"
+                            placeholder="Job Title"
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                        />
+                        <textarea
+                            placeholder="Job Description"
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                        />
+                        <input
+                            type="text"
+                            placeholder="Location"
+                            value={location}
+                            onChange={(e) => setLocation(e.target.value)}
+                        />
+                        <input
+                            type="number"
+                            placeholder="Price ($)"
+                            value={price}
+                            onChange={(e) => setPrice(e.target.value)}
+                        />
+
+                        <div className="helper-row">
+                            <button className="primary-button" onClick={handlePostJob}>
+                                Post Job
+                            </button>
+                            <a href="/home" className="ghost-button">Back to Home</a>
+                        </div>
+                    </div>
+
+                    {message && <p className="auth-message">{message}</p>}
+                </section>
+            </div>
         </div>
     );
 }

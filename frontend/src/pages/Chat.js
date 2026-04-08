@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { apiClient } from '../api';
 
 function Chat() {
@@ -52,66 +52,51 @@ function Chat() {
     };
 
     return (
-        <div style={{ padding: '40px', maxWidth: '600px', margin: 'auto' }}>
-            <h2>💬 Job Chat</h2>
-            <p style={{ color: '#666' }}>Job ID: {jobId}</p>
-            {role === 'customer' ? (
-                <a href="/customer-dashboard">← Back to Dashboard</a>
-            ) : (
-                <a href="/dashboard">← Back to Dashboard</a>
-            )}
-            <hr />
-            {message && <p style={{ color: 'red' }}>{message}</p>}
-
-            <div style={{
-                border: '1px solid #ccc',
-                borderRadius: '8px',
-                padding: '15px',
-                height: '400px',
-                overflowY: 'auto',
-                marginBottom: '15px',
-                backgroundColor: '#f9f9f9'
-            }}>
-                {messages.length === 0 ? (
-                    <p style={{ color: '#aaa', textAlign: 'center' }}>No messages yet. Start the conversation!</p>
-                ) : (
-                    messages.map(msg => (
-                        <div key={msg.id} style={{
-                            display: 'flex',
-                            justifyContent: msg.sender_id === parseInt(senderId) ? 'flex-end' : 'flex-start',
-                            marginBottom: '10px'
-                        }}>
-                            <div style={{
-                                backgroundColor: msg.sender_id === parseInt(senderId) ? '#007bff' : '#e0e0e0',
-                                color: msg.sender_id === parseInt(senderId) ? 'white' : 'black',
-                                padding: '10px 15px',
-                                borderRadius: '18px',
-                                maxWidth: '70%',
-                                wordWrap: 'break-word'
-                            }}>
-                                {msg.message}
-                            </div>
+        <div className="app-shell">
+            <div className="page-wrap">
+                <section className="chat-card">
+                    <div className="chat-header">
+                        <div>
+                            <span className="hero-label">Conversation</span>
+                            <h2>Job Chat</h2>
+                            <p className="section-subtitle">Job ID: {jobId}</p>
                         </div>
-                    ))
-                )}
-                <div ref={bottomRef} />
-            </div>
+                        <a href={role === 'customer' ? '/customer-dashboard' : '/dashboard'} className="ghost-button">
+                            Back to Dashboard
+                        </a>
+                    </div>
 
-            <div style={{ display: 'flex', gap: '10px' }}>
-                <input
-                    type="text"
-                    placeholder="Type a message..."
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    style={{ flex: 1, padding: '10px', borderRadius: '20px', border: '1px solid #ccc' }}
-                />
-                <button
-                    onClick={handleSend}
-                    style={{ padding: '10px 20px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '20px', cursor: 'pointer' }}
-                >
-                    Send ➤
-                </button>
+                    {message && <div className="message-banner error">{message}</div>}
+
+                    <div className="chat-thread">
+                        {messages.length === 0 ? (
+                            <div className="empty-state">No messages yet. Start the conversation.</div>
+                        ) : (
+                            messages.map((msg) => (
+                                <div
+                                    key={msg.id}
+                                    className={`chat-row ${msg.sender_id === parseInt(senderId, 10) ? 'mine' : 'theirs'}`}
+                                >
+                                    <div className="chat-bubble">{msg.message}</div>
+                                </div>
+                            ))
+                        )}
+                        <div ref={bottomRef} />
+                    </div>
+
+                    <div className="chat-compose">
+                        <input
+                            type="text"
+                            placeholder="Type a message..."
+                            value={newMessage}
+                            onChange={(e) => setNewMessage(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                        />
+                        <button className="secondary-button" onClick={handleSend}>
+                            Send
+                        </button>
+                    </div>
+                </section>
             </div>
         </div>
     );

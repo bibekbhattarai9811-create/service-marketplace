@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import Navbar from "../components/Navbar";
+import React, { useEffect, useState } from 'react';
+import Navbar from '../components/Navbar';
 import { apiClient } from '../api';
 
 function Home() {
@@ -22,42 +22,76 @@ function Home() {
     };
 
     return (
-        <>
+        <div className="app-shell">
             <Navbar />
 
-            <div className="container mt-4">
-                <h2 className="mb-4">Available Jobs</h2>
+            <div className="page-wrap">
+                <div className="page-hero">
+                    <section className="hero-panel">
+                        <span className="hero-label">Marketplace feed</span>
+                        <h1>Browse live jobs and jump into the work that fits you.</h1>
+                        <p>
+                            This is your central feed for open jobs. Customers can post work,
+                            and workers can quickly move into their dashboard to accept jobs
+                            and start earning.
+                        </p>
+                    </section>
 
-                <div className="mb-4">
-                    {role === 'customer' ? (
-                        <>
-                            <a href="/post-job" className="btn btn-primary me-2">Post a Job</a>
-                            <a href="/customer-dashboard" className="btn btn-outline-primary">My Dashboard</a>
-                        </>
-                    ) : (
-                        <a href="/dashboard" className="btn btn-outline-success">Worker Dashboard</a>
-                    )}
+                    <aside className="hero-side-panel">
+                        <h3>Quick actions</h3>
+                        <p>
+                            Keep the flow simple: browse jobs, post requests, and move into the
+                            right dashboard without bouncing around the app.
+                        </p>
+                        <div className="button-row">
+                            {role === 'customer' ? (
+                                <>
+                                    <a href="/post-job" className="primary-button">Post a Job</a>
+                                    <a href="/customer-dashboard" className="ghost-button">My Dashboard</a>
+                                </>
+                            ) : (
+                                <a href="/dashboard" className="secondary-button">Worker Dashboard</a>
+                            )}
+                        </div>
+                    </aside>
                 </div>
 
-                {message && <p>{message}</p>}
+                {message && <div className="message-banner error">{message}</div>}
 
-                {jobs.length === 0 ? (
-                    <p>No jobs available right now.</p>
-                ) : (
-                    jobs.map((job) => (
-                        <div key={job.id} className="card mb-3 shadow">
-                            <div className="card-body">
-                                <h5 className="card-title">{job.title}</h5>
-                                <p className="card-text">{job.description}</p>
-                                <p>📍 Location: {job.location}</p>
-                                <p>💰 Price: ${job.price}</p>
-                                <span className="badge bg-success">{job.status}</span>
-                            </div>
+                <section className="section-card">
+                    <div className="section-header">
+                        <div>
+                            <h2>Available Jobs</h2>
+                            <p className="section-subtitle">See which jobs are open right now across the marketplace.</p>
                         </div>
-                    ))
-                )}
+                    </div>
+
+                    {jobs.length === 0 ? (
+                        <div className="empty-state">No jobs available right now.</div>
+                    ) : (
+                        <div className="card-grid">
+                            {jobs.map((job) => (
+                                <article key={job.id} className="job-card">
+                                    <div className="job-card-header">
+                                        <div>
+                                            <h3>{job.title}</h3>
+                                            <p>{job.description}</p>
+                                        </div>
+                                        <span className={`status-badge status-${job.status.toLowerCase()}`}>
+                                            {job.status}
+                                        </span>
+                                    </div>
+                                    <div className="job-meta">
+                                        <span className="job-meta-chip">Location: {job.location}</span>
+                                        <span className="job-meta-chip">Price: ${job.price}</span>
+                                    </div>
+                                </article>
+                            ))}
+                        </div>
+                    )}
+                </section>
             </div>
-        </>
+        </div>
     );
 }
 

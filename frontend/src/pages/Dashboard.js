@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
-import { WS_API, apiClient, clearSession } from "../api";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import Navbar from "../components/Navbar";
+import { WS_API, apiClient } from "../api";
 
 function Dashboard() {
     const [jobs, setJobs] = useState([]);
@@ -69,7 +70,7 @@ function Dashboard() {
             fetchWorkerJobs();
             fetchEarnings();
         } catch (error) {
-            setMessage({ text: "Failed to accept job.", isError: true });
+            setMessage({ text: error.response?.data?.detail || "Failed to accept job.", isError: true });
         }
     };
 
@@ -81,14 +82,13 @@ function Dashboard() {
             setMessage({ text: "Job completed!", isError: false });
             fetchWorkerJobs();
             fetchEarnings();
+            fetchTransactions();
         } catch (error) {
-            setMessage({ text: "Failed to complete job.", isError: true });
+            setMessage({ text: error.response?.data?.detail || "Failed to complete job.", isError: true });
         }
     };
 
-    const chatLink = (job) => {
-        return "/chat?job_id=" + job.id + "&receiver_id=" + job.customer_id;
-    };
+    const chatLink = (job) => `/chat?job_id=${job.id}&receiver_id=${job.customer_id}`;
 
     useEffect(() => {
         fetchAvailableJobs();
@@ -105,13 +105,11 @@ function Dashboard() {
         const ws = new WebSocket(WS_API);
         wsRef.current = ws;
 
-        ws.onopen = () => console.log("WebSocket connected");
-
         ws.onmessage = (event) => {
             try {
                 const data = JSON.parse(event.data);
                 if (data.type === "new_job") {
-                    alert("New Job: " + data.title + " $" + data.price);
+                    setMessage({ text: `New job available: ${data.title} for $${data.price}`, isError: false });
                     fetchAvailableJobs();
                 }
             } catch (error) {
@@ -119,183 +117,188 @@ function Dashboard() {
             }
         };
 
-        ws.onerror = (error) => console.log("WebSocket error:", error);
-        ws.onclose = () => console.log("WebSocket disconnected");
-
         return () => {
             if (wsRef.current) wsRef.current.close();
             clearInterval(interval);
         };
     }, [fetchAvailableJobs, fetchWorkerJobs, fetchEarnings, fetchRating, fetchTransactions]);
 
+    const totalJobValue = transactions.reduce((sum, t) => sum + t.total_amount, 0);
+    const totalWorkerReceived = transactions.reduce((sum, t) => sum + t.worker_received, 0);
+    const totalFees = transactions.reduce((sum, t) => sum + t.platform_fee, 0);
+
     return (
-        <div style={{ padding: "40px", maxWidth: "900px", margin: "auto" }}>
-            <h2>Worker Dashboard</h2>
+        <div className="app-shell">
+            <Navbar />
 
-            <div style={{ marginBottom: "20px" }}>
-                <a href="/home" style={{ marginRight: "20px" }}>Home</a>
-                <a href="/" onClick={clearSession}>Logout</a>
-            </div>
+            <div className="page-wrap">
+                <div className="page-hero">
+                    <section className="hero-panel">
+                        <span className="hero-label">Worker dashboard</span>
+                        <h1>Manage your accepted jobs, earnings, and customer conversations.</h1>
+                        <p>
+                            Track what is available, what you have already accepted, and what has
+                            already been paid out to you from one dashboard.
+                        </p>
+                    </section>
 
-            {message.text && (
-                <p style={{ color: message.isError ? "red" : "green" }}>
-                    {message.text}
-                </p>
-            )}
-
-            {earnings && (
-                <div style={{
-                    border: "1px solid #ccc",
-                    padding: "20px",
-                    marginBottom: "20px",
-                    borderRadius: "8px",
-                    backgroundColor: "#f5f5f5"
-                }}>
-                    <h3>Worker Statistics</h3>
-                    <p>Completed Jobs: {earnings.completed_jobs}</p>
-                    <p>Total Earnings: ${earnings.total_earnings}</p>
-                    <p>Average Rating: {rating || 0}</p>
+                    <aside className="hero-side-panel">
+                        <h3>Today at a glance</h3>
+                        <p>
+                            Watch new jobs come in live, move accepted work to completed status,
+                            and keep an eye on your payment history.
+                        </p>
+                    </aside>
                 </div>
-            )}
 
-            <h3>Available Jobs</h3>
-            {jobs.length === 0 ? (
-                <p>No available jobs right now.</p>
-            ) : (
-                jobs.map((job) => (
-                    <div
-                        key={job.id}
-                        style={{
-                            border: "1px solid #ccc",
-                            padding: "20px",
-                            marginBottom: "10px",
-                            borderRadius: "8px"
-                        }}
-                    >
-                        <h3>{job.title}</h3>
-                        <p>{job.description}</p>
-                        <p>Location: {job.location}</p>
-                        <p>Price: ${job.price}</p>
-
-                        <button
-                            onClick={() => acceptJob(job.id)}
-                            style={{
-                                padding: "8px 16px",
-                                backgroundColor: "green",
-                                color: "white",
-                                border: "none",
-                                cursor: "pointer",
-                                borderRadius: "4px"
-                            }}
-                        >
-                            Accept Job
-                        </button>
+                {message.text && (
+                    <div className={`message-banner ${message.isError ? 'error' : 'success'}`}>
+                        {message.text}
                     </div>
-                ))
-            )}
+                )}
 
-            <h3 style={{ marginTop: "40px" }}>Your Jobs</h3>
-            {workerJobs.length === 0 ? (
-                <p>No accepted jobs.</p>
-            ) : (
-                workerJobs.map((job) => (
-                    <div
-                        key={job.id}
-                        style={{
-                            border: "1px solid #ccc",
-                            padding: "20px",
-                            marginBottom: "10px",
-                            borderRadius: "8px"
-                        }}
-                    >
-                        <h3>{job.title}</h3>
-                        <p>Status: {job.status}</p>
-                        <p>Price: ${job.price}</p>
-
-                        <a
-                            href={chatLink(job)}
-                            style={{
-                                display: "inline-block",
-                                marginBottom: "10px",
-                                padding: "6px 14px",
-                                backgroundColor: "#007bff",
-                                color: "white",
-                                borderRadius: "20px",
-                                textDecoration: "none",
-                                marginRight: "10px"
-                            }}
-                        >
-                            Chat with Customer
-                        </a>
-
-                        {job.status !== "COMPLETED" && (
-                            <button
-                                onClick={() => completeJob(job.id)}
-                                style={{
-                                    padding: "8px 16px",
-                                    backgroundColor: "blue",
-                                    color: "white",
-                                    border: "none",
-                                    cursor: "pointer",
-                                    borderRadius: "4px"
-                                }}
-                            >
-                                Complete Job
-                            </button>
-                        )}
+                <div className="stats-grid">
+                    <div className="stat-card">
+                        <span>Completed Jobs</span>
+                        <strong>{earnings?.completed_jobs || 0}</strong>
                     </div>
-                ))
-            )}
+                    <div className="stat-card">
+                        <span>Total Earnings</span>
+                        <strong>${earnings?.total_earnings || 0}</strong>
+                    </div>
+                    <div className="stat-card">
+                        <span>Average Rating</span>
+                        <strong>{rating || 0}</strong>
+                    </div>
+                </div>
 
-            {/* Payment History Section */}
-            <hr style={{ marginTop: "40px" }} />
-            <h3>💳 Payment History</h3>
-            {transactions.length === 0 ? (
-                <p style={{ color: "#888" }}>No payments received yet.</p>
-            ) : (
-                <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                    <thead>
-                        <tr style={{ backgroundColor: "#f0f0f0" }}>
-                            <th style={thStyle}>Job</th>
-                            <th style={thStyle}>Total Job Price</th>
-                            <th style={thStyle}>You Received</th>
-                            <th style={thStyle}>Platform Fee</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {transactions.map(t => (
-                            <tr key={t.payment_id} style={{ borderBottom: "1px solid #eee" }}>
-                                <td style={tdStyle}>{t.job_title}</td>
-                                <td style={tdStyle}>${t.total_amount}</td>
-                                <td style={{ ...tdStyle, color: "#28a745", fontWeight: "bold" }}>${t.worker_received}</td>
-                                <td style={{ ...tdStyle, color: "#dc3545" }}>${t.platform_fee}</td>
-                            </tr>
-                        ))}
-                    </tbody>
-                    <tfoot>
-                        <tr style={{ backgroundColor: "#f9f9f9", fontWeight: "bold" }}>
-                            <td style={tdStyle}>Total</td>
-                            <td style={tdStyle}>${transactions.reduce((sum, t) => sum + t.total_amount, 0)}</td>
-                            <td style={{ ...tdStyle, color: "#28a745" }}>${transactions.reduce((sum, t) => sum + t.worker_received, 0)}</td>
-                            <td style={{ ...tdStyle, color: "#dc3545" }}>${transactions.reduce((sum, t) => sum + t.platform_fee, 0)}</td>
-                        </tr>
-                    </tfoot>
-                </table>
-            )}
+                <section className="section-card">
+                    <div className="section-header">
+                        <div>
+                            <h2>Available Jobs</h2>
+                            <p className="section-subtitle">Open jobs you can accept right now.</p>
+                        </div>
+                    </div>
+
+                    {jobs.length === 0 ? (
+                        <div className="empty-state">No available jobs right now.</div>
+                    ) : (
+                        <div className="card-grid">
+                            {jobs.map((job) => (
+                                <article key={job.id} className="job-card">
+                                    <div className="job-card-header">
+                                        <div>
+                                            <h3>{job.title}</h3>
+                                            <p>{job.description}</p>
+                                        </div>
+                                        <span className={`status-badge status-${job.status.toLowerCase()}`}>{job.status}</span>
+                                    </div>
+                                    <div className="job-meta">
+                                        <span className="job-meta-chip">Location: {job.location}</span>
+                                        <span className="job-meta-chip">Price: ${job.price}</span>
+                                    </div>
+                                    <div className="button-row">
+                                        <button className="primary-button" onClick={() => acceptJob(job.id)}>
+                                            Accept Job
+                                        </button>
+                                    </div>
+                                </article>
+                            ))}
+                        </div>
+                    )}
+                </section>
+
+                <section className="section-card">
+                    <div className="section-header">
+                        <div>
+                            <h2>Your Jobs</h2>
+                            <p className="section-subtitle">Jobs you have already accepted and are managing.</p>
+                        </div>
+                    </div>
+
+                    {workerJobs.length === 0 ? (
+                        <div className="empty-state">No accepted jobs yet.</div>
+                    ) : (
+                        <div className="card-grid">
+                            {workerJobs.map((job) => (
+                                <article key={job.id} className="job-card">
+                                    <div className="job-card-header">
+                                        <div>
+                                            <h3>{job.title}</h3>
+                                            <p>Status: {job.status}</p>
+                                        </div>
+                                        <span className={`status-badge status-${job.status.toLowerCase()}`}>{job.status}</span>
+                                    </div>
+                                    <div className="job-meta">
+                                        <span className="job-meta-chip">Price: ${job.price}</span>
+                                    </div>
+                                    <div className="button-row">
+                                        <a href={chatLink(job)} className="secondary-button">Chat with Customer</a>
+                                        {job.status !== "COMPLETED" && (
+                                            <button className="primary-button" onClick={() => completeJob(job.id)}>
+                                                Complete Job
+                                            </button>
+                                        )}
+                                    </div>
+                                </article>
+                            ))}
+                        </div>
+                    )}
+                </section>
+
+                <section className="section-card">
+                    <div className="section-header">
+                        <div>
+                            <h2>Payment History</h2>
+                            <p className="section-subtitle">Track what customers paid and what you received.</p>
+                        </div>
+                    </div>
+
+                    <div className="summary-grid" style={{ marginBottom: '18px' }}>
+                        <div className="summary-card">
+                            <span>Total Job Value</span>
+                            <strong>${totalJobValue}</strong>
+                        </div>
+                        <div className="summary-card">
+                            <span>You Received</span>
+                            <strong>${totalWorkerReceived}</strong>
+                        </div>
+                        <div className="summary-card">
+                            <span>Platform Fees</span>
+                            <strong>${totalFees}</strong>
+                        </div>
+                    </div>
+
+                    {transactions.length === 0 ? (
+                        <div className="empty-state">No payments received yet.</div>
+                    ) : (
+                        <div className="table-wrap">
+                            <table className="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Job</th>
+                                        <th>Total Job Price</th>
+                                        <th>You Received</th>
+                                        <th>Platform Fee</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {transactions.map((t) => (
+                                        <tr key={t.payment_id}>
+                                            <td>{t.job_title}</td>
+                                            <td>${t.total_amount}</td>
+                                            <td className="table-positive">${t.worker_received}</td>
+                                            <td className="table-negative">${t.platform_fee}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </section>
+            </div>
         </div>
     );
 }
-
-const thStyle = {
-    padding: "10px",
-    textAlign: "left",
-    borderBottom: "2px solid #ddd",
-    fontSize: "14px"
-};
-
-const tdStyle = {
-    padding: "10px",
-    fontSize: "14px"
-};
 
 export default Dashboard;
