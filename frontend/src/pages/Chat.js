@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
-import { API } from '../api';
+import { apiClient } from '../api';
 
 function Chat() {
     const [messages, setMessages] = useState([]);
@@ -16,7 +15,7 @@ function Chat() {
 
     const fetchMessages = async () => {
         try {
-            const response = await axios.get(`${API}/jobs/chat/${jobId}`);
+            const response = await apiClient.get(`/jobs/chat/${jobId}`);
             setMessages(response.data);
         } catch (error) {
             setMessage('Failed to load messages.');
@@ -36,9 +35,11 @@ function Chat() {
     const handleSend = async () => {
         if (!newMessage.trim()) return;
         try {
-            await axios.post(
-                `${API}/jobs/send-message?job_id=${jobId}&sender_id=${senderId}&receiver_id=${receiverId}&message=${newMessage}`
-            );
+            await apiClient.post('/jobs/send-message', {
+                job_id: Number(jobId),
+                receiver_id: Number(receiverId),
+                message: newMessage,
+            });
             setNewMessage('');
             fetchMessages();
         } catch (error) {

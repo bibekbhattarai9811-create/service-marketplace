@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
-import { API } from '../api';
+import { apiClient } from '../api';
 
 function Login() {
     const [email, setEmail] = useState('');
@@ -9,14 +8,17 @@ function Login() {
 
     const handleLogin = async () => {
         try {
-            const response = await axios.post(
-                `${API}/login?email=${email}&password=${password}`
-            );
+            const response = await apiClient.post('/login', {
+                email,
+                password,
+            });
             const userId = response.data.user_id;
             const role = response.data.role;
+            const token = response.data.token;
             console.log("Login response:", response.data);
             localStorage.setItem('user_id', userId);
             localStorage.setItem('role', role);
+            localStorage.setItem('token', token);
             setMessage('Login successful! Redirecting...');
             setTimeout(() => {
                 if (role === 'customer') {
@@ -26,7 +28,7 @@ function Login() {
                 }
             }, 1000);
         } catch (error) {
-            setMessage('Login failed. Please try again.');
+            setMessage(error.response?.data?.detail || 'Login failed. Please try again.');
         }
     };
 

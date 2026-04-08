@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import axios from "axios";
-import { API, WS_API } from "../api";
+import { WS_API, apiClient, clearSession } from "../api";
 
 function Dashboard() {
     const [jobs, setJobs] = useState([]);
@@ -15,7 +14,7 @@ function Dashboard() {
 
     const fetchAvailableJobs = async () => {
         try {
-            const response = await axios.get(API + "/jobs/available-jobs");
+            const response = await apiClient.get("/jobs/available-jobs");
             setJobs(response.data);
         } catch (error) {
             setMessage({ text: "Failed to load jobs.", isError: true });
@@ -24,7 +23,7 @@ function Dashboard() {
 
     const fetchWorkerJobs = async () => {
         try {
-            const response = await axios.get(API + "/jobs/worker-jobs/" + userId);
+            const response = await apiClient.get("/jobs/worker-jobs/me");
             setWorkerJobs(response.data);
         } catch (error) {
             console.log("Load worker jobs error:", error);
@@ -34,7 +33,7 @@ function Dashboard() {
     const fetchEarnings = async () => {
         if (!userId) return;
         try {
-            const response = await axios.get(API + "/worker-earnings?worker_id=" + userId);
+            const response = await apiClient.get("/worker-earnings");
             setEarnings(response.data);
         } catch (error) {
             console.log("Failed to load earnings:", error);
@@ -43,7 +42,7 @@ function Dashboard() {
 
     const fetchRating = async () => {
         try {
-            const response = await axios.get(API + "/jobs/worker-rating/" + userId);
+            const response = await apiClient.get("/jobs/worker-rating/" + userId);
             setRating(response.data.average_rating);
         } catch (error) {
             console.log("Rating error:", error);
@@ -53,9 +52,8 @@ function Dashboard() {
     const fetchTransactions = async () => {
         if (!userId) return;
         try {
-            const response = await axios.get(API + "/transactions");
-            const myTransactions = response.data.filter(t => Number(t.worker_id) === userId);
-            setTransactions(myTransactions);
+            const response = await apiClient.get("/transactions");
+            setTransactions(response.data);
         } catch (error) {
             console.log("Failed to load transactions:", error);
         }
@@ -63,8 +61,8 @@ function Dashboard() {
 
     const acceptJob = async (jobId) => {
         try {
-            await axios.post(API + "/jobs/accept-job", null, {
-                params: { job_id: jobId, worker_id: userId },
+            await apiClient.post("/jobs/accept-job", null, {
+                params: { job_id: jobId },
             });
             setMessage({ text: "Job accepted successfully!", isError: false });
             fetchAvailableJobs();
@@ -77,7 +75,7 @@ function Dashboard() {
 
     const completeJob = async (jobId) => {
         try {
-            await axios.post(API + "/jobs/complete-job", null, {
+            await apiClient.post("/jobs/complete-job", null, {
                 params: { job_id: jobId },
             });
             setMessage({ text: "Job completed!", isError: false });
@@ -136,7 +134,7 @@ function Dashboard() {
 
             <div style={{ marginBottom: "20px" }}>
                 <a href="/home" style={{ marginRight: "20px" }}>Home</a>
-                <a href="/">Logout</a>
+                <a href="/" onClick={clearSession}>Logout</a>
             </div>
 
             {message.text && (

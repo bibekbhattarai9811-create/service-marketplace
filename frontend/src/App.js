@@ -5,7 +5,7 @@ import Register from './pages/Register';
 import Home from './pages/Home';
 import PostJob from './pages/PostJob';
 import Dashboard from './pages/Dashboard';
-import CustomerDashboard from './pages/CustomerDashboard';
+import CustomerDashboard from './pages/CustomerDashboardV2';
 import Chat from './pages/Chat';
 
 function App() {

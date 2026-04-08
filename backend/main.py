@@ -1,9 +1,10 @@
-from fastapi import FastAPI, WebSocket, Depends, HTTPException
+from fastapi import FastAPI, WebSocket, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
+from auth import get_current_user, require_role
 from database import engine, SessionLocal
-from models import Base, Job
+from models import Base, Job, Payment, User
 
 from routes import users
 from routes import jobs
@@ -92,46 +93,22 @@ async def websocket_endpoint(websocket: WebSocket):
         print("WebSocket disconnected")
 
 # -----------------------------
-# Complete Job
-# -----------------------------
-
-
-@app.post("/jobs/{job_id}/complete")
-def complete_job(job_id: int, db: Session = Depends(get_db)):
-    job = db.query(Job).filter(Job.id == job_id).first()
-    if not job:
-        raise HTTPException(status_code=404, detail="Job not found")
-    job.status = "COMPLETED"
-    db.commit()
-    db.refresh(job)
-    return {"message": "Job completed", "job_id": job.id, "status": job.status}
-
-# -----------------------------
-# Pay for Job
-# -----------------------------
-
-
-@app.post("/jobs/{job_id}/pay")
-def pay_job(job_id: int, db: Session = Depends(get_db)):
-    job = db.query(Job).filter(Job.id == job_id).first()
-    if not job:
-        raise HTTPException(status_code=404, detail="Job not found")
-    if job.status != "COMPLETED":
-        raise HTTPException(status_code=400, detail="Job not completed")
-    job.paid = True
-    db.commit()
-    db.refresh(job)
-    return {"message": "Payment successful", "job_id": job.id, "paid": job.paid}
-
-# -----------------------------
 # Transactions
 # -----------------------------
 
 
 @app.get("/transactions")
-def get_transactions(db: Session = Depends(get_db)):
-    from models import Payment
-    payments = db.query(Payment).all()
+def get_transactions(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    payments_query = db.query(Payment)
+    if current_user.role == "customer":
+        payments_query = payments_query.filter(Payment.customer_id == current_user.id)
+    elif current_user.role == "worker":
+        payments_query = payments_query.filter(Payment.worker_id == current_user.id)
+
+    payments = payments_query.all()
     result = []
     for p in payments:
         job = db.query(Job).filter(Job.id == p.job_id).first()
@@ -148,49 +125,20 @@ def get_transactions(db: Session = Depends(get_db)):
     return result
 
 # -----------------------------
-# Worker Jobs
-# -----------------------------
-
-
-@app.get("/worker-jobs")
-def worker_jobs(worker_id: int, db: Session = Depends(get_db)):
-    jobs = db.query(Job).filter(Job.worker_id == worker_id).all()
-    return jobs
-
-# -----------------------------
 # Worker Earnings
 # -----------------------------
 
 
 @app.get("/worker-earnings")
-def worker_earnings(worker_id: int, db: Session = Depends(get_db)):
-    from models import Payment
+def worker_earnings(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("worker")),
+):
     jobs = db.query(Job).filter(
-        Job.worker_id == worker_id,
+        Job.worker_id == current_user.id,
         Job.status == "COMPLETED"
     ).all()
-    payments = db.query(Payment).filter(Payment.worker_id == worker_id).all()
+    payments = db.query(Payment).filter(Payment.worker_id == current_user.id).all()
     total = sum(p.worker_amount for p in payments if p.worker_amount)
     return {"completed_jobs": len(jobs), "total_earnings": total}
 
-# -----------------------------
-# Rate Worker
-# -----------------------------
-
-
-@app.post("/jobs/{job_id}/rate")
-def rate_worker(job_id: int, rating: int, db: Session = Depends(get_db)):
-    job = db.query(Job).filter(Job.id == job_id).first()
-    if not job:
-        raise HTTPException(status_code=404, detail="Job not found")
-    if job.status != "COMPLETED":
-        raise HTTPException(status_code=400, detail="Job not completed")
-    if not job.paid:
-        raise HTTPException(status_code=400, detail="Job not paid")
-    if rating < 1 or rating > 5:
-        raise HTTPException(
-            status_code=400, detail="Rating must be between 1 and 5")
-    job.rating = rating
-    db.commit()
-    db.refresh(job)
-    return {"message": "Worker rated successfully", "job_id": job.id, "rating": job.rating}

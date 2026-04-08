@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
-import { API } from '../api';
+import { apiClient } from '../api';
 
 function PostJob() {
     const [title, setTitle] = useState('');
@@ -11,13 +10,15 @@ function PostJob() {
 
     const handlePostJob = async () => {
         try {
-            const customerId = localStorage.getItem('user_id');
-            const response = await axios.post(
-                API + '/jobs/create-job?title=' + title + '&description=' + description + '&location=' + location + '&price=' + price + '&customer_id=' + customerId
-            );
+            const response = await apiClient.post('/jobs/create-job', {
+                title,
+                description,
+                location,
+                price: Number(price),
+            });
             setMessage('Job posted successfully! Job ID: ' + response.data.job_id);
         } catch (error) {
-            setMessage('Failed to post job. Please try again.');
+            setMessage(error.response?.data?.detail || 'Failed to post job. Please try again.');
         }
     };
 

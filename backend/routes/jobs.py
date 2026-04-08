@@ -1,10 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 import json
 
+from auth import get_current_user, require_role
 from database import SessionLocal
-from models import Job, JobAcceptance, Rating, Notification, Payment, ChatMessage, User, Availability
+from models import Job, Rating, Notification, Payment, ChatMessage, User
 from connections import active_connections
 
 router = APIRouter()
@@ -21,13 +23,43 @@ def get_db():
         db.close()
 
 
+class CreateJobRequest(BaseModel):
+    title: str
+    description: str
+    location: str
+    price: int
+
+
+class PaymentRequest(BaseModel):
+    job_id: int
+
+
+class RatingRequest(BaseModel):
+    job_id: int
+    rating: int
+    review: str
+
+
+class ChatMessageRequest(BaseModel):
+    job_id: int
+    receiver_id: int
+    message: str
+
+
 @router.post("/complete-job")
-def complete_job(job_id: int, db: Session = Depends(get_db)):
+def complete_job(
+    job_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("worker")),
+):
 
     job = db.query(Job).filter(Job.id == job_id).first()
 
     if not job:
-        return {"message": "Job not found"}
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    if job.worker_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to complete this job")
 
     job.status = "COMPLETED"
 
@@ -44,20 +76,17 @@ def complete_job(job_id: int, db: Session = Depends(get_db)):
 # -------------------------
 @router.post("/create-job")
 async def create_job(
-    title: str,
-    description: str,
-    location: str,
-    price: str,
-    customer_id: int,
-    db: Session = Depends(get_db)
+    payload: CreateJobRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("customer")),
 ):
 
     new_job = Job(
-        title=title,
-        description=description,
-        location=location,
-        price=price,
-        customer_id=customer_id
+        title=payload.title.strip(),
+        description=payload.description.strip(),
+        location=payload.location.strip(),
+        price=payload.price,
+        customer_id=current_user.id
     )
 
     db.add(new_job)
@@ -66,9 +95,9 @@ async def create_job(
 
     notification = {
         "type": "new_job",
-        "title": title,
-        "location": location,
-        "price": price
+        "title": new_job.title,
+        "location": new_job.location,
+        "price": new_job.price
     }
 
     for connection in active_connections:
@@ -84,14 +113,21 @@ async def create_job(
 # Accept Job
 # -------------------------
 @router.post("/accept-job")
-def accept_job(job_id: int, worker_id: int, db: Session = Depends(get_db)):
+def accept_job(
+    job_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("worker")),
+):
 
     job = db.query(Job).filter(Job.id == job_id).first()
 
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
 
-    job.worker_id = worker_id
+    if job.status != "OPEN" or job.worker_id is not None:
+        raise HTTPException(status_code=400, detail="Job is no longer available")
+
+    job.worker_id = current_user.id
     job.status = "ACCEPTED"
 
     db.commit()
@@ -100,38 +136,8 @@ def accept_job(job_id: int, worker_id: int, db: Session = Depends(get_db)):
     return {
         "message": "Job accepted successfully",
         "job_status": job.status,
-        "worker_id": job.worker_id
+        "worker_id": job.worker_id,
     }
-
-
-# -------------------------
-# Update Job Status
-# -------------------------
-@router.post("/update-job-status")
-def update_job_status(job_id: int, status: str, db: Session = Depends(get_db)):
-
-    job = db.query(Job).filter(Job.id == job_id).first()
-
-    if not job:
-        raise HTTPException(status_code=404, detail="Job not found")
-
-    job.status = status
-
-    db.commit()
-    db.refresh(job)
-
-    return {
-        "message": "Job status updated",
-        "new_status": job.status
-    }
-
-
-# -------------------------
-# Get All Jobs
-# -------------------------
-@router.get("/jobs")
-def get_jobs(db: Session = Depends(get_db)):
-    return db.query(Job).all()
 
 
 # -------------------------
@@ -148,10 +154,13 @@ def get_available_jobs(db: Session = Depends(get_db)):
 # -------------------------
 # Worker Jobs
 # -------------------------
-@router.get("/worker-jobs/{worker_id}")
-def get_worker_jobs(worker_id: int, db: Session = Depends(get_db)):
+@router.get("/worker-jobs/me")
+def get_worker_jobs(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("worker")),
+):
 
-    jobs = db.query(Job).filter(Job.worker_id == worker_id).all()
+    jobs = db.query(Job).filter(Job.worker_id == current_user.id).all()
 
     return jobs
 
@@ -159,10 +168,13 @@ def get_worker_jobs(worker_id: int, db: Session = Depends(get_db)):
 # -------------------------
 # Customer Jobs
 # -------------------------
-@router.get("/customer-jobs/{customer_id}")
-def get_customer_jobs(customer_id: int, db: Session = Depends(get_db)):
+@router.get("/customer-jobs/me")
+def get_customer_jobs(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("customer")),
+):
 
-    jobs = db.query(Job).filter(Job.customer_id == customer_id).all()
+    jobs = db.query(Job).filter(Job.customer_id == current_user.id).all()
 
     return jobs
 
@@ -171,21 +183,40 @@ def get_customer_jobs(customer_id: int, db: Session = Depends(get_db)):
 # Rate Worker
 # -------------------------
 @router.post("/rate-worker")
-def rate_worker(worker_id: int, rating: int, review: str, db: Session = Depends(get_db)):
+def rate_worker(
+    payload: RatingRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("customer")),
+):
+    job = db.query(Job).filter(Job.id == payload.job_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    if job.customer_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to rate this job")
+    if job.status != "COMPLETED":
+        raise HTTPException(status_code=400, detail="Job not completed")
+    if not job.paid:
+        raise HTTPException(status_code=400, detail="Job not paid")
+    if payload.rating < 1 or payload.rating > 5:
+        raise HTTPException(status_code=400, detail="Rating must be between 1 and 5")
+    if job.rating is not None:
+        raise HTTPException(status_code=400, detail="Job has already been rated")
 
     new_rating = Rating(
-        worker_id=worker_id,
-        rating=rating,
-        review=review
+        worker_id=job.worker_id,
+        rating=payload.rating,
+        review=payload.review.strip()
     )
 
     db.add(new_rating)
+    job.rating = payload.rating
     db.commit()
     db.refresh(new_rating)
 
     return {
         "message": "Worker rated successfully",
-        "rating_id": new_rating.id
+        "rating_id": new_rating.id,
+        "rating": job.rating,
     }
 
 
@@ -212,13 +243,24 @@ def get_worker_rating(worker_id: int, db: Session = Depends(get_db)):
 # Send Chat Message
 # -------------------------
 @router.post("/send-message")
-def send_message(job_id: int, sender_id: int, receiver_id: int, message: str, db: Session = Depends(get_db)):
+def send_message(
+    payload: ChatMessageRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    job = db.query(Job).filter(Job.id == payload.job_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    allowed_ids = {job.customer_id, job.worker_id}
+    if current_user.id not in allowed_ids or payload.receiver_id not in allowed_ids:
+        raise HTTPException(status_code=403, detail="Not authorized to chat on this job")
 
     chat = ChatMessage(
-        job_id=job_id,
-        sender_id=sender_id,
-        receiver_id=receiver_id,
-        message=message
+        job_id=payload.job_id,
+        sender_id=current_user.id,
+        receiver_id=payload.receiver_id,
+        message=payload.message.strip()
     )
 
     db.add(chat)
@@ -235,7 +277,16 @@ def send_message(job_id: int, sender_id: int, receiver_id: int, message: str, db
 # Get Chat
 # -------------------------
 @router.get("/chat/{job_id}")
-def get_chat(job_id: int, db: Session = Depends(get_db)):
+def get_chat(
+    job_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    job = db.query(Job).filter(Job.id == job_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    if current_user.id not in {job.customer_id, job.worker_id}:
+        raise HTTPException(status_code=403, detail="Not authorized to view this chat")
 
     messages = db.query(ChatMessage).filter(
         ChatMessage.job_id == job_id
@@ -257,15 +308,32 @@ def get_notifications(db: Session = Depends(get_db)):
 # Payment
 # -------------------------
 @router.post("/pay")
-def make_payment(job_id: int, customer_id: int, worker_id: int, amount: int, db: Session = Depends(get_db)):
+def make_payment(
+    payload: PaymentRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("customer")),
+):
+    job = db.query(Job).filter(Job.id == payload.job_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    if job.customer_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to pay for this job")
+    if job.status != "COMPLETED":
+        raise HTTPException(status_code=400, detail="Job must be completed before payment")
+    if not job.worker_id:
+        raise HTTPException(status_code=400, detail="Job has no assigned worker")
+    if job.paid:
+        raise HTTPException(status_code=400, detail="Job has already been paid")
+
+    amount = int(job.price)
 
     platform_fee = int(amount * 0.10)
     worker_amount = amount - platform_fee
 
     payment = Payment(
-        job_id=job_id,
-        customer_id=customer_id,
-        worker_id=worker_id,
+        job_id=job.id,
+        customer_id=current_user.id,
+        worker_id=job.worker_id,
         amount=amount,
         platform_fee=platform_fee,
         worker_amount=worker_amount,
@@ -273,6 +341,7 @@ def make_payment(job_id: int, customer_id: int, worker_id: int, amount: int, db:
     )
 
     db.add(payment)
+    job.paid = True
     db.commit()
     db.refresh(payment)
 
@@ -288,14 +357,18 @@ def make_payment(job_id: int, customer_id: int, worker_id: int, amount: int, db:
 
 
 @router.post("/cancel-job")
-def cancel_job(job_id: int, customer_id: int, db: Session = Depends(get_db)):
+def cancel_job(
+    job_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("customer")),
+):
 
     job = db.query(Job).filter(Job.id == job_id).first()
 
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
 
-    if job.customer_id != customer_id:
+    if job.customer_id != current_user.id:
         raise HTTPException(
             status_code=403, detail="Not authorized to cancel this job")
 

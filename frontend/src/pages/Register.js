@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
-import { API } from '../api';
+import { apiClient } from '../api';
 
 function Register() {
     const [name, setName] = useState('');
@@ -12,12 +11,16 @@ function Register() {
 
     const handleRegister = async () => {
         try {
-            const response = await axios.post(
-                `${API}/register?name=${name}&email=${email}&phone=${phone}&role=${role}&password=${password}`
-            );
+            const response = await apiClient.post('/register', {
+                name,
+                email,
+                phone,
+                role,
+                password,
+            });
             setMessage('Registration successful! User ID: ' + response.data.user_id);
         } catch (error) {
-            setMessage('Registration failed. Please try again.');
+            setMessage(error.response?.data?.detail || 'Registration failed. Please try again.');
         }
     };
 
