@@ -324,6 +324,11 @@ def make_payment(
         raise HTTPException(status_code=400, detail="Job has no assigned worker")
     if job.paid:
         raise HTTPException(status_code=400, detail="Job has already been paid")
+    existing_payment = db.query(Payment).filter(Payment.job_id == job.id).first()
+    if existing_payment:
+        job.paid = True
+        db.commit()
+        raise HTTPException(status_code=400, detail="Job already has a payment record")
 
     amount = int(job.price)
 
