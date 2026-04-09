@@ -25,6 +25,8 @@ function Login() {
             setTimeout(() => {
                 if (role === 'customer') {
                     navigate('/customer-dashboard');
+                } else if (role === 'admin') {
+                    navigate('/admin');
                 } else {
                     navigate('/dashboard');
                 }

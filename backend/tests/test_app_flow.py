@@ -222,3 +222,49 @@ def test_rating_flow_after_payment(client):
     )
     assert worker_rating_response.status_code == 200
     assert worker_rating_response.json()["average_rating"] == 5.0
+
+
+def test_profile_update_and_admin_summary(client):
+    register_user(
+        client,
+        name="Admin",
+        email="admin@test.com",
+        role="admin",
+    )
+    register_user(
+        client,
+        name="Worker",
+        email="worker@test.com",
+        role="worker",
+    )
+
+    admin_login = login_user(client, email="admin@test.com")
+    worker_login = login_user(client, email="worker@test.com")
+
+    update_profile_response = client.put(
+        "/me",
+        json={
+            "bio": "Licensed electrician",
+            "city": "Chicago",
+            "skills": "electrical, wiring",
+            "hourly_rate": 80,
+        },
+        headers=auth_headers(worker_login["token"]),
+    )
+    assert update_profile_response.status_code == 200
+
+    get_profile_response = client.get(
+        "/me",
+        headers=auth_headers(worker_login["token"]),
+    )
+    assert get_profile_response.status_code == 200
+    assert get_profile_response.json()["city"] == "Chicago"
+    assert get_profile_response.json()["hourly_rate"] == 80
+
+    admin_summary_response = client.get(
+        "/jobs/admin/summary",
+        headers=auth_headers(admin_login["token"]),
+    )
+    assert admin_summary_response.status_code == 200
+    assert admin_summary_response.json()["summary"]["admins"] == 1
+    assert admin_summary_response.json()["summary"]["workers"] == 1

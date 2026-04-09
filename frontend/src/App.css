@@ -385,6 +385,10 @@
   margin-bottom: 28px;
 }
 
+.admin-stats-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .summary-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
@@ -726,5 +730,111 @@
 
   .chat-thread {
     height: 360px;
+  }
+}
+
+@media (max-width: 720px) {
+  .auth-showcase {
+    padding: 24px 18px 8px;
+  }
+
+  .auth-copy h1,
+  .hero-panel h1 {
+    font-size: clamp(2rem, 10vw, 3rem);
+  }
+
+  .auth-card,
+  .hero-panel,
+  .hero-side-panel,
+  .section-card,
+  .job-card,
+  .summary-card,
+  .stat-card,
+  .chat-card {
+    border-radius: 22px;
+    padding: 20px;
+  }
+
+  .page-wrap {
+    width: calc(100% - 18px);
+    padding: 16px 0 44px;
+  }
+
+  .button-row,
+  .helper-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .primary-button,
+  .secondary-button,
+  .ghost-button,
+  .danger-button,
+  .app-nav-link {
+    width: 100%;
+    text-align: center;
+  }
+
+  .job-card-header,
+  .section-header,
+  .chat-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .job-meta {
+    gap: 8px;
+  }
+
+  .job-meta-chip,
+  .status-badge {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 12px 8px;
+    font-size: 0.9rem;
+  }
+
+  .chat-bubble {
+    max-width: 88%;
+  }
+}
+
+@media (max-width: 560px) {
+  .app-topbar {
+    padding: 14px;
+    gap: 12px;
+  }
+
+  .app-nav {
+    width: 100%;
+    gap: 8px;
+  }
+
+  .auth-feature-card,
+  .job-card,
+  .section-card,
+  .summary-card,
+  .stat-card,
+  .chat-card {
+    padding: 16px;
+  }
+
+  .auth-form input,
+  .auth-form select,
+  .page-form input,
+  .page-form textarea,
+  .page-form select,
+  .chat-compose input {
+    padding: 12px 14px;
+    font-size: 0.96rem;
+  }
+
+  .chat-thread {
+    height: 300px;
+    padding: 12px;
   }
 }

@@ -13,3 +13,5 @@ test.db-journal
 frontend/build/
 frontend/build-*/
 coverage/
+.pytest_cache/
+pytest-cache-files-*/

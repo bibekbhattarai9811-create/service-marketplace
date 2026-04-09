@@ -8,9 +8,14 @@ import PostJob from './pages/PostJob';
 import Dashboard from './pages/Dashboard';
 import CustomerDashboard from './pages/CustomerDashboardV2';
 import Chat from './pages/Chat';
+import Profile from './pages/Profile';
+import AdminAnalytics from './pages/AdminAnalytics';
 
 function getDefaultRoute() {
-  return localStorage.getItem('role') === 'worker' ? '/dashboard' : '/customer-dashboard';
+  const role = localStorage.getItem('role');
+  if (role === 'worker') return '/dashboard';
+  if (role === 'admin') return '/admin';
+  return '/customer-dashboard';
 }
 
 function ProtectedRoute({ children, allowedRoles }) {
@@ -58,6 +63,11 @@ function App() {
           element={<ProtectedRoute allowedRoles={['customer']}><CustomerDashboard /></ProtectedRoute>}
         />
         <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        <Route
+          path="/admin"
+          element={<ProtectedRoute allowedRoles={['admin']}><AdminAnalytics /></ProtectedRoute>}
+        />
       </Routes>
     </Router>
   );

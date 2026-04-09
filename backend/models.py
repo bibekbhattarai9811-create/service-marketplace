@@ -16,6 +16,17 @@ class User(Base):
     password = Column(String)
 
 
+class UserProfile(Base):
+    __tablename__ = "user_profiles"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, unique=True, index=True)
+    bio = Column(String, default="")
+    city = Column(String, default="")
+    skills = Column(String, default="")
+    hourly_rate = Column(Integer, nullable=True)
+
+
 # ---------------------------
 # Job Table
 # ---------------------------

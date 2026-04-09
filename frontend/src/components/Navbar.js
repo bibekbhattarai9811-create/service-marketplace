@@ -16,6 +16,9 @@ function Navbar() {
                 <Link className="app-nav-link" to="/home">
                     Home
                 </Link>
+                <Link className="app-nav-link" to="/profile">
+                    Profile
+                </Link>
 
                 {role === "customer" ? (
                     <>
@@ -26,6 +29,10 @@ function Navbar() {
                             Post Job
                         </Link>
                     </>
+                ) : role === "admin" ? (
+                    <Link className="app-nav-link app-nav-link-primary" to="/admin">
+                        Admin Analytics
+                    </Link>
                 ) : (
                     <Link className="app-nav-link" to="/dashboard">
                         Worker Dashboard

@@ -50,6 +50,8 @@ function Home() {
                                     <Link to="/post-job" className="primary-button">Post a Job</Link>
                                     <Link to="/customer-dashboard" className="ghost-button">My Dashboard</Link>
                                 </>
+                            ) : role === 'admin' ? (
+                                <Link to="/admin" className="primary-button">Admin Analytics</Link>
                             ) : (
                                 <Link to="/dashboard" className="secondary-button">Worker Dashboard</Link>
                             )}

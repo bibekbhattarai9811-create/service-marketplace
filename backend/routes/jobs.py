@@ -6,7 +6,7 @@ import json
 
 from auth import get_current_user, require_role
 from database import SessionLocal
-from models import Job, Rating, Notification, Payment, ChatMessage, User
+from models import Job, Rating, Notification, Payment, ChatMessage, User, UserProfile
 from connections import active_connections
 
 router = APIRouter()
@@ -416,4 +416,91 @@ def platform_summary(db: Session = Depends(get_db)):
         "total_jobs": total_jobs,
         "completed_jobs": completed_jobs,
         "platform_revenue": revenue
+    }
+
+
+@router.get("/admin/summary")
+def admin_summary(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("admin")),
+):
+    total_users = db.query(func.count(User.id)).scalar() or 0
+    total_jobs = db.query(func.count(Job.id)).scalar() or 0
+    open_jobs = db.query(func.count(Job.id)).filter(Job.status == "OPEN").scalar() or 0
+    accepted_jobs = db.query(func.count(Job.id)).filter(Job.status == "ACCEPTED").scalar() or 0
+    completed_jobs = db.query(func.count(Job.id)).filter(Job.status == "COMPLETED").scalar() or 0
+    cancelled_jobs = db.query(func.count(Job.id)).filter(Job.status == "CANCELLED").scalar() or 0
+    platform_revenue = db.query(func.sum(Payment.platform_fee)).scalar() or 0
+    total_payments = db.query(func.sum(Payment.amount)).scalar() or 0
+
+    users = db.query(User).all()
+    workers = [user for user in users if user.role == "worker"]
+    profiles = {
+        profile.user_id: profile
+        for profile in db.query(UserProfile).filter(
+            UserProfile.user_id.in_([worker.id for worker in workers] or [0])
+        ).all()
+    }
+
+    top_workers = []
+    for worker in workers:
+        avg_rating = db.query(func.avg(Rating.rating)).filter(Rating.worker_id == worker.id).scalar() or 0
+        completed_count = db.query(func.count(Job.id)).filter(
+            Job.worker_id == worker.id,
+            Job.status == "COMPLETED",
+        ).scalar() or 0
+        worker_payments = db.query(func.sum(Payment.worker_amount)).filter(
+            Payment.worker_id == worker.id
+        ).scalar() or 0
+        profile = profiles.get(worker.id)
+        top_workers.append({
+            "id": worker.id,
+            "name": worker.name,
+            "email": worker.email,
+            "city": profile.city if profile else "",
+            "skills": profile.skills if profile else "",
+            "hourly_rate": profile.hourly_rate if profile else None,
+            "average_rating": round(avg_rating, 2),
+            "completed_jobs": completed_count,
+            "total_earnings": worker_payments,
+        })
+
+    top_workers.sort(
+        key=lambda worker: (
+            worker["completed_jobs"],
+            worker["average_rating"],
+            worker["total_earnings"],
+        ),
+        reverse=True,
+    )
+
+    recent_jobs = db.query(Job).order_by(Job.id.desc()).limit(8).all()
+
+    return {
+        "summary": {
+            "total_users": total_users,
+            "total_jobs": total_jobs,
+            "open_jobs": open_jobs,
+            "accepted_jobs": accepted_jobs,
+            "completed_jobs": completed_jobs,
+            "cancelled_jobs": cancelled_jobs,
+            "platform_revenue": platform_revenue,
+            "total_payments": total_payments,
+            "customers": len([user for user in users if user.role == "customer"]),
+            "workers": len(workers),
+            "admins": len([user for user in users if user.role == "admin"]),
+        },
+        "top_workers": top_workers[:5],
+        "recent_jobs": [
+            {
+                "id": job.id,
+                "title": job.title,
+                "status": job.status,
+                "price": job.price,
+                "location": job.location,
+                "customer_id": job.customer_id,
+                "worker_id": job.worker_id,
+            }
+            for job in recent_jobs
+        ],
     }
