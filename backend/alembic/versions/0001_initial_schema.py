@@ -36,7 +36,6 @@ def upgrade() -> None:
         sa.Column("city", sa.String(), nullable=True),
         sa.Column("skills", sa.String(), nullable=True),
         sa.Column("hourly_rate", sa.Integer(), nullable=True),
-        sa.Column("avatar_url", sa.String(), nullable=True),
     )
     op.create_index("ix_user_profiles_id", "user_profiles", ["id"], unique=False)
     op.create_index("ix_user_profiles_user_id", "user_profiles", ["user_id"], unique=True)
