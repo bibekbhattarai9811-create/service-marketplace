@@ -20,6 +20,7 @@ jest.mock(
       BrowserRouter: ({ children }) => <div>{children}</div>,
       Routes: ({ children }) => React.Children.toArray(children)[0] ?? null,
       Route: ({ element }) => element,
+      Navigate: () => <div>redirected</div>,
       Link: ({ children, to, ...props }) => <a href={to} {...props}>{children}</a>,
       useNavigate: () => navigate,
     };

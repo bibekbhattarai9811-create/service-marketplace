@@ -1,70 +1,131 @@
-# Getting Started with Create React App
+# Service Marketplace Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This frontend is the customer and worker web app for the Service Marketplace project.
 
-## Available Scripts
+## Main Features
 
-In the project directory, you can run:
+- customer registration and login
+- worker registration and login
+- job posting
+- worker dashboard for accepting and completing jobs
+- customer dashboard for payments and ratings
+- in-app chat
+- token-based API requests
 
-### `npm start`
+## Local Development
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### 1. Install dependencies
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+```bash
+npm install
+```
 
-### `npm test`
+### 2. Configure environment variables
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Create a `.env` file inside `frontend` if you want to point the app at a specific backend.
 
-### `npm run build`
+Example:
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```env
+REACT_APP_API_URL=http://127.0.0.1:8000
+REACT_APP_WS_URL=ws://127.0.0.1:8000/ws
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+If you do not set them, the app defaults to `http://127.0.0.1:8000`.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### 3. Start the frontend
 
-### `npm run eject`
+```bash
+npm start
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+Open:
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+- [http://127.0.0.1:3000](http://127.0.0.1:3000)
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## Tests
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+Run frontend tests:
 
-## Learn More
+```bash
+npm test -- --watchAll=false --runInBand
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## Production Build
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+Build for production:
 
-### Code Splitting
+```bash
+npm run build
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+If Windows or OneDrive blocks writes to the local `build` folder, use a temp build path:
 
-### Analyzing the Bundle Size
+```powershell
+$env:BUILD_PATH = "$env:TEMP\service-marketplace-build"
+npm run build
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## Render Deployment
 
-### Making a Progressive Web App
+This frontend is deployed as a Render Static Site.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+### Render settings
 
-### Advanced Configuration
+- Root Directory: `frontend`
+- Build Command: `npm install && npm run build`
+- Publish Directory: `build`
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+### Required environment variables
 
-### Deployment
+Set these in the frontend Render service:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+```env
+REACT_APP_API_URL=https://service-marketplace-16.onrender.com
+REACT_APP_WS_URL=wss://service-marketplace-16.onrender.com/ws
+```
 
-### `npm run build` fails to minify
+Important:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- do not add a trailing `/` to `REACT_APP_API_URL`
+- after changing Render environment variables, use `Clear build cache & deploy`
+
+### SPA routing
+
+This project includes `public/_redirects`:
+
+```txt
+/* /index.html 200
+```
+
+That is needed so routes like `/register`, `/dashboard`, and `/chat` work on the deployed static site.
+
+## Frontend Routes
+
+- `/` -> login
+- `/register` -> register
+- `/home` -> available jobs
+- `/post-job` -> post a job
+- `/dashboard` -> worker dashboard
+- `/customer-dashboard` -> customer dashboard
+- `/chat` -> job chat
+
+## Access Rules
+
+- guests can only use `/` and `/register`
+- customers can use `/post-job` and `/customer-dashboard`
+- workers can use `/dashboard`
+- authenticated users can use `/home` and `/chat`
+
+## Manual Smoke Test
+
+1. Register a customer
+2. Log in as customer
+3. Post a job
+4. Log in as worker
+5. Accept the job
+6. Complete the job
+7. Return to customer
+8. Pay for the job
+9. Submit a rating
+10. Check chat
