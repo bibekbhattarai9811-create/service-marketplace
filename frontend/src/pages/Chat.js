@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { apiClient } from '../api';
+import { apiClient, WS_API } from '../api';
 
 function Chat() {
     const [messages, setMessages] = useState([]);
@@ -11,6 +11,7 @@ function Chat() {
     const receiverId = new URLSearchParams(window.location.search).get('receiver_id');
     const senderId = localStorage.getItem('user_id');
     const role = localStorage.getItem('role');
+    const token = localStorage.getItem('token');
 
     const bottomRef = useRef(null);
 
@@ -25,9 +26,36 @@ function Chat() {
 
     useEffect(() => {
         fetchMessages();
-        const interval = setInterval(fetchMessages, 3000);
-        return () => clearInterval(interval);
     }, [fetchMessages]);
+
+    useEffect(() => {
+        if (!token) {
+            return undefined;
+        }
+
+        const socket = new WebSocket(`${WS_API}?token=${encodeURIComponent(token)}`);
+
+        socket.onmessage = (event) => {
+            try {
+                const payload = JSON.parse(event.data);
+                if (payload.type !== 'chat_message' || String(payload.job_id) !== String(jobId)) {
+                    return;
+                }
+
+                setMessages((current) => {
+                    const exists = current.some((item) => item.id === payload.id);
+                    if (exists) {
+                        return current;
+                    }
+                    return [...current, payload];
+                });
+            } catch (error) {
+                // Ignore malformed live events and keep the chat usable.
+            }
+        };
+
+        return () => socket.close();
+    }, [jobId, token]);
 
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -42,7 +70,6 @@ function Chat() {
                 message: newMessage,
             });
             setNewMessage('');
-            fetchMessages();
         } catch (error) {
             setMessage('Failed to send message.');
         }

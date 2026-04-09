@@ -25,6 +25,7 @@ class UserProfile(Base):
     city = Column(String, default="")
     skills = Column(String, default="")
     hourly_rate = Column(Integer, nullable=True)
+    avatar_url = Column(String, default="")
 
 
 # ---------------------------

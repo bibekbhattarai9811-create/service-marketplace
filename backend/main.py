@@ -1,14 +1,18 @@
-from fastapi import FastAPI, WebSocket, Depends
+from pathlib import Path
+
+from fastapi import FastAPI, WebSocket, Depends, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 
 from auth import get_current_user, require_role
 from database import engine, SessionLocal
 from models import Base, Job, Payment, User
+from security import decode_access_token
 
 from routes import users
 from routes import jobs
-from connections import active_connections
+from connections import add_connection, remove_connection
 
 # -----------------------------
 # Create FastAPI App
@@ -43,6 +47,9 @@ app.add_middleware(
 # Reset & Create Tables
 # -----------------------------
 Base.metadata.create_all(bind=engine)
+UPLOADS_DIR = Path(__file__).resolve().parent / "uploads"
+UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=UPLOADS_DIR), name="uploads")
 
 # -----------------------------
 # Include Routers
@@ -79,18 +86,31 @@ def debug(db: Session = Depends(get_db)):
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
+    token = websocket.query_params.get("token", "").strip()
+    if not token:
+        await websocket.close(code=4401)
+        return
+
+    try:
+        payload = decode_access_token(token)
+        user_id = int(payload["user_id"])
+    except Exception:
+        await websocket.close(code=4401)
+        return
+
     await websocket.accept()
-    active_connections.append(websocket)
-    print("WebSocket connected")
+    add_connection(user_id, websocket)
+    print("WebSocket connected", user_id)
     try:
         while True:
             await websocket.receive_text()
+    except WebSocketDisconnect:
+        pass
     except Exception as e:
         print("WebSocket error:", e)
     finally:
-        if websocket in active_connections:
-            active_connections.remove(websocket)
-        print("WebSocket disconnected")
+        remove_connection(user_id, websocket)
+        print("WebSocket disconnected", user_id)
 
 # -----------------------------
 # Transactions

@@ -1,5 +1,6 @@
 from pathlib import Path
 import sys
+import os
 
 import pytest
 from fastapi.testclient import TestClient
@@ -11,6 +12,8 @@ from sqlalchemy.pool import StaticPool
 BACKEND_DIR = Path(__file__).resolve().parents[1]
 if str(BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(BACKEND_DIR))
+
+os.environ["SERVICE_MARKETPLACE_ADMIN_SIGNUP_SECRET"] = "test-admin-secret"
 
 import main  # noqa: E402
 from auth import get_db as auth_get_db  # noqa: E402
@@ -49,15 +52,19 @@ def client():
 
 
 def register_user(client, *, name, email, role):
+    payload = {
+        "name": name,
+        "email": email,
+        "phone": "1234567890",
+        "role": role,
+        "password": "1234",
+    }
+    if role == "admin":
+        payload["admin_secret"] = "test-admin-secret"
+
     response = client.post(
         "/register",
-        json={
-            "name": name,
-            "email": email,
-            "phone": "1234567890",
-            "role": role,
-            "password": "1234",
-        },
+        json=payload,
     )
     assert response.status_code == 200
     return response.json()

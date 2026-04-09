@@ -10,6 +10,7 @@ function Profile() {
         skills: '',
         hourly_rate: '',
     });
+    const [avatarFile, setAvatarFile] = useState(null);
     const [message, setMessage] = useState('');
     const [messageIsError, setMessageIsError] = useState(false);
 
@@ -57,6 +58,29 @@ function Profile() {
         }
     };
 
+    const handleAvatarUpload = async () => {
+        if (!avatarFile) {
+            setMessageIsError(true);
+            setMessage('Choose an image before uploading.');
+            return;
+        }
+
+        try {
+            const formData = new FormData();
+            formData.append('file', avatarFile);
+            await apiClient.post('/me/avatar', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            });
+            setAvatarFile(null);
+            setMessageIsError(false);
+            setMessage('Avatar uploaded successfully.');
+            fetchProfile();
+        } catch (error) {
+            setMessageIsError(true);
+            setMessage(error.response?.data?.detail || 'Failed to upload avatar.');
+        }
+    };
+
     return (
         <div className="app-shell">
             <Navbar />
@@ -99,6 +123,23 @@ function Profile() {
                     </div>
 
                     <div className="page-form">
+                        {profile?.avatar_url && (
+                            <img
+                                src={`${apiClient.defaults.baseURL}${profile.avatar_url}`}
+                                alt={`${profile.name} avatar`}
+                                className="profile-avatar"
+                            />
+                        )}
+                        <div className="compact-form">
+                            <input
+                                type="file"
+                                accept=".png,.jpg,.jpeg,.webp"
+                                onChange={(e) => setAvatarFile(e.target.files?.[0] || null)}
+                            />
+                            <button type="button" className="ghost-button" onClick={handleAvatarUpload}>
+                                Upload Avatar
+                            </button>
+                        </div>
                         <input type="text" value={profile?.name || ''} disabled placeholder="Name" />
                         <input type="text" value={profile?.email || ''} disabled placeholder="Email" />
                         <input type="text" value={profile?.phone || ''} disabled placeholder="Phone" />

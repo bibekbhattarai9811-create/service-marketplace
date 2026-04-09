@@ -608,6 +608,13 @@
   gap: 14px;
 }
 
+.compact-form {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
 .page-form input,
 .page-form textarea,
 .page-form select {
@@ -630,6 +637,15 @@
   outline: none;
   border-color: #f97316;
   box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.12);
+}
+
+.profile-avatar {
+  width: 108px;
+  height: 108px;
+  border-radius: 28px;
+  object-fit: cover;
+  border: 3px solid rgba(249, 115, 22, 0.18);
+  box-shadow: 0 18px 34px rgba(15, 23, 42, 0.12);
 }
 
 .helper-row {
@@ -712,7 +728,9 @@
   .page-hero,
   .summary-grid,
   .stats-grid,
+  .admin-stats-grid,
   .card-grid,
+  .compact-form,
   .chat-compose {
     grid-template-columns: 1fr;
   }

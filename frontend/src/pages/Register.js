@@ -8,6 +8,7 @@ function Register() {
     const [phone, setPhone] = useState('');
     const [role, setRole] = useState('customer');
     const [password, setPassword] = useState('');
+    const [adminSecret, setAdminSecret] = useState('');
     const [message, setMessage] = useState('');
 
     const handleRegister = async () => {
@@ -18,6 +19,7 @@ function Register() {
                 phone,
                 role,
                 password,
+                admin_secret: role === 'admin' ? adminSecret : null,
             });
             setMessage('Registration successful! User ID: ' + response.data.user_id);
         } catch (error) {
@@ -93,6 +95,14 @@ function Register() {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                         />
+                        {role === 'admin' && (
+                            <input
+                                type="password"
+                                placeholder="Admin Secret"
+                                value={adminSecret}
+                                onChange={(e) => setAdminSecret(e.target.value)}
+                            />
+                        )}
                         <button className="auth-button" onClick={handleRegister}>
                             Register
                         </button>

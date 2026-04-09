@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { apiClient } from '../api';
@@ -6,21 +6,35 @@ import { apiClient } from '../api';
 function Home() {
     const [jobs, setJobs] = useState([]);
     const [message, setMessage] = useState('');
+    const [filters, setFilters] = useState({
+        search: '',
+        location: '',
+        minPrice: '',
+        maxPrice: '',
+    });
 
     const role = localStorage.getItem('role');
 
-    useEffect(() => {
-        fetchJobs();
-    }, []);
-
-    const fetchJobs = async () => {
+    const fetchJobs = useCallback(async () => {
         try {
-            const response = await apiClient.get('/jobs/available-jobs');
+            const response = await apiClient.get('/jobs/available-jobs', {
+                params: {
+                    search: filters.search || undefined,
+                    location: filters.location || undefined,
+                    min_price: filters.minPrice || undefined,
+                    max_price: filters.maxPrice || undefined,
+                },
+            });
             setJobs(response.data);
+            setMessage('');
         } catch (error) {
             setMessage('Failed to load jobs.');
         }
-    };
+    }, [filters]);
+
+    useEffect(() => {
+        fetchJobs();
+    }, [fetchJobs]);
 
     return (
         <div className="app-shell">
@@ -67,6 +81,36 @@ function Home() {
                             <h2>Available Jobs</h2>
                             <p className="section-subtitle">See which jobs are open right now across the marketplace.</p>
                         </div>
+                    </div>
+
+                    <div className="compact-form">
+                        <input
+                            type="text"
+                            placeholder="Search jobs"
+                            value={filters.search}
+                            onChange={(e) => setFilters((current) => ({ ...current, search: e.target.value }))}
+                        />
+                        <input
+                            type="text"
+                            placeholder="Location"
+                            value={filters.location}
+                            onChange={(e) => setFilters((current) => ({ ...current, location: e.target.value }))}
+                        />
+                        <input
+                            type="number"
+                            placeholder="Min price"
+                            value={filters.minPrice}
+                            onChange={(e) => setFilters((current) => ({ ...current, minPrice: e.target.value }))}
+                        />
+                        <input
+                            type="number"
+                            placeholder="Max price"
+                            value={filters.maxPrice}
+                            onChange={(e) => setFilters((current) => ({ ...current, maxPrice: e.target.value }))}
+                        />
+                        <button type="button" className="ghost-button" onClick={fetchJobs}>
+                            Apply Filters
+                        </button>
                     </div>
 
                     {jobs.length === 0 ? (

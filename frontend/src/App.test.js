@@ -132,6 +132,7 @@ test('registers a customer and shows the created user id', async () => {
       phone: '1234567890',
       role: 'customer',
       password: '1234',
+      admin_secret: null,
     });
   });
 

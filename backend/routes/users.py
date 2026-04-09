@@ -1,4 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException
+import os
+import uuid
+from pathlib import Path
+
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from pydantic import BaseModel
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -25,6 +29,7 @@ class RegisterRequest(BaseModel):
     phone: str
     role: str
     password: str
+    admin_secret: str | None = None
 
 
 class LoginRequest(BaseModel):
@@ -39,6 +44,10 @@ class ProfileUpdateRequest(BaseModel):
     hourly_rate: int | None = None
 
 
+UPLOADS_DIR = Path(__file__).resolve().parents[1] / "uploads" / "avatars"
+UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+
+
 # Register user
 @router.post("/register")
 def register_user(payload: RegisterRequest, db: Session = Depends(get_db)):
@@ -50,6 +59,11 @@ def register_user(payload: RegisterRequest, db: Session = Depends(get_db)):
 
     if role not in {"customer", "worker", "admin"}:
         raise HTTPException(status_code=400, detail="Role must be customer, worker, or admin")
+
+    if role == "admin":
+        expected_secret = os.getenv("SERVICE_MARKETPLACE_ADMIN_SIGNUP_SECRET", "").strip()
+        if not expected_secret or payload.admin_secret != expected_secret:
+            raise HTTPException(status_code=403, detail="Admin registration is restricted")
 
     if len(password) < 4:
         raise HTTPException(
@@ -135,6 +149,7 @@ def get_my_profile(
         "city": profile.city or "",
         "skills": profile.skills or "",
         "hourly_rate": profile.hourly_rate,
+        "avatar_url": profile.avatar_url or "",
     }
 
 
@@ -164,5 +179,38 @@ def update_my_profile(
             "city": profile.city or "",
             "skills": profile.skills or "",
             "hourly_rate": profile.hourly_rate,
+            "avatar_url": profile.avatar_url or "",
         },
+    }
+
+
+@router.post("/me/avatar")
+async def upload_avatar(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    profile = db.query(UserProfile).filter(UserProfile.user_id == current_user.id).first()
+    if not profile:
+        profile = UserProfile(user_id=current_user.id)
+        db.add(profile)
+
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="Avatar file is required")
+
+    extension = Path(file.filename).suffix.lower()
+    if extension not in {".png", ".jpg", ".jpeg", ".webp"}:
+        raise HTTPException(status_code=400, detail="Avatar must be png, jpg, jpeg, or webp")
+
+    file_name = f"{current_user.id}-{uuid.uuid4().hex}{extension}"
+    destination = UPLOADS_DIR / file_name
+    destination.write_bytes(await file.read())
+
+    profile.avatar_url = f"/uploads/avatars/{file_name}"
+    db.commit()
+    db.refresh(profile)
+
+    return {
+        "message": "Avatar uploaded successfully",
+        "avatar_url": profile.avatar_url,
     }

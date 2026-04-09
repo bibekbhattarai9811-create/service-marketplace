@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -100,8 +100,12 @@ async def create_job(
         "price": new_job.price
     }
 
-    for connection in active_connections:
-        await connection.send_text(json.dumps(notification))
+    for user_connections in active_connections.values():
+        for connection in list(user_connections):
+            try:
+                await connection.send_text(json.dumps(notification))
+            except Exception:
+                pass
 
     return {
         "message": "Job created",
@@ -144,9 +148,29 @@ def accept_job(
 # Available Jobs
 # -------------------------
 @router.get("/available-jobs")
-def get_available_jobs(db: Session = Depends(get_db)):
+def get_available_jobs(
+    search: str | None = Query(default=None),
+    location: str | None = Query(default=None),
+    min_price: int | None = Query(default=None),
+    max_price: int | None = Query(default=None),
+    db: Session = Depends(get_db),
+):
 
-    jobs = db.query(Job).filter(Job.status == "OPEN").all()
+    jobs_query = db.query(Job).filter(Job.status == "OPEN")
+
+    if search:
+        search_term = f"%{search.strip()}%"
+        jobs_query = jobs_query.filter(
+            (Job.title.ilike(search_term)) | (Job.description.ilike(search_term))
+        )
+    if location:
+        jobs_query = jobs_query.filter(Job.location.ilike(f"%{location.strip()}%"))
+    if min_price is not None:
+        jobs_query = jobs_query.filter(Job.price >= min_price)
+    if max_price is not None:
+        jobs_query = jobs_query.filter(Job.price <= max_price)
+
+    jobs = jobs_query.order_by(Job.id.desc()).all()
 
     return jobs
 
@@ -243,7 +267,7 @@ def get_worker_rating(worker_id: int, db: Session = Depends(get_db)):
 # Send Chat Message
 # -------------------------
 @router.post("/send-message")
-def send_message(
+async def send_message(
     payload: ChatMessageRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -266,6 +290,27 @@ def send_message(
     db.add(chat)
     db.commit()
     db.refresh(chat)
+
+    chat_notification = {
+        "type": "chat_message",
+        "job_id": payload.job_id,
+        "sender_id": current_user.id,
+        "receiver_id": payload.receiver_id,
+        "message": chat.message,
+        "chat_id": chat.id,
+    }
+
+    for connection in list(active_connections.get(payload.receiver_id, set())):
+        try:
+            await connection.send_text(json.dumps(chat_notification))
+        except Exception:
+            pass
+
+    for connection in list(active_connections.get(current_user.id, set())):
+        try:
+            await connection.send_text(json.dumps(chat_notification))
+        except Exception:
+            pass
 
     return {
         "message": "Message sent",
