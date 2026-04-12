@@ -1,4 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+import uuid
+from pathlib import Path
+
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -28,6 +31,7 @@ class CreateJobRequest(BaseModel):
     description: str
     location: str
     price: int
+    image_url: str | None = None
 
 
 class PaymentRequest(BaseModel):
@@ -46,8 +50,42 @@ class ChatMessageRequest(BaseModel):
     message: str
 
 
+UPLOADS_DIR = Path(__file__).resolve().parents[1] / "uploads" / "jobs"
+UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def create_notification(
+    db: Session,
+    *,
+    user_id: int,
+    title: str,
+    message: str,
+    notification_type: str = "general",
+):
+    notification = Notification(
+        user_id=user_id,
+        title=title,
+        message=message,
+        notification_type=notification_type,
+        location="",
+        is_read=0,
+    )
+    db.add(notification)
+    db.commit()
+    db.refresh(notification)
+    return notification
+
+
+async def push_notification(user_id: int, payload: dict):
+    for connection in list(active_connections.get(user_id, set())):
+        try:
+            await connection.send_text(json.dumps(payload))
+        except Exception:
+            pass
+
+
 @router.post("/complete-job")
-def complete_job(
+async def complete_job(
     job_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("worker")),
@@ -64,6 +102,24 @@ def complete_job(
     job.status = "COMPLETED"
 
     db.commit()
+
+    notification = create_notification(
+        db,
+        user_id=job.customer_id,
+        title="Job completed",
+        message=f"{job.title} has been marked completed by the worker.",
+        notification_type="job_completed",
+    )
+    await push_notification(
+        job.customer_id,
+        {
+            "type": "notification",
+            "id": notification.id,
+            "title": notification.title,
+            "message": notification.message,
+            "notification_type": notification.notification_type,
+        },
+    )
 
     return {
         "message": "Job completed successfully",
@@ -86,12 +142,33 @@ async def create_job(
         description=payload.description.strip(),
         location=payload.location.strip(),
         price=payload.price,
-        customer_id=current_user.id
+        customer_id=current_user.id,
+        image_url=(payload.image_url or "").strip(),
     )
 
     db.add(new_job)
     db.commit()
     db.refresh(new_job)
+
+    workers = db.query(User).filter(User.role == "worker", User.is_active == True).all()  # noqa: E712
+    for worker in workers:
+        stored_notification = create_notification(
+            db,
+            user_id=worker.id,
+            title="New job available",
+            message=f"{new_job.title} is open in {new_job.location} for ${new_job.price}.",
+            notification_type="new_job",
+        )
+        await push_notification(
+            worker.id,
+            {
+                "type": "notification",
+                "id": stored_notification.id,
+                "title": stored_notification.title,
+                "message": stored_notification.message,
+                "notification_type": stored_notification.notification_type,
+            },
+        )
 
     notification = {
         "type": "new_job",
@@ -117,7 +194,7 @@ async def create_job(
 # Accept Job
 # -------------------------
 @router.post("/accept-job")
-def accept_job(
+async def accept_job(
     job_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("worker")),
@@ -137,10 +214,29 @@ def accept_job(
     db.commit()
     db.refresh(job)
 
+    notification = create_notification(
+        db,
+        user_id=job.customer_id,
+        title="Job accepted",
+        message=f"{job.title} has been accepted by a worker.",
+        notification_type="job_accepted",
+    )
+    await push_notification(
+        job.customer_id,
+        {
+            "type": "notification",
+            "id": notification.id,
+            "title": notification.title,
+            "message": notification.message,
+            "notification_type": notification.notification_type,
+        },
+    )
+
     return {
         "message": "Job accepted successfully",
         "job_status": job.status,
         "worker_id": job.worker_id,
+        "notification_id": notification.id,
     }
 
 
@@ -153,6 +249,7 @@ def get_available_jobs(
     location: str | None = Query(default=None),
     min_price: int | None = Query(default=None),
     max_price: int | None = Query(default=None),
+    sort_by: str | None = Query(default="newest"),
     db: Session = Depends(get_db),
 ):
 
@@ -170,7 +267,16 @@ def get_available_jobs(
     if max_price is not None:
         jobs_query = jobs_query.filter(Job.price <= max_price)
 
-    jobs = jobs_query.order_by(Job.id.desc()).all()
+    if sort_by == "price_low":
+        jobs_query = jobs_query.order_by(Job.price.asc(), Job.id.desc())
+    elif sort_by == "price_high":
+        jobs_query = jobs_query.order_by(Job.price.desc(), Job.id.desc())
+    elif sort_by == "location":
+        jobs_query = jobs_query.order_by(Job.location.asc(), Job.id.desc())
+    else:
+        jobs_query = jobs_query.order_by(Job.id.desc())
+
+    jobs = jobs_query.all()
 
     return jobs
 
@@ -237,10 +343,19 @@ def rate_worker(
     db.commit()
     db.refresh(new_rating)
 
+    notification = create_notification(
+        db,
+        user_id=job.worker_id,
+        title="New rating received",
+        message=f"You received a {payload.rating}/5 rating for {job.title}.",
+        notification_type="rating",
+    )
+
     return {
         "message": "Worker rated successfully",
         "rating_id": new_rating.id,
         "rating": job.rating,
+        "notification_id": notification.id,
     }
 
 
@@ -291,13 +406,21 @@ async def send_message(
     db.commit()
     db.refresh(chat)
 
+    notification = create_notification(
+        db,
+        user_id=payload.receiver_id,
+        title="New chat message",
+        message=f"You have a new message about {job.title}.",
+        notification_type="chat_message",
+    )
+
     chat_notification = {
         "type": "chat_message",
         "job_id": payload.job_id,
         "sender_id": current_user.id,
         "receiver_id": payload.receiver_id,
         "message": chat.message,
-        "chat_id": chat.id,
+        "id": chat.id,
     }
 
     for connection in list(active_connections.get(payload.receiver_id, set())):
@@ -343,17 +466,40 @@ def get_chat(
 # -------------------------
 # Notifications
 # -------------------------
-@router.get("/notifications")
-def get_notifications(db: Session = Depends(get_db)):
+@router.get("/notifications/me")
+def get_notifications(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    notifications = db.query(Notification).filter(
+        Notification.user_id == current_user.id
+    ).order_by(Notification.id.desc()).all()
+    return notifications
 
-    return db.query(Notification).all()
+
+@router.post("/notifications/{notification_id}/read")
+def mark_notification_read(
+    notification_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    notification = db.query(Notification).filter(
+        Notification.id == notification_id,
+        Notification.user_id == current_user.id,
+    ).first()
+    if not notification:
+        raise HTTPException(status_code=404, detail="Notification not found")
+
+    notification.is_read = 1
+    db.commit()
+    return {"message": "Notification marked as read"}
 
 
 # -------------------------
 # Payment
 # -------------------------
 @router.post("/pay")
-def make_payment(
+async def make_payment(
     payload: PaymentRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("customer")),
@@ -394,6 +540,24 @@ def make_payment(
     job.paid = True
     db.commit()
     db.refresh(payment)
+
+    notification = create_notification(
+        db,
+        user_id=job.worker_id,
+        title="Payment received",
+        message=f"Payment for {job.title} has been completed.",
+        notification_type="payment",
+    )
+    await push_notification(
+        job.worker_id,
+        {
+            "type": "notification",
+            "id": notification.id,
+            "title": notification.title,
+            "message": notification.message,
+            "notification_type": notification.notification_type,
+        },
+    )
 
     return {
         "message": "Payment successful",
@@ -462,6 +626,37 @@ def platform_summary(db: Session = Depends(get_db)):
         "completed_jobs": completed_jobs,
         "platform_revenue": revenue
     }
+
+
+@router.post("/{job_id}/image")
+async def upload_job_image(
+    job_id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("customer")),
+):
+    job = db.query(Job).filter(Job.id == job_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    if job.customer_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to update this job")
+
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="Job image is required")
+
+    extension = Path(file.filename).suffix.lower()
+    if extension not in {".png", ".jpg", ".jpeg", ".webp"}:
+        raise HTTPException(status_code=400, detail="Job image must be png, jpg, jpeg, or webp")
+
+    file_name = f"job-{job.id}-{uuid.uuid4().hex}{extension}"
+    destination = UPLOADS_DIR / file_name
+    destination.write_bytes(await file.read())
+
+    job.image_url = f"/uploads/jobs/{file_name}"
+    db.commit()
+    db.refresh(job)
+
+    return {"message": "Job image uploaded successfully", "image_url": job.image_url}
 
 
 @router.get("/admin/summary")

@@ -42,6 +42,13 @@ class ProfileUpdateRequest(BaseModel):
     city: str = ""
     skills: str = ""
     hourly_rate: int | None = None
+    service_area: str = ""
+    portfolio: str = ""
+
+
+class AdminUserUpdateRequest(BaseModel):
+    role: str | None = None
+    is_active: bool | None = None
 
 
 UPLOADS_DIR = Path(__file__).resolve().parents[1] / "uploads" / "avatars"
@@ -75,7 +82,8 @@ def register_user(payload: RegisterRequest, db: Session = Depends(get_db)):
         email=email,
         phone=phone,
         role=role,
-        password=hash_password(password)
+        password=hash_password(password),
+        is_active=True,
     )
 
     db.add(new_user)
@@ -108,6 +116,9 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
 
     if not verify_password(password, user.password):
         raise HTTPException(status_code=401, detail="Invalid email or password")
+
+    if not user.is_active:
+        raise HTTPException(status_code=403, detail="Your account is inactive")
 
     # Upgrade legacy plain-text passwords on the next successful login.
     if not user.password.startswith("pbkdf2_sha256$"):
@@ -150,6 +161,8 @@ def get_my_profile(
         "skills": profile.skills or "",
         "hourly_rate": profile.hourly_rate,
         "avatar_url": profile.avatar_url or "",
+        "service_area": profile.service_area or "",
+        "portfolio": profile.portfolio or "",
     }
 
 
@@ -168,6 +181,8 @@ def update_my_profile(
     profile.city = payload.city.strip()
     profile.skills = payload.skills.strip()
     profile.hourly_rate = payload.hourly_rate if current_user.role == "worker" else None
+    profile.service_area = payload.service_area.strip()
+    profile.portfolio = payload.portfolio.strip()
 
     db.commit()
     db.refresh(profile)
@@ -180,6 +195,8 @@ def update_my_profile(
             "skills": profile.skills or "",
             "hourly_rate": profile.hourly_rate,
             "avatar_url": profile.avatar_url or "",
+            "service_area": profile.service_area or "",
+            "portfolio": profile.portfolio or "",
         },
     }
 
@@ -213,4 +230,71 @@ async def upload_avatar(
     return {
         "message": "Avatar uploaded successfully",
         "avatar_url": profile.avatar_url,
+    }
+
+
+@router.get("/admin/users")
+def list_users_for_admin(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+
+    users = db.query(User).order_by(User.id.asc()).all()
+    profiles = {
+        profile.user_id: profile
+        for profile in db.query(UserProfile).filter(
+            UserProfile.user_id.in_([user.id for user in users] or [0])
+        ).all()
+    }
+
+    return [
+        {
+            "id": user.id,
+            "name": user.name,
+            "email": user.email,
+            "phone": user.phone,
+            "role": user.role,
+            "is_active": bool(user.is_active),
+            "city": profiles.get(user.id).city if profiles.get(user.id) else "",
+            "service_area": profiles.get(user.id).service_area if profiles.get(user.id) else "",
+        }
+        for user in users
+    ]
+
+
+@router.put("/admin/users/{user_id}")
+def update_user_for_admin(
+    user_id: int,
+    payload: AdminUserUpdateRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if payload.role is not None:
+        next_role = payload.role.strip().lower()
+        if next_role not in {"customer", "worker", "admin"}:
+            raise HTTPException(status_code=400, detail="Invalid role")
+        user.role = next_role
+
+    if payload.is_active is not None:
+        user.is_active = payload.is_active
+
+    db.commit()
+    db.refresh(user)
+
+    return {
+        "message": "User updated successfully",
+        "user": {
+            "id": user.id,
+            "role": user.role,
+            "is_active": bool(user.is_active),
+        },
     }

@@ -4,6 +4,7 @@ import { apiClient } from '../api';
 
 function AdminAnalytics() {
     const [data, setData] = useState(null);
+    const [users, setUsers] = useState([]);
     const [message, setMessage] = useState('');
 
     useEffect(() => {
@@ -12,10 +13,24 @@ function AdminAnalytics() {
 
     const fetchAnalytics = async () => {
         try {
-            const response = await apiClient.get('/jobs/admin/summary');
-            setData(response.data);
+            const [summaryResponse, usersResponse] = await Promise.all([
+                apiClient.get('/jobs/admin/summary'),
+                apiClient.get('/admin/users'),
+            ]);
+            setData(summaryResponse.data);
+            setUsers(usersResponse.data);
         } catch (error) {
             setMessage(error.response?.data?.detail || 'Failed to load admin analytics.');
+        }
+    };
+
+    const updateUser = async (userId, payload) => {
+        try {
+            await apiClient.put(`/admin/users/${userId}`, payload);
+            setMessage('User updated successfully.');
+            fetchAnalytics();
+        } catch (error) {
+            setMessage(error.response?.data?.detail || 'Failed to update user.');
         }
     };
 
@@ -129,6 +144,58 @@ function AdminAnalytics() {
                                                 <td>${job.price}</td>
                                                 <td>{job.location}</td>
                                                 <td>{job.worker_id || 'Unassigned'}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
+
+                        <section className="section-card">
+                            <div className="section-header">
+                                <div>
+                                    <h2>User Management</h2>
+                                    <p className="section-subtitle">Promote roles or disable accounts without touching the database.</p>
+                                </div>
+                            </div>
+                            <div className="table-wrap">
+                                <table className="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Email</th>
+                                            <th>Role</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {users.map((user) => (
+                                            <tr key={user.id}>
+                                                <td>{user.name}</td>
+                                                <td>{user.email}</td>
+                                                <td>{user.role}</td>
+                                                <td>{user.is_active ? 'Active' : 'Inactive'}</td>
+                                                <td>
+                                                    <div className="button-row">
+                                                        <button
+                                                            className="ghost-button"
+                                                            onClick={() => updateUser(user.id, {
+                                                                is_active: !user.is_active,
+                                                            })}
+                                                        >
+                                                            {user.is_active ? 'Disable' : 'Enable'}
+                                                        </button>
+                                                        {user.role !== 'admin' && (
+                                                            <button
+                                                                className="secondary-button"
+                                                                onClick={() => updateUser(user.id, { role: 'admin' })}
+                                                            >
+                                                                Make Admin
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </td>
                                             </tr>
                                         ))}
                                     </tbody>

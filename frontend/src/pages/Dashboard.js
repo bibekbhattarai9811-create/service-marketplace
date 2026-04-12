@@ -13,6 +13,7 @@ function Dashboard() {
     const wsRef = useRef(null);
 
     const userId = Number(localStorage.getItem("user_id") || 0);
+    const token = localStorage.getItem("token");
 
     const fetchAvailableJobs = useCallback(async () => {
         try {
@@ -103,7 +104,7 @@ function Dashboard() {
             fetchEarnings();
         }, 5000);
 
-        const ws = new WebSocket(WS_API);
+        const ws = new WebSocket(`${WS_API}?token=${encodeURIComponent(token || "")}`);
         wsRef.current = ws;
 
         ws.onmessage = (event) => {
@@ -122,7 +123,7 @@ function Dashboard() {
             if (wsRef.current) wsRef.current.close();
             clearInterval(interval);
         };
-    }, [fetchAvailableJobs, fetchWorkerJobs, fetchEarnings, fetchRating, fetchTransactions]);
+    }, [fetchAvailableJobs, fetchWorkerJobs, fetchEarnings, fetchRating, fetchTransactions, token]);
 
     const totalJobValue = transactions.reduce((sum, t) => sum + t.total_amount, 0);
     const totalWorkerReceived = transactions.reduce((sum, t) => sum + t.worker_received, 0);
@@ -187,6 +188,13 @@ function Dashboard() {
                         <div className="card-grid">
                             {jobs.map((job) => (
                                 <article key={job.id} className="job-card">
+                                    {job.image_url && (
+                                        <img
+                                            src={`${apiClient.defaults.baseURL}${job.image_url}`}
+                                            alt={job.title}
+                                            className="job-photo"
+                                        />
+                                    )}
                                     <div className="job-card-header">
                                         <div>
                                             <h3>{job.title}</h3>
@@ -223,6 +231,13 @@ function Dashboard() {
                         <div className="card-grid">
                             {workerJobs.map((job) => (
                                 <article key={job.id} className="job-card">
+                                    {job.image_url && (
+                                        <img
+                                            src={`${apiClient.defaults.baseURL}${job.image_url}`}
+                                            alt={job.title}
+                                            className="job-photo"
+                                        />
+                                    )}
                                     <div className="job-card-header">
                                         <div>
                                             <h3>{job.title}</h3>

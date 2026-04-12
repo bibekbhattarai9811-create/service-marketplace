@@ -9,6 +9,8 @@ function Profile() {
         city: '',
         skills: '',
         hourly_rate: '',
+        service_area: '',
+        portfolio: '',
     });
     const [avatarFile, setAvatarFile] = useState(null);
     const [message, setMessage] = useState('');
@@ -29,6 +31,8 @@ function Profile() {
                 city: response.data.city || '',
                 skills: response.data.skills || '',
                 hourly_rate: response.data.hourly_rate ?? '',
+                service_area: response.data.service_area || '',
+                portfolio: response.data.portfolio || '',
             });
         } catch (error) {
             setMessageIsError(true);
@@ -47,6 +51,8 @@ function Profile() {
                 city: form.city,
                 skills: form.skills,
                 hourly_rate: role === 'worker' && form.hourly_rate !== '' ? Number(form.hourly_rate) : null,
+                service_area: form.service_area,
+                portfolio: form.portfolio,
             };
             await apiClient.put('/me', payload);
             setMessageIsError(false);
@@ -117,7 +123,7 @@ function Profile() {
                         <div>
                             <h2>Profile Details</h2>
                             <p className="section-subtitle">
-                                Customers can add a city and bio. Workers can also add skills and an hourly rate.
+                                Customers can add a city and bio. Workers can also add service area, skills, portfolio details, and an hourly rate.
                             </p>
                         </div>
                     </div>
@@ -150,6 +156,12 @@ function Profile() {
                             value={form.city}
                             onChange={(e) => handleChange('city', e.target.value)}
                         />
+                        <input
+                            type="text"
+                            placeholder="Service Area"
+                            value={form.service_area}
+                            onChange={(e) => handleChange('service_area', e.target.value)}
+                        />
                         <textarea
                             placeholder="Bio"
                             value={form.bio}
@@ -162,6 +174,11 @@ function Profile() {
                                     placeholder="Skills (comma separated)"
                                     value={form.skills}
                                     onChange={(e) => handleChange('skills', e.target.value)}
+                                />
+                                <textarea
+                                    placeholder="Portfolio highlights or past projects"
+                                    value={form.portfolio}
+                                    onChange={(e) => handleChange('portfolio', e.target.value)}
                                 />
                                 <input
                                     type="number"

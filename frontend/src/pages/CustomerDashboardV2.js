@@ -156,6 +156,13 @@ function CustomerDashboardV2() {
                         <div className="card-grid">
                             {myJobs.map((job) => (
                                 <article key={job.id} className="job-card">
+                                    {job.image_url && (
+                                        <img
+                                            src={`${apiClient.defaults.baseURL}${job.image_url}`}
+                                            alt={job.title}
+                                            className="job-photo"
+                                        />
+                                    )}
                                     <div className="job-card-header">
                                         <div>
                                             <h3>{job.title}</h3>

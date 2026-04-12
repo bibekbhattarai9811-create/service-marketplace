@@ -13,7 +13,10 @@ DATABASE_URL = os.getenv("DATABASE_URL", DEFAULT_SQLITE_URL)
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
+IS_SQLITE = DATABASE_URL.startswith("sqlite")
+AUTO_CREATE_TABLES = os.getenv("AUTO_CREATE_TABLES", "true" if IS_SQLITE else "false").lower() == "true"
+
+connect_args = {"check_same_thread": False} if IS_SQLITE else {}
 
 engine = create_engine(DATABASE_URL, connect_args=connect_args, pool_pre_ping=True)
 

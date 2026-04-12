@@ -10,6 +10,7 @@ import CustomerDashboard from './pages/CustomerDashboardV2';
 import Chat from './pages/Chat';
 import Profile from './pages/Profile';
 import AdminAnalytics from './pages/AdminAnalytics';
+import Notifications from './pages/Notifications';
 
 function getDefaultRoute() {
   const role = localStorage.getItem('role');
@@ -64,6 +65,7 @@ function App() {
         />
         <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
         <Route
           path="/admin"
           element={<ProtectedRoute allowedRoles={['admin']}><AdminAnalytics /></ProtectedRoute>}

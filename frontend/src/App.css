@@ -428,6 +428,14 @@
   gap: 14px;
 }
 
+.job-photo {
+  width: 100%;
+  max-height: 220px;
+  object-fit: cover;
+  border-radius: 22px;
+  border: 1px solid rgba(154, 52, 18, 0.1);
+}
+
 .job-card-header {
   display: flex;
   align-items: flex-start;
@@ -610,7 +618,7 @@
 
 .compact-form {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 12px;
   margin-bottom: 18px;
 }

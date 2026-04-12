@@ -14,6 +14,7 @@ class User(Base):
     phone = Column(String)
     role = Column(String)  # customer / worker
     password = Column(String)
+    is_active = Column(Boolean, default=True)
 
 
 class UserProfile(Base):
@@ -26,6 +27,8 @@ class UserProfile(Base):
     skills = Column(String, default="")
     hourly_rate = Column(Integer, nullable=True)
     avatar_url = Column(String, default="")
+    service_area = Column(String, default="")
+    portfolio = Column(String, default="")
 
 
 # ---------------------------
@@ -48,6 +51,7 @@ class Job(Base):
     worker_id = Column(Integer, nullable=True)
     paid = Column(Boolean, default=False)
     rating = Column(Integer, nullable=True)
+    image_url = Column(String, default="")
 
 
 # ---------------------------
@@ -80,7 +84,10 @@ class Notification(Base):
     __tablename__ = "notifications"
 
     id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, index=True)
+    title = Column(String, default="")
     message = Column(String)
+    notification_type = Column(String, default="general")
     location = Column(String)
     is_read = Column(Integer, default=0)
 

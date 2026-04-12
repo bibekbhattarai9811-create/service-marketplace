@@ -6,7 +6,7 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 
 from auth import get_current_user, require_role
-from database import engine, SessionLocal
+from database import AUTO_CREATE_TABLES, engine, SessionLocal
 from models import Base, Job, Payment, User
 from security import decode_access_token
 
@@ -46,7 +46,9 @@ app.add_middleware(
 # -----------------------------
 # Reset & Create Tables
 # -----------------------------
-Base.metadata.create_all(bind=engine)
+if AUTO_CREATE_TABLES:
+    Base.metadata.create_all(bind=engine)
+
 UPLOADS_DIR = Path(__file__).resolve().parent / "uploads"
 UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=UPLOADS_DIR), name="uploads")
@@ -64,7 +66,10 @@ app.include_router(jobs.router, prefix="/jobs")
 
 @app.get("/")
 def home():
-    return {"message": "Service Marketplace backend version 2 is running"}
+    return {
+        "message": "Service Marketplace backend version 2 is running",
+        "schema_mode": "auto-create" if AUTO_CREATE_TABLES else "migrations",
+    }
 
 # -----------------------------
 # Debug Endpoint

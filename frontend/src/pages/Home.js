@@ -11,6 +11,7 @@ function Home() {
         location: '',
         minPrice: '',
         maxPrice: '',
+        sortBy: 'newest',
     });
 
     const role = localStorage.getItem('role');
@@ -23,6 +24,7 @@ function Home() {
                     location: filters.location || undefined,
                     min_price: filters.minPrice || undefined,
                     max_price: filters.maxPrice || undefined,
+                    sort_by: filters.sortBy || undefined,
                 },
             });
             setJobs(response.data);
@@ -108,6 +110,15 @@ function Home() {
                             value={filters.maxPrice}
                             onChange={(e) => setFilters((current) => ({ ...current, maxPrice: e.target.value }))}
                         />
+                        <select
+                            value={filters.sortBy}
+                            onChange={(e) => setFilters((current) => ({ ...current, sortBy: e.target.value }))}
+                        >
+                            <option value="newest">Newest</option>
+                            <option value="price_low">Price: Low to High</option>
+                            <option value="price_high">Price: High to Low</option>
+                            <option value="location">Location</option>
+                        </select>
                         <button type="button" className="ghost-button" onClick={fetchJobs}>
                             Apply Filters
                         </button>
@@ -119,6 +130,13 @@ function Home() {
                         <div className="card-grid">
                             {jobs.map((job) => (
                                 <article key={job.id} className="job-card">
+                                    {job.image_url && (
+                                        <img
+                                            src={`${apiClient.defaults.baseURL}${job.image_url}`}
+                                            alt={job.title}
+                                            className="job-photo"
+                                        />
+                                    )}
                                     <div className="job-card-header">
                                         <div>
                                             <h3>{job.title}</h3>

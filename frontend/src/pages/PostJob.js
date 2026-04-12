@@ -8,6 +8,7 @@ function PostJob() {
     const [description, setDescription] = useState('');
     const [location, setLocation] = useState('');
     const [price, setPrice] = useState('');
+    const [jobImage, setJobImage] = useState(null);
     const [message, setMessage] = useState('');
 
     const handlePostJob = async () => {
@@ -18,6 +19,13 @@ function PostJob() {
                 location,
                 price: Number(price),
             });
+            if (jobImage) {
+                const formData = new FormData();
+                formData.append('file', jobImage);
+                await apiClient.post(`/jobs/${response.data.job_id}/image`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                });
+            }
             setMessage('Job posted successfully! Job ID: ' + response.data.job_id);
         } catch (error) {
             setMessage(error.response?.data?.detail || 'Failed to post job. Please try again.');
@@ -80,6 +88,11 @@ function PostJob() {
                             placeholder="Price ($)"
                             value={price}
                             onChange={(e) => setPrice(e.target.value)}
+                        />
+                        <input
+                            type="file"
+                            accept=".png,.jpg,.jpeg,.webp"
+                            onChange={(e) => setJobImage(e.target.files?.[0] || null)}
                         />
 
                         <div className="helper-row">
