@@ -13,6 +13,7 @@ function Profile() {
         portfolio: '',
     });
     const [avatarFile, setAvatarFile] = useState(null);
+    const [availability, setAvailability] = useState([]);
     const [message, setMessage] = useState('');
     const [messageIsError, setMessageIsError] = useState(false);
 
@@ -20,6 +21,9 @@ function Profile() {
 
     useEffect(() => {
         fetchProfile();
+        if (role === 'worker') {
+            fetchAvailability();
+        }
     }, []);
 
     const fetchProfile = async () => {
@@ -42,6 +46,15 @@ function Profile() {
 
     const handleChange = (field, value) => {
         setForm((current) => ({ ...current, [field]: value }));
+    };
+
+    const fetchAvailability = async () => {
+        try {
+            const response = await apiClient.get('/availability/me');
+            setAvailability(response.data);
+        } catch (error) {
+            setAvailability([]);
+        }
     };
 
     const handleSave = async () => {
@@ -84,6 +97,36 @@ function Profile() {
         } catch (error) {
             setMessageIsError(true);
             setMessage(error.response?.data?.detail || 'Failed to upload avatar.');
+        }
+    };
+
+    const addAvailabilitySlot = () => {
+        setAvailability((current) => [
+            ...current,
+            { day: 'Monday', start_time: '09:00', end_time: '17:00' },
+        ]);
+    };
+
+    const updateAvailabilitySlot = (index, field, value) => {
+        setAvailability((current) =>
+            current.map((slot, slotIndex) =>
+                slotIndex === index ? { ...slot, [field]: value } : slot
+            )
+        );
+    };
+
+    const removeAvailabilitySlot = (index) => {
+        setAvailability((current) => current.filter((_, slotIndex) => slotIndex !== index));
+    };
+
+    const saveAvailability = async () => {
+        try {
+            await apiClient.post('/availability/me', availability);
+            setMessageIsError(false);
+            setMessage('Availability updated successfully.');
+        } catch (error) {
+            setMessageIsError(true);
+            setMessage(error.response?.data?.detail || 'Failed to update availability.');
         }
     };
 
@@ -195,6 +238,57 @@ function Profile() {
                         </div>
                     </div>
                 </section>
+
+                {role === 'worker' && (
+                    <section className="section-card">
+                        <div className="section-header">
+                            <div>
+                                <h2>Availability</h2>
+                                <p className="section-subtitle">Share the days and times you are available for new jobs.</p>
+                            </div>
+                        </div>
+
+                        <div className="page-form">
+                            {availability.map((slot, index) => (
+                                <div key={`${slot.day}-${index}`} className="compact-form">
+                                    <select
+                                        value={slot.day}
+                                        onChange={(e) => updateAvailabilitySlot(index, 'day', e.target.value)}
+                                    >
+                                        <option>Monday</option>
+                                        <option>Tuesday</option>
+                                        <option>Wednesday</option>
+                                        <option>Thursday</option>
+                                        <option>Friday</option>
+                                        <option>Saturday</option>
+                                        <option>Sunday</option>
+                                    </select>
+                                    <input
+                                        type="time"
+                                        value={slot.start_time}
+                                        onChange={(e) => updateAvailabilitySlot(index, 'start_time', e.target.value)}
+                                    />
+                                    <input
+                                        type="time"
+                                        value={slot.end_time}
+                                        onChange={(e) => updateAvailabilitySlot(index, 'end_time', e.target.value)}
+                                    />
+                                    <button type="button" className="danger-button" onClick={() => removeAvailabilitySlot(index)}>
+                                        Remove
+                                    </button>
+                                </div>
+                            ))}
+                            <div className="button-row">
+                                <button type="button" className="ghost-button" onClick={addAvailabilitySlot}>
+                                    Add Availability Slot
+                                </button>
+                                <button type="button" className="primary-button" onClick={saveAvailability}>
+                                    Save Availability
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+                )}
             </div>
         </div>
     );

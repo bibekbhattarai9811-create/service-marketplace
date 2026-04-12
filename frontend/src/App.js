@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Navigate, Routes, Route } from 'react-router-d
 import './App.css';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ResetPassword from './pages/ResetPassword';
 import Home from './pages/Home';
 import PostJob from './pages/PostJob';
 import Dashboard from './pages/Dashboard';
@@ -11,6 +12,7 @@ import Chat from './pages/Chat';
 import Profile from './pages/Profile';
 import AdminAnalytics from './pages/AdminAnalytics';
 import Notifications from './pages/Notifications';
+import Workers from './pages/Workers';
 
 function getDefaultRoute() {
   const role = localStorage.getItem('role');
@@ -50,7 +52,9 @@ function App() {
       <Routes>
         <Route path="/" element={<PublicOnlyRoute><Login /></PublicOnlyRoute>} />
         <Route path="/register" element={<PublicOnlyRoute><Register /></PublicOnlyRoute>} />
+        <Route path="/reset-password" element={<PublicOnlyRoute><ResetPassword /></PublicOnlyRoute>} />
         <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+        <Route path="/workers" element={<ProtectedRoute><Workers /></ProtectedRoute>} />
         <Route
           path="/post-job"
           element={<ProtectedRoute allowedRoles={['customer']}><PostJob /></ProtectedRoute>}

@@ -3,6 +3,10 @@ import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { apiClient } from '../api';
 
+function mapLink(location) {
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`;
+}
+
 function Home() {
     const [jobs, setJobs] = useState([]);
     const [message, setMessage] = useState('');
@@ -149,6 +153,11 @@ function Home() {
                                     <div className="job-meta">
                                         <span className="job-meta-chip">Location: {job.location}</span>
                                         <span className="job-meta-chip">Price: ${job.price}</span>
+                                    </div>
+                                    <div className="button-row">
+                                        <a className="ghost-button" href={mapLink(job.location)} target="_blank" rel="noreferrer">
+                                            View Map
+                                        </a>
                                     </div>
                                 </article>
                             ))}

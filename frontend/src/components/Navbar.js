@@ -19,6 +19,9 @@ function Navbar() {
                 <Link className="app-nav-link" to="/profile">
                     Profile
                 </Link>
+                <Link className="app-nav-link" to="/workers">
+                    Workers
+                </Link>
                 <Link className="app-nav-link" to="/notifications">
                     Notifications
                 </Link>

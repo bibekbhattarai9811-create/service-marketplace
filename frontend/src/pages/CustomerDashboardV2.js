@@ -3,6 +3,10 @@ import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { apiClient } from '../api';
 
+function mapLink(location) {
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`;
+}
+
 function CustomerDashboardV2() {
     const [myJobs, setMyJobs] = useState([]);
     const [message, setMessage] = useState('');
@@ -178,6 +182,9 @@ function CustomerDashboardV2() {
                                     </div>
 
                                     <div className="button-row">
+                                        <a className="ghost-button" href={mapLink(job.location)} target="_blank" rel="noreferrer">
+                                            View Map
+                                        </a>
                                         {job.worker_id && (
                                             <Link to={chatLink(job)} className="secondary-button">Chat with Worker</Link>
                                         )}

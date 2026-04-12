@@ -3,6 +3,10 @@ import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { WS_API, apiClient } from "../api";
 
+function mapLink(location) {
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`;
+}
+
 function Dashboard() {
     const [jobs, setJobs] = useState([]);
     const [workerJobs, setWorkerJobs] = useState([]);
@@ -207,6 +211,9 @@ function Dashboard() {
                                         <span className="job-meta-chip">Price: ${job.price}</span>
                                     </div>
                                     <div className="button-row">
+                                        <a className="ghost-button" href={mapLink(job.location)} target="_blank" rel="noreferrer">
+                                            View Map
+                                        </a>
                                         <button className="primary-button" onClick={() => acceptJob(job.id)}>
                                             Accept Job
                                         </button>
@@ -246,9 +253,13 @@ function Dashboard() {
                                         <span className={`status-badge status-${job.status.toLowerCase()}`}>{job.status}</span>
                                     </div>
                                     <div className="job-meta">
+                                        <span className="job-meta-chip">Location: {job.location}</span>
                                         <span className="job-meta-chip">Price: ${job.price}</span>
                                     </div>
                                     <div className="button-row">
+                                        <a className="ghost-button" href={mapLink(job.location)} target="_blank" rel="noreferrer">
+                                            View Map
+                                        </a>
                                         <Link to={chatLink(job)} className="secondary-button">Chat with Customer</Link>
                                         {job.status !== "COMPLETED" && (
                                             <button className="primary-button" onClick={() => completeJob(job.id)}>

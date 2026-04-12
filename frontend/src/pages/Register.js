@@ -87,7 +87,6 @@ function Register() {
                         <select value={role} onChange={(e) => setRole(e.target.value)}>
                             <option value="customer">Customer</option>
                             <option value="worker">Worker</option>
-                            <option value="admin">Admin</option>
                         </select>
                         <input
                             type="password"
@@ -95,14 +94,6 @@ function Register() {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                         />
-                        {role === 'admin' && (
-                            <input
-                                type="password"
-                                placeholder="Admin Secret"
-                                value={adminSecret}
-                                onChange={(e) => setAdminSecret(e.target.value)}
-                            />
-                        )}
                         <button className="auth-button" onClick={handleRegister}>
                             Register
                         </button>

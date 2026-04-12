@@ -92,6 +92,7 @@ function Login() {
                         </button>
                     </div>
                     <p className="auth-message">{message}</p>
+                    <p className="auth-switch"><Link to="/reset-password">Forgot password?</Link></p>
                     <p className="auth-switch">Don't have an account? <Link to="/register">Register</Link></p>
                 </div>
             </section>

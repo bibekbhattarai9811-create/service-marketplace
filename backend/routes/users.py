@@ -5,11 +5,19 @@ from pathlib import Path
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from pydantic import BaseModel
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import func
 from sqlalchemy.orm import Session
-from auth import get_current_user
+from auth import get_current_user, require_role
 from database import SessionLocal
-from models import User, UserProfile
-from security import create_access_token, hash_password, verify_password
+from models import Availability, Rating, User, UserProfile
+from notification_service import send_email_notification, send_sms_notification
+from security import (
+    create_access_token,
+    create_password_reset_token,
+    decode_password_reset_token,
+    hash_password,
+    verify_password,
+)
 
 router = APIRouter()
 
@@ -37,6 +45,15 @@ class LoginRequest(BaseModel):
     password: str
 
 
+class PasswordResetRequest(BaseModel):
+    email: str
+
+
+class PasswordResetConfirmRequest(BaseModel):
+    token: str
+    password: str
+
+
 class ProfileUpdateRequest(BaseModel):
     bio: str = ""
     city: str = ""
@@ -51,8 +68,21 @@ class AdminUserUpdateRequest(BaseModel):
     is_active: bool | None = None
 
 
+class AvailabilitySlotRequest(BaseModel):
+    day: str
+    start_time: str
+    end_time: str
+
+
 UPLOADS_DIR = Path(__file__).resolve().parents[1] / "uploads" / "avatars"
 UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def public_upload_url(path: str) -> str:
+    uploads_base = os.getenv("SERVICE_MARKETPLACE_UPLOADS_BASE_URL", "").strip().rstrip("/")
+    if uploads_base:
+        return f"{uploads_base}{path}"
+    return path
 
 
 # Register user
@@ -138,6 +168,53 @@ def get_users():
     return {"users": []}
 
 
+@router.post("/password-reset/request")
+def request_password_reset(payload: PasswordResetRequest, db: Session = Depends(get_db)):
+    email = payload.email.strip().lower()
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        return {"message": "If that account exists, a reset link has been sent."}
+
+    token = create_password_reset_token(user.id, user.email)
+    reset_link = os.getenv(
+        "SERVICE_MARKETPLACE_PASSWORD_RESET_URL",
+        "http://127.0.0.1:3000/reset-password",
+    ).rstrip("/")
+    reset_url = f"{reset_link}?token={token}"
+    body = (
+        f"Hello {user.name},\n\n"
+        f"Use this link to reset your password:\n{reset_url}\n\n"
+        "If you did not request this, you can ignore this email."
+    )
+
+    email_sent = send_email_notification(user.email, "Reset your Service Marketplace password", body)
+    sms_sent = send_sms_notification(user.phone, f"Reset your password: {reset_url}")
+
+    response = {"message": "If that account exists, a reset link has been sent."}
+    if not email_sent and not sms_sent:
+        response["reset_token"] = token
+        response["reset_url"] = reset_url
+    return response
+
+
+@router.post("/password-reset/confirm")
+def confirm_password_reset(payload: PasswordResetConfirmRequest, db: Session = Depends(get_db)):
+    if len(payload.password) < 4:
+        raise HTTPException(status_code=400, detail="Password must be at least 4 characters")
+
+    token_payload = decode_password_reset_token(payload.token)
+    user = db.query(User).filter(
+        User.id == token_payload["user_id"],
+        User.email == token_payload["email"],
+    ).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user.password = hash_password(payload.password)
+    db.commit()
+    return {"message": "Password reset successful"}
+
+
 @router.get("/me")
 def get_my_profile(
     db: Session = Depends(get_db),
@@ -164,6 +241,36 @@ def get_my_profile(
         "service_area": profile.service_area or "",
         "portfolio": profile.portfolio or "",
     }
+
+
+@router.get("/workers")
+def list_public_workers(db: Session = Depends(get_db)):
+    workers = db.query(User).filter(User.role == "worker", User.is_active == True).all()  # noqa: E712
+    worker_ids = [worker.id for worker in workers] or [0]
+    profiles = {
+        profile.user_id: profile
+        for profile in db.query(UserProfile).filter(UserProfile.user_id.in_(worker_ids)).all()
+    }
+
+    result = []
+    for worker in workers:
+        profile = profiles.get(worker.id)
+        average_rating = db.query(func.avg(Rating.rating)).filter(Rating.worker_id == worker.id).scalar() or 0
+        review_count = db.query(func.count(Rating.id)).filter(Rating.worker_id == worker.id).scalar() or 0
+        result.append({
+            "id": worker.id,
+            "name": worker.name,
+            "city": profile.city if profile else "",
+            "service_area": profile.service_area if profile else "",
+            "skills": profile.skills if profile else "",
+            "portfolio": profile.portfolio if profile else "",
+            "hourly_rate": profile.hourly_rate if profile else None,
+            "avatar_url": profile.avatar_url if profile else "",
+            "average_rating": round(average_rating, 2),
+            "review_count": review_count,
+        })
+
+    return result
 
 
 @router.put("/me")
@@ -223,7 +330,7 @@ async def upload_avatar(
     destination = UPLOADS_DIR / file_name
     destination.write_bytes(await file.read())
 
-    profile.avatar_url = f"/uploads/avatars/{file_name}"
+    profile.avatar_url = public_upload_url(f"/uploads/avatars/{file_name}")
     db.commit()
     db.refresh(profile)
 
@@ -298,3 +405,34 @@ def update_user_for_admin(
             "is_active": bool(user.is_active),
         },
     }
+
+
+@router.get("/availability/me")
+def get_my_availability(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("worker")),
+):
+    slots = db.query(Availability).filter(Availability.worker_id == current_user.id).order_by(
+        Availability.day.asc(), Availability.start_time.asc()
+    ).all()
+    return slots
+
+
+@router.post("/availability/me")
+def save_my_availability(
+    slots: list[AvailabilitySlotRequest],
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("worker")),
+):
+    db.query(Availability).filter(Availability.worker_id == current_user.id).delete()
+    for slot in slots:
+        db.add(
+            Availability(
+                worker_id=current_user.id,
+                day=slot.day.strip(),
+                start_time=slot.start_time.strip(),
+                end_time=slot.end_time.strip(),
+            )
+        )
+    db.commit()
+    return {"message": "Availability updated successfully"}

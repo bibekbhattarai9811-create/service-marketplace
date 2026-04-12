@@ -275,3 +275,97 @@ def test_profile_update_and_admin_summary(client):
     assert admin_summary_response.status_code == 200
     assert admin_summary_response.json()["summary"]["admins"] == 1
     assert admin_summary_response.json()["summary"]["workers"] == 1
+
+
+def test_password_reset_and_admin_disable_flow(client):
+    register_user(
+        client,
+        name="Admin",
+        email="admin@test.com",
+        role="admin",
+    )
+    register_user(
+        client,
+        name="Customer",
+        email="customer@test.com",
+        role="customer",
+    )
+
+    admin_login = login_user(client, email="admin@test.com")
+
+    reset_request = client.post(
+        "/password-reset/request",
+        json={"email": "customer@test.com"},
+    )
+    assert reset_request.status_code == 200
+    reset_token = reset_request.json()["reset_token"]
+
+    reset_confirm = client.post(
+        "/password-reset/confirm",
+        json={"token": reset_token, "password": "newpass"},
+    )
+    assert reset_confirm.status_code == 200
+
+    login_after_reset = client.post(
+        "/login",
+        json={"email": "customer@test.com", "password": "newpass"},
+    )
+    assert login_after_reset.status_code == 200
+
+    disable_user = client.put(
+        f"/admin/users/{login_after_reset.json()['user_id']}",
+        json={"is_active": False},
+        headers=auth_headers(admin_login["token"]),
+    )
+    assert disable_user.status_code == 200
+
+    disabled_login = client.post(
+        "/login",
+        json={"email": "customer@test.com", "password": "newpass"},
+    )
+    assert disabled_login.status_code == 403
+
+
+def test_worker_availability_and_public_workers(client):
+    register_user(
+        client,
+        name="Worker",
+        email="worker@test.com",
+        role="worker",
+    )
+    worker_login = login_user(client, email="worker@test.com")
+
+    update_profile_response = client.put(
+        "/me",
+        json={
+            "bio": "Handyman",
+            "city": "Chicago",
+            "skills": "plumbing, repairs",
+            "hourly_rate": 60,
+            "service_area": "West Loop",
+            "portfolio": "Kitchen remodels and maintenance",
+        },
+        headers=auth_headers(worker_login["token"]),
+    )
+    assert update_profile_response.status_code == 200
+
+    availability_response = client.post(
+        "/availability/me",
+        json=[
+            {"day": "Monday", "start_time": "09:00", "end_time": "17:00"},
+            {"day": "Tuesday", "start_time": "10:00", "end_time": "14:00"},
+        ],
+        headers=auth_headers(worker_login["token"]),
+    )
+    assert availability_response.status_code == 200
+
+    fetch_availability = client.get(
+        "/availability/me",
+        headers=auth_headers(worker_login["token"]),
+    )
+    assert fetch_availability.status_code == 200
+    assert len(fetch_availability.json()) == 2
+
+    workers_response = client.get("/workers")
+    assert workers_response.status_code == 200
+    assert workers_response.json()[0]["service_area"] == "West Loop"

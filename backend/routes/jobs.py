@@ -6,11 +6,13 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 import json
+import os
 
 from auth import get_current_user, require_role
 from database import SessionLocal
 from models import Job, Rating, Notification, Payment, ChatMessage, User, UserProfile
 from connections import active_connections
+from notification_service import send_email_notification, send_sms_notification
 
 router = APIRouter()
 
@@ -76,12 +78,24 @@ def create_notification(
     return notification
 
 
+def public_upload_url(path: str) -> str:
+    uploads_base = os.getenv("SERVICE_MARKETPLACE_UPLOADS_BASE_URL", "").strip().rstrip("/")
+    if uploads_base:
+        return f"{uploads_base}{path}"
+    return path
+
+
 async def push_notification(user_id: int, payload: dict):
     for connection in list(active_connections.get(user_id, set())):
         try:
             await connection.send_text(json.dumps(payload))
         except Exception:
             pass
+
+
+def notify_user_channels(user: User, *, subject: str, body: str, sms_message: str):
+    send_email_notification(user.email, subject, body)
+    send_sms_notification(user.phone, sms_message)
 
 
 @router.post("/complete-job")
@@ -102,6 +116,7 @@ async def complete_job(
     job.status = "COMPLETED"
 
     db.commit()
+    customer = db.query(User).filter(User.id == job.customer_id).first()
 
     notification = create_notification(
         db,
@@ -120,6 +135,13 @@ async def complete_job(
             "notification_type": notification.notification_type,
         },
     )
+    if customer:
+        notify_user_channels(
+            customer,
+            subject="Job completed",
+            body=f"{job.title} has been marked completed by the worker.",
+            sms_message=f"Job completed: {job.title}",
+        )
 
     return {
         "message": "Job completed successfully",
@@ -169,6 +191,12 @@ async def create_job(
                 "notification_type": stored_notification.notification_type,
             },
         )
+        notify_user_channels(
+            worker,
+            subject="New job available",
+            body=f"{new_job.title} is open in {new_job.location} for ${new_job.price}.",
+            sms_message=f"New job: {new_job.title} in {new_job.location}",
+        )
 
     notification = {
         "type": "new_job",
@@ -213,6 +241,7 @@ async def accept_job(
 
     db.commit()
     db.refresh(job)
+    customer = db.query(User).filter(User.id == job.customer_id).first()
 
     notification = create_notification(
         db,
@@ -231,6 +260,13 @@ async def accept_job(
             "notification_type": notification.notification_type,
         },
     )
+    if customer:
+        notify_user_channels(
+            customer,
+            subject="Job accepted",
+            body=f"{job.title} has been accepted by a worker.",
+            sms_message=f"Job accepted: {job.title}",
+        )
 
     return {
         "message": "Job accepted successfully",
@@ -435,6 +471,15 @@ async def send_message(
         except Exception:
             pass
 
+    receiver = db.query(User).filter(User.id == payload.receiver_id).first()
+    if receiver:
+        notify_user_channels(
+            receiver,
+            subject="New chat message",
+            body=f"You have a new message about {job.title}.",
+            sms_message=f"New message about {job.title}",
+        )
+
     return {
         "message": "Message sent",
         "chat_id": chat.id
@@ -540,6 +585,7 @@ async def make_payment(
     job.paid = True
     db.commit()
     db.refresh(payment)
+    worker = db.query(User).filter(User.id == job.worker_id).first()
 
     notification = create_notification(
         db,
@@ -558,6 +604,13 @@ async def make_payment(
             "notification_type": notification.notification_type,
         },
     )
+    if worker:
+        notify_user_channels(
+            worker,
+            subject="Payment received",
+            body=f"Payment for {job.title} has been completed.",
+            sms_message=f"Payment received for {job.title}",
+        )
 
     return {
         "message": "Payment successful",
@@ -652,7 +705,7 @@ async def upload_job_image(
     destination = UPLOADS_DIR / file_name
     destination.write_bytes(await file.read())
 
-    job.image_url = f"/uploads/jobs/{file_name}"
+    job.image_url = public_upload_url(f"/uploads/jobs/{file_name}")
     db.commit()
     db.refresh(job)
 
