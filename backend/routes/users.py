@@ -1,6 +1,4 @@
 import os
-import uuid
-from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from pydantic import BaseModel
@@ -18,6 +16,7 @@ from security import (
     hash_password,
     verify_password,
 )
+from storage import store_image, validate_image_extension
 
 router = APIRouter()
 
@@ -72,17 +71,6 @@ class AvailabilitySlotRequest(BaseModel):
     day: str
     start_time: str
     end_time: str
-
-
-UPLOADS_DIR = Path(__file__).resolve().parents[1] / "uploads" / "avatars"
-UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
-
-
-def public_upload_url(path: str) -> str:
-    uploads_base = os.getenv("SERVICE_MARKETPLACE_UPLOADS_BASE_URL", "").strip().rstrip("/")
-    if uploads_base:
-        return f"{uploads_base}{path}"
-    return path
 
 
 # Register user
@@ -322,15 +310,12 @@ async def upload_avatar(
     if not file.filename:
         raise HTTPException(status_code=400, detail="Avatar file is required")
 
-    extension = Path(file.filename).suffix.lower()
-    if extension not in {".png", ".jpg", ".jpeg", ".webp"}:
-        raise HTTPException(status_code=400, detail="Avatar must be png, jpg, jpeg, or webp")
-
-    file_name = f"{current_user.id}-{uuid.uuid4().hex}{extension}"
-    destination = UPLOADS_DIR / file_name
-    destination.write_bytes(await file.read())
-
-    profile.avatar_url = public_upload_url(f"/uploads/avatars/{file_name}")
+    validate_image_extension(file.filename, label="Avatar")
+    profile.avatar_url = await store_image(
+        file,
+        folder="avatars",
+        file_prefix=str(current_user.id),
+    )
     db.commit()
     db.refresh(profile)
 

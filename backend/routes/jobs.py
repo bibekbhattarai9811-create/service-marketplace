@@ -1,18 +1,15 @@
-import uuid
-from pathlib import Path
-
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 import json
-import os
 
 from auth import get_current_user, require_role
 from database import SessionLocal
 from models import Job, Rating, Notification, Payment, ChatMessage, User, UserProfile
 from connections import active_connections
 from notification_service import send_email_notification, send_sms_notification
+from storage import store_image, validate_image_extension
 
 router = APIRouter()
 
@@ -52,10 +49,6 @@ class ChatMessageRequest(BaseModel):
     message: str
 
 
-UPLOADS_DIR = Path(__file__).resolve().parents[1] / "uploads" / "jobs"
-UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
-
-
 def create_notification(
     db: Session,
     *,
@@ -76,15 +69,6 @@ def create_notification(
     db.commit()
     db.refresh(notification)
     return notification
-
-
-def public_upload_url(path: str) -> str:
-    uploads_base = os.getenv("SERVICE_MARKETPLACE_UPLOADS_BASE_URL", "").strip().rstrip("/")
-    if uploads_base:
-        return f"{uploads_base}{path}"
-    return path
-
-
 async def push_notification(user_id: int, payload: dict):
     for connection in list(active_connections.get(user_id, set())):
         try:
@@ -697,15 +681,12 @@ async def upload_job_image(
     if not file.filename:
         raise HTTPException(status_code=400, detail="Job image is required")
 
-    extension = Path(file.filename).suffix.lower()
-    if extension not in {".png", ".jpg", ".jpeg", ".webp"}:
-        raise HTTPException(status_code=400, detail="Job image must be png, jpg, jpeg, or webp")
-
-    file_name = f"job-{job.id}-{uuid.uuid4().hex}{extension}"
-    destination = UPLOADS_DIR / file_name
-    destination.write_bytes(await file.read())
-
-    job.image_url = public_upload_url(f"/uploads/jobs/{file_name}")
+    validate_image_extension(file.filename, label="Job image")
+    job.image_url = await store_image(
+        file,
+        folder="jobs",
+        file_prefix=f"job-{job.id}",
+    )
     db.commit()
     db.refresh(job)
 
