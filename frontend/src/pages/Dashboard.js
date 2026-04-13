@@ -1,5 +1,26 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png'
+});
+
+function getFakeCoords(locationName) {
+    if (!locationName) return [40.7128, -74.0060];
+    let hash = 0;
+    for (let i = 0; i < locationName.length; i++) {
+        hash = locationName.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const lat = 40.7128 + ((hash % 100) / 100) * 0.5 - 0.25;
+    const lng = -74.0060 + (((hash >> 8) % 100) / 100) * 0.5 - 0.25;
+    return [lat, lng];
+}
 import Navbar from "../components/Navbar";
 import { WS_API, apiClient } from "../api";
 
@@ -204,40 +225,59 @@ function Dashboard() {
                     {jobs.length === 0 ? (
                         <div className="empty-state">No available jobs right now.</div>
                     ) : (
-                        <div className="card-grid">
-                            {jobs.map((job) => (
-                                <article key={job.id} className="job-card">
-                                    {job.image_url && (
-                                        <img
-                                            src={`${apiClient.defaults.baseURL}${job.image_url}`}
-                                            alt={job.title}
-                                            className="job-photo"
-                                        />
-                                    )}
-                                    <div className="job-card-header">
-                                        <div>
-                                            <h3>{job.title}</h3>
-                                            <p>{job.description}</p>
+                        <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
+                            <div className="card-grid" style={{ flex: 1, minWidth: '300px', maxHeight: '600px', overflowY: 'auto', alignContent: 'start' }}>
+                                {jobs.map((job) => (
+                                    <article key={job.id} className="job-card">
+                                        {job.image_url && (
+                                            <img
+                                                src={`${apiClient.defaults.baseURL}${job.image_url}`}
+                                                alt={job.title}
+                                                className="job-photo"
+                                            />
+                                        )}
+                                        <div className="job-card-header">
+                                            <div>
+                                                <h3>{job.title}</h3>
+                                                <p>{job.description}</p>
+                                            </div>
+                                            <span className={`status-badge status-${job.status.toLowerCase()}`}>{job.status}</span>
                                         </div>
-                                        <span className={`status-badge status-${job.status.toLowerCase()}`}>{job.status}</span>
-                                    </div>
-                                    <div className="job-meta">
-                                        <span className="job-meta-chip">Location: {job.location}</span>
-                                        <span className="job-meta-chip">Price: ${job.price}</span>
-                                        {job.category && <span className="job-meta-chip">{job.category}</span>}
-                                        {job.service_date && <span className="job-meta-chip">{job.service_date}</span>}
-                                        {job.service_window && <span className="job-meta-chip">{job.service_window}</span>}
-                                    </div>
-                                    <div className="button-row">
-                                        <a className="ghost-button" href={mapLink(job.location)} target="_blank" rel="noreferrer">
-                                            View Map
-                                        </a>
-                                        <button className="primary-button" onClick={() => acceptJob(job.id)}>
-                                            Accept Job
-                                        </button>
-                                    </div>
-                                </article>
-                            ))}
+                                        <div className="job-meta">
+                                            <span className="job-meta-chip">Location: {job.location}</span>
+                                            <span className="job-meta-chip">Price: ${job.price}</span>
+                                            {job.category && <span className="job-meta-chip">{job.category}</span>}
+                                            {job.service_date && <span className="job-meta-chip">{job.service_date}</span>}
+                                            {job.service_window && <span className="job-meta-chip">{job.service_window}</span>}
+                                        </div>
+                                        <div className="button-row">
+                                            <button className="primary-button" onClick={() => acceptJob(job.id)}>
+                                                Accept Job
+                                            </button>
+                                        </div>
+                                    </article>
+                                ))}
+                            </div>
+                            <div style={{ flex: 1, minWidth: '300px', height: '600px', borderRadius: '12px', overflow: 'hidden', border: '1px solid #e1e4e8' }}>
+                                <MapContainer center={[40.7128, -74.0060]} zoom={10} style={{ height: '100%', width: '100%' }}>
+                                    <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                                    {jobs.map(job => {
+                                        if (!job.location) return null;
+                                        const coords = getFakeCoords(job.location);
+                                        return (
+                                            <Marker key={job.id} position={coords}>
+                                                <Popup>
+                                                    <div style={{ textAlign: 'center' }}>
+                                                        <strong style={{ display: 'block', marginBottom: '4px' }}>{job.title}</strong>
+                                                        {job.location}<br/>
+                                                        <strong>${job.price}</strong><br/>
+                                                    </div>
+                                                </Popup>
+                                            </Marker>
+                                        );
+                                    })}
+                                </MapContainer>
+                            </div>
                         </div>
                     )}
                 </section>

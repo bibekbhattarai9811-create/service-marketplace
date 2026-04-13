@@ -128,6 +128,7 @@ class ChatMessage(Base):
     receiver_id = Column(Integer)
 
     message = Column(String)
+    image_url = Column(String, default="")
 
 
 # ---------------------------

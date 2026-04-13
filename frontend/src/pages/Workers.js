@@ -1,5 +1,26 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png'
+});
+
+function getFakeCoords(locationName) {
+    if (!locationName) return [40.7128, -74.0060];
+    let hash = 0;
+    for (let i = 0; i < locationName.length; i++) {
+        hash = locationName.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const lat = 40.7128 + ((hash % 100) / 100) * 0.5 - 0.25;
+    const lng = -74.0060 + (((hash >> 8) % 100) / 100) * 0.5 - 0.25;
+    return [lat, lng];
+}
 import Navbar from '../components/Navbar';
 import { apiClient } from '../api';
 
@@ -76,49 +97,64 @@ function Workers() {
                     {filteredWorkers.length === 0 ? (
                         <div className="empty-state">No workers available yet.</div>
                     ) : (
-                        <div className="card-grid">
-                            {filteredWorkers.map((worker) => (
-                                <article key={worker.id} className="job-card">
-                                    {worker.avatar_url && (
-                                        <img
-                                            src={worker.avatar_url.startsWith('http') ? worker.avatar_url : `${apiClient.defaults.baseURL}${worker.avatar_url}`}
-                                            alt={worker.name}
-                                            className="job-photo"
-                                        />
-                                    )}
-                                    <div className="job-card-header">
-                                        <div>
-                                            <h3>{worker.name}</h3>
-                                            <p>{worker.portfolio || 'No portfolio highlights yet.'}</p>
+                        <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
+                            <div className="card-grid" style={{ flex: 1, minWidth: '300px', maxHeight: '600px', overflowY: 'auto', alignContent: 'start' }}>
+                                {filteredWorkers.map((worker) => (
+                                    <article key={worker.id} className="job-card">
+                                        {worker.avatar_url && (
+                                            <img
+                                                src={worker.avatar_url.startsWith('http') ? worker.avatar_url : `${apiClient.defaults.baseURL}${worker.avatar_url}`}
+                                                alt={worker.name}
+                                                className="job-photo"
+                                            />
+                                        )}
+                                        <div className="job-card-header">
+                                            <div>
+                                                <h3>{worker.name}</h3>
+                                                <p>{worker.portfolio || 'No portfolio highlights yet.'}</p>
+                                            </div>
+                                            <span className="status-badge status-open">
+                                                {worker.average_rating} stars
+                                            </span>
                                         </div>
-                                        <span className="status-badge status-open">
-                                            {worker.average_rating} stars
-                                        </span>
-                                    </div>
-                                    <div className="job-meta">
-                                        {worker.city && <span className="job-meta-chip">{worker.city}</span>}
-                                        {worker.service_area && <span className="job-meta-chip">{worker.service_area}</span>}
-                                        {worker.skills && <span className="job-meta-chip">{worker.skills}</span>}
-                                        {worker.hourly_rate && <span className="job-meta-chip">${worker.hourly_rate}/hr</span>}
-                                        <span className="job-meta-chip">{worker.review_count} reviews</span>
-                                    </div>
-                                    {(worker.city || worker.service_area) && (
-                                        <div className="button-row">
-                                            <Link className="secondary-button" to={`/workers/${worker.id}`}>
-                                                View Profile
-                                            </Link>
-                                            <a
-                                                className="ghost-button"
-                                                href={mapLink(worker.service_area || worker.city)}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                            >
-                                                View Service Area
-                                            </a>
+                                        <div className="job-meta">
+                                            {worker.city && <span className="job-meta-chip">{worker.city}</span>}
+                                            {worker.service_area && <span className="job-meta-chip">{worker.service_area}</span>}
+                                            {worker.skills && <span className="job-meta-chip">{worker.skills}</span>}
+                                            {worker.hourly_rate && <span className="job-meta-chip">${worker.hourly_rate}/hr</span>}
+                                            <span className="job-meta-chip">{worker.review_count} reviews</span>
                                         </div>
-                                    )}
-                                </article>
-                            ))}
+                                        {(worker.city || worker.service_area) && (
+                                            <div className="button-row">
+                                                <Link className="secondary-button" to={`/workers/${worker.id}`}>
+                                                    View Profile
+                                                </Link>
+                                            </div>
+                                        )}
+                                    </article>
+                                ))}
+                            </div>
+                            <div style={{ flex: 1, minWidth: '300px', height: '600px', borderRadius: '12px', overflow: 'hidden', border: '1px solid #e1e4e8' }}>
+                                <MapContainer center={[40.7128, -74.0060]} zoom={10} style={{ height: '100%', width: '100%' }}>
+                                    <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                                    {filteredWorkers.map(w => {
+                                        if (!w.city && !w.service_area) return null;
+                                        const coords = getFakeCoords(w.service_area || w.city);
+                                        return (
+                                            <Marker key={w.id} position={coords}>
+                                                <Popup>
+                                                    <div style={{ textAlign: 'center' }}>
+                                                        <strong style={{ display: 'block', marginBottom: '4px' }}>{w.name}</strong>
+                                                        {w.service_area || w.city}<br/>
+                                                        <strong>${w.hourly_rate}/hr</strong><br/>
+                                                        <Link to={`/workers/${w.id}`}>View Profile</Link>
+                                                    </div>
+                                                </Popup>
+                                            </Marker>
+                                        );
+                                    })}
+                                </MapContainer>
+                            </div>
                         </div>
                     )}
                 </section>

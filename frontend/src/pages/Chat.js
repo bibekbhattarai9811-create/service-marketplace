@@ -6,6 +6,8 @@ function Chat() {
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
     const [message, setMessage] = useState('');
+    const [uploading, setUploading] = useState(false);
+    const fileInputRef = useRef(null);
 
     const jobId = new URLSearchParams(window.location.search).get('job_id');
     const receiverId = new URLSearchParams(window.location.search).get('receiver_id');
@@ -61,6 +63,35 @@ function Chat() {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
 
+    const handleFileUpload = async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        setUploading(true);
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const response = await apiClient.post('/upload-chat-image', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            const imageUrl = response.data.image_url;
+            await apiClient.post('/jobs/send-message', {
+                job_id: Number(jobId),
+                receiver_id: Number(receiverId),
+                message: 'Sent an image',
+                image_url: imageUrl
+            });
+        } catch (error) {
+            setMessage('Failed to upload image.');
+        } finally {
+            setUploading(false);
+            if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
+        }
+    };
+
     const handleSend = async () => {
         if (!newMessage.trim()) return;
         try {
@@ -105,7 +136,16 @@ function Chat() {
                                     key={msg.id}
                                     className={`chat-row ${msg.sender_id === parseInt(senderId, 10) ? 'mine' : 'theirs'}`}
                                 >
-                                    <div className="chat-bubble">{msg.message}</div>
+                                    <div className="chat-bubble">
+                                        {msg.image_url ? (
+                                            <div>
+                                                <img src={msg.image_url} alt="attached" style={{ maxWidth: '200px', borderRadius: '8px', marginBottom: '4px', display: 'block' }} />
+                                                <div style={{ fontSize: '0.9em' }}>{msg.message}</div>
+                                            </div>
+                                        ) : (
+                                            msg.message
+                                        )}
+                                    </div>
                                 </div>
                             ))
                         )}
@@ -114,13 +154,23 @@ function Chat() {
 
                     <div className="chat-compose">
                         <input
+                            type="file"
+                            accept="image/*"
+                            style={{ display: 'none' }}
+                            ref={fileInputRef}
+                            onChange={handleFileUpload}
+                        />
+                        <button className="icon-button" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+                            {uploading ? '...' : '📎'}
+                        </button>
+                        <input
                             type="text"
                             placeholder="Type a message..."
                             value={newMessage}
                             onChange={(e) => setNewMessage(e.target.value)}
                             onKeyDown={handleKeyDown}
                         />
-                        <button className="secondary-button" onClick={handleSend}>
+                        <button className="secondary-button" onClick={handleSend} disabled={uploading}>
                             Send
                         </button>
                     </div>

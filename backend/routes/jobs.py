@@ -50,6 +50,7 @@ class ChatMessageRequest(BaseModel):
     job_id: int
     receiver_id: int
     message: str
+    image_url: str | None = None
 
 
 class DisputeRequest(BaseModel):
@@ -468,7 +469,8 @@ async def send_message(
         job_id=payload.job_id,
         sender_id=current_user.id,
         receiver_id=payload.receiver_id,
-        message=payload.message.strip()
+        message=payload.message.strip(),
+        image_url=payload.image_url.strip() if payload.image_url else ""
     )
 
     db.add(chat)
@@ -490,6 +492,7 @@ async def send_message(
         "sender_id": current_user.id,
         "receiver_id": payload.receiver_id,
         "message": chat.message,
+        "image_url": chat.image_url,
         "id": chat.id,
     }
 

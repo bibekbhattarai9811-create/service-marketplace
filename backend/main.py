@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from fastapi import FastAPI, WebSocket, Depends, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, Depends, WebSocketDisconnect, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
@@ -63,6 +63,15 @@ app.include_router(jobs.router, prefix="/jobs")
 # Root Endpoint
 # -----------------------------
 
+
+@app.post("/upload-chat-image")
+async def upload_chat_image(
+    file: UploadFile,
+    current_user: User = Depends(get_current_user)
+):
+    from storage import store_image
+    url = await store_image(file, folder="chat", file_prefix="chat")
+    return {"image_url": url}
 
 @app.get("/")
 def home():
