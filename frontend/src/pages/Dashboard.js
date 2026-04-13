@@ -13,6 +13,8 @@ function Dashboard() {
     const [message, setMessage] = useState({ text: "", isError: false });
     const [earnings, setEarnings] = useState(null);
     const [rating, setRating] = useState(null);
+    const [disputeReason, setDisputeReason] = useState({});
+    const [disputeDetails, setDisputeDetails] = useState({});
     const [transactions, setTransactions] = useState([]);
     const wsRef = useRef(null);
 
@@ -91,6 +93,19 @@ function Dashboard() {
             fetchTransactions();
         } catch (error) {
             setMessage({ text: error.response?.data?.detail || "Failed to complete job.", isError: true });
+        }
+    };
+
+    const reportIssue = async (jobId) => {
+        try {
+            await apiClient.post('/jobs/disputes', {
+                job_id: jobId,
+                reason: disputeReason[jobId] || 'General issue',
+                details: disputeDetails[jobId] || '',
+            });
+            setMessage({ text: 'Issue reported successfully.', isError: false });
+        } catch (error) {
+            setMessage({ text: error.response?.data?.detail || 'Failed to report issue.', isError: true });
         }
     };
 
@@ -273,6 +288,24 @@ function Dashboard() {
                                             </button>
                                         )}
                                     </div>
+                                    {(job.status === "ACCEPTED" || job.status === "COMPLETED") && (
+                                        <div className="section-card" style={{ padding: '18px', marginBottom: 0 }}>
+                                            <div className="page-form">
+                                                <input
+                                                    type="text"
+                                                    placeholder="Issue reason"
+                                                    onChange={(e) => setDisputeReason({ ...disputeReason, [job.id]: e.target.value })}
+                                                />
+                                                <textarea
+                                                    placeholder="Issue details"
+                                                    onChange={(e) => setDisputeDetails({ ...disputeDetails, [job.id]: e.target.value })}
+                                                />
+                                                <button className="danger-button" onClick={() => reportIssue(job.id)}>
+                                                    Report Issue
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
                                 </article>
                             ))}
                         </div>

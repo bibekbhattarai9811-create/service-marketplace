@@ -1,0 +1,9 @@
+{
+  "appId": "com.servicemarketplace.app",
+  "appName": "Service Marketplace",
+  "webDir": "build",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  }
+}

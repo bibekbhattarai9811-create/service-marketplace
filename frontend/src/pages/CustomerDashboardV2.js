@@ -13,6 +13,8 @@ function CustomerDashboardV2() {
     const [messageIsError, setMessageIsError] = useState(false);
     const [ratingData, setRatingData] = useState({});
     const [reviewData, setReviewData] = useState({});
+    const [disputeReason, setDisputeReason] = useState({});
+    const [disputeDetails, setDisputeDetails] = useState({});
     const [transactions, setTransactions] = useState([]);
 
     const fetchMyJobs = async () => {
@@ -91,6 +93,19 @@ function CustomerDashboardV2() {
             fetchMyJobs();
         } catch (error) {
             showMessage(error.response?.data?.detail || 'Failed to cancel job.', true);
+        }
+    };
+
+    const handleDispute = async (job) => {
+        try {
+            await apiClient.post('/jobs/disputes', {
+                job_id: job.id,
+                reason: disputeReason[job.id] || 'General issue',
+                details: disputeDetails[job.id] || '',
+            });
+            showMessage('Dispute reported successfully.');
+        } catch (error) {
+            showMessage(error.response?.data?.detail || 'Failed to report dispute.', true);
         }
     };
 
@@ -252,6 +267,33 @@ function CustomerDashboardV2() {
                                     {job.rating && (
                                         <div className="message-banner success" style={{ marginBottom: 0 }}>
                                             Rating submitted. Score: {job.rating}/5
+                                        </div>
+                                    )}
+
+                                    {(job.status === 'ACCEPTED' || job.status === 'COMPLETED') && (
+                                        <div className="section-card" style={{ padding: '18px', marginBottom: 0 }}>
+                                            <div className="section-header">
+                                                <div>
+                                                    <h3>Report an issue</h3>
+                                                    <p className="section-subtitle">Use this if there is a dispute with the job or worker.</p>
+                                                </div>
+                                            </div>
+                                            <div className="page-form">
+                                                <input
+                                                    type="text"
+                                                    placeholder="Reason"
+                                                    onChange={(e) => setDisputeReason({ ...disputeReason, [job.id]: e.target.value })}
+                                                />
+                                                <textarea
+                                                    placeholder="Details"
+                                                    onChange={(e) => setDisputeDetails({ ...disputeDetails, [job.id]: e.target.value })}
+                                                />
+                                                <div className="button-row">
+                                                    <button className="danger-button" onClick={() => handleDispute(job)}>
+                                                        Report Issue
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </div>
                                     )}
                                 </article>

@@ -6,7 +6,7 @@ import json
 
 from auth import get_current_user, require_role
 from database import SessionLocal
-from models import Job, Rating, Notification, Payment, ChatMessage, User, UserProfile
+from models import Job, Rating, Notification, Payment, ChatMessage, User, UserProfile, Dispute
 from connections import active_connections
 from notification_service import send_email_notification, send_sms_notification
 from storage import store_image, validate_image_extension
@@ -52,6 +52,17 @@ class ChatMessageRequest(BaseModel):
     message: str
 
 
+class DisputeRequest(BaseModel):
+    job_id: int
+    reason: str
+    details: str = ""
+
+
+class DisputeUpdateRequest(BaseModel):
+    status: str
+    resolution_note: str = ""
+
+
 def create_notification(
     db: Session,
     *,
@@ -85,6 +96,19 @@ async def push_notification(user_id: int, payload: dict):
 def notify_user_channels(user: User, *, subject: str, body: str, sms_message: str):
     send_email_notification(user.email, subject, body)
     send_sms_notification(user.phone, sms_message)
+
+
+def notify_admins(db: Session, *, title: str, message: str, action_url: str):
+    admins = db.query(User).filter(User.role == "admin", User.is_active == True).all()  # noqa: E712
+    for admin in admins:
+        create_notification(
+            db,
+            user_id=admin.id,
+            title=title,
+            message=message,
+            notification_type="admin_alert",
+            action_url=action_url,
+        )
 
 
 @router.post("/complete-job")
@@ -577,6 +601,111 @@ def mark_all_notifications_read(
     ).update({"is_read": 1})
     db.commit()
     return {"message": "All notifications marked as read"}
+
+
+@router.post("/disputes")
+def create_dispute(
+    payload: DisputeRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    job = db.query(Job).filter(Job.id == payload.job_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    if current_user.id not in {job.customer_id, job.worker_id}:
+        raise HTTPException(status_code=403, detail="Not authorized to report this job")
+
+    target_user_id = job.worker_id if current_user.id == job.customer_id else job.customer_id
+    dispute = Dispute(
+        job_id=job.id,
+        reporter_id=current_user.id,
+        target_user_id=target_user_id,
+        dispute_type="job",
+        reason=payload.reason.strip(),
+        details=payload.details.strip(),
+        status="OPEN",
+        resolution_note="",
+    )
+    db.add(dispute)
+    db.commit()
+    db.refresh(dispute)
+
+    notify_admins(
+        db,
+        title="New dispute reported",
+        message=f"{current_user.name} reported an issue on job {job.title}.",
+        action_url="/admin",
+    )
+    return {"message": "Dispute reported successfully", "dispute_id": dispute.id}
+
+
+@router.get("/disputes/me")
+def get_my_disputes(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    disputes = db.query(Dispute).filter(
+        (Dispute.reporter_id == current_user.id) | (Dispute.target_user_id == current_user.id)
+    ).order_by(Dispute.id.desc()).all()
+    return disputes
+
+
+@router.get("/admin/disputes")
+def get_admin_disputes(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("admin")),
+):
+    disputes = db.query(Dispute).order_by(Dispute.id.desc()).all()
+    jobs = {
+        job.id: job
+        for job in db.query(Job).filter(Job.id.in_([dispute.job_id for dispute in disputes] or [0])).all()
+    }
+    users = {
+        user.id: user
+        for user in db.query(User).filter(
+            User.id.in_(
+                [dispute.reporter_id for dispute in disputes] +
+                [dispute.target_user_id for dispute in disputes if dispute.target_user_id]
+            ) if disputes else [0]
+        ).all()
+    }
+
+    return [
+        {
+            "id": dispute.id,
+            "job_id": dispute.job_id,
+            "job_title": jobs.get(dispute.job_id).title if jobs.get(dispute.job_id) else "Unknown",
+            "reporter_name": users.get(dispute.reporter_id).name if users.get(dispute.reporter_id) else "Unknown",
+            "target_name": users.get(dispute.target_user_id).name if users.get(dispute.target_user_id) else "",
+            "reason": dispute.reason,
+            "details": dispute.details,
+            "status": dispute.status,
+            "resolution_note": dispute.resolution_note,
+        }
+        for dispute in disputes
+    ]
+
+
+@router.put("/admin/disputes/{dispute_id}")
+def update_dispute(
+    dispute_id: int,
+    payload: DisputeUpdateRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("admin")),
+):
+    dispute = db.query(Dispute).filter(Dispute.id == dispute_id).first()
+    if not dispute:
+        raise HTTPException(status_code=404, detail="Dispute not found")
+
+    next_status = payload.status.strip().upper()
+    if next_status not in {"OPEN", "UNDER_REVIEW", "RESOLVED", "REJECTED"}:
+        raise HTTPException(status_code=400, detail="Invalid dispute status")
+
+    dispute.status = next_status
+    dispute.resolution_note = payload.resolution_note.strip()
+    db.commit()
+    return {"message": "Dispute updated successfully"}
 
 
 # -------------------------

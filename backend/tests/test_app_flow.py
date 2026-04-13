@@ -462,3 +462,86 @@ def test_job_filters_notifications_and_worker_public_profile(client):
     worker_profile = client.get(f"/workers/{worker_login['user_id']}")
     assert worker_profile.status_code == 200
     assert worker_profile.json()["service_area"] == "Downtown"
+
+
+def test_dispute_reporting_and_admin_moderation(client):
+    register_user(
+        client,
+        name="Admin",
+        email="admin@test.com",
+        role="admin",
+    )
+    register_user(
+        client,
+        name="Customer",
+        email="customer@test.com",
+        role="customer",
+    )
+    register_user(
+        client,
+        name="Worker",
+        email="worker@test.com",
+        role="worker",
+    )
+
+    admin_login = login_user(client, email="admin@test.com")
+    customer_login = login_user(client, email="customer@test.com")
+    worker_login = login_user(client, email="worker@test.com")
+
+    create_job_response = client.post(
+        "/jobs/create-job",
+        json={
+            "title": "Fix gate",
+            "description": "The front gate latch is broken",
+            "location": "Chicago",
+            "price": 75,
+        },
+        headers=auth_headers(customer_login["token"]),
+    )
+    assert create_job_response.status_code == 200
+    job_id = create_job_response.json()["job_id"]
+
+    assert client.post(
+        f"/jobs/accept-job?job_id={job_id}",
+        headers=auth_headers(worker_login["token"]),
+    ).status_code == 200
+
+    dispute_response = client.post(
+        "/jobs/disputes",
+        json={
+            "job_id": job_id,
+            "reason": "Late arrival",
+            "details": "Worker arrived much later than agreed.",
+        },
+        headers=auth_headers(customer_login["token"]),
+    )
+    assert dispute_response.status_code == 200
+
+    my_disputes = client.get(
+        "/jobs/disputes/me",
+        headers=auth_headers(customer_login["token"]),
+    )
+    assert my_disputes.status_code == 200
+    assert my_disputes.json()[0]["reason"] == "Late arrival"
+
+    admin_disputes = client.get(
+        "/jobs/admin/disputes",
+        headers=auth_headers(admin_login["token"]),
+    )
+    assert admin_disputes.status_code == 200
+    dispute_id = admin_disputes.json()[0]["id"]
+    assert admin_disputes.json()[0]["job_title"] == "Fix gate"
+
+    resolve_dispute = client.put(
+        f"/jobs/admin/disputes/{dispute_id}",
+        json={"status": "RESOLVED", "resolution_note": "Refund approved"},
+        headers=auth_headers(admin_login["token"]),
+    )
+    assert resolve_dispute.status_code == 200
+
+    updated_disputes = client.get(
+        "/jobs/admin/disputes",
+        headers=auth_headers(admin_login["token"]),
+    )
+    assert updated_disputes.status_code == 200
+    assert updated_disputes.json()[0]["status"] == "RESOLVED"

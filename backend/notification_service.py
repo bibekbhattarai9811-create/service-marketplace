@@ -5,16 +5,23 @@ import ssl
 from email.message import EmailMessage
 from urllib import request
 
+import httpx
+
 
 SMTP_HOST = os.getenv("SERVICE_MARKETPLACE_SMTP_HOST", "").strip()
 SMTP_PORT = int(os.getenv("SERVICE_MARKETPLACE_SMTP_PORT", "587") or "587")
 SMTP_USER = os.getenv("SERVICE_MARKETPLACE_SMTP_USER", "").strip()
 SMTP_PASSWORD = os.getenv("SERVICE_MARKETPLACE_SMTP_PASSWORD", "").strip()
 SMTP_FROM = os.getenv("SERVICE_MARKETPLACE_SMTP_FROM", "").strip() or SMTP_USER
+RESEND_API_KEY = os.getenv("SERVICE_MARKETPLACE_RESEND_API_KEY", "").strip()
+RESEND_FROM = os.getenv("SERVICE_MARKETPLACE_RESEND_FROM", "").strip()
 SMS_WEBHOOK_URL = os.getenv("SERVICE_MARKETPLACE_SMS_WEBHOOK_URL", "").strip()
 
 
 def send_email_notification(to_email: str, subject: str, body: str) -> bool:
+    if RESEND_API_KEY and RESEND_FROM and to_email:
+        return _send_resend_email(to_email, subject, body)
+
     if not (SMTP_HOST and SMTP_FROM and to_email):
         return False
 
@@ -31,6 +38,28 @@ def send_email_notification(to_email: str, subject: str, body: str) -> bool:
             if SMTP_USER and SMTP_PASSWORD:
                 server.login(SMTP_USER, SMTP_PASSWORD)
             server.send_message(message)
+        return True
+    except Exception:
+        return False
+
+
+def _send_resend_email(to_email: str, subject: str, body: str) -> bool:
+    try:
+        response = httpx.post(
+            "https://api.resend.com/emails",
+            headers={
+                "Authorization": f"Bearer {RESEND_API_KEY}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "from": RESEND_FROM,
+                "to": [to_email],
+                "subject": subject,
+                "text": body,
+            },
+            timeout=20,
+        )
+        response.raise_for_status()
         return True
     except Exception:
         return False

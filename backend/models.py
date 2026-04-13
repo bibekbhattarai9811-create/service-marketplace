@@ -143,3 +143,20 @@ class Availability(Base):
 
     start_time = Column(String)
     end_time = Column(String)
+
+
+# ---------------------------
+# Reports / Disputes
+# ---------------------------
+class Dispute(Base):
+    __tablename__ = "disputes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    job_id = Column(Integer)
+    reporter_id = Column(Integer)
+    target_user_id = Column(Integer, nullable=True)
+    dispute_type = Column(String, default="job")
+    reason = Column(String)
+    details = Column(String, default="")
+    status = Column(String, default="OPEN")
+    resolution_note = Column(String, default="")

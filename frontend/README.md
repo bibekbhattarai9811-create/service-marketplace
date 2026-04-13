@@ -6,10 +6,17 @@ This frontend is the customer and worker web app for the Service Marketplace pro
 
 - customer registration and login
 - worker registration and login
+- password reset flow
 - job posting
 - worker dashboard for accepting and completing jobs
 - customer dashboard for payments and ratings
 - in-app chat
+- notifications center
+- profile management
+- worker directory
+- admin analytics and user management
+- dispute reporting and moderation actions
+- installable PWA and Capacitor mobile scaffold
 - token-based API requests
 
 ## Local Development
@@ -59,6 +66,34 @@ Build for production:
 npm run build
 ```
 
+## Mobile Packaging
+
+This frontend now includes a Capacitor config:
+
+```bash
+capacitor.config.json
+```
+
+Typical packaging flow:
+
+```bash
+npm run mobile:build
+npm run mobile:sync
+```
+
+Then open a native project:
+
+```bash
+npm run mobile:android
+npm run mobile:ios
+```
+
+Important:
+
+- install Capacitor packages before first native build
+- add Android/iOS projects with `npx cap add android` or `npx cap add ios`
+- make sure `REACT_APP_API_URL` and `REACT_APP_WS_URL` point to live services for device testing
+
 If Windows or OneDrive blocks writes to the local `build` folder, use a temp build path:
 
 ```powershell
@@ -89,6 +124,7 @@ Important:
 
 - do not add a trailing `/` to `REACT_APP_API_URL`
 - after changing Render environment variables, use `Clear build cache & deploy`
+- make sure the frontend is deployed from the latest GitHub commit before testing new routes
 
 ### SPA routing
 
@@ -104,17 +140,24 @@ That is needed so routes like `/register`, `/dashboard`, and `/chat` work on the
 
 - `/` -> login
 - `/register` -> register
+- `/reset-password` -> password reset
 - `/home` -> available jobs
+- `/workers` -> public worker directory
 - `/post-job` -> post a job
 - `/dashboard` -> worker dashboard
 - `/customer-dashboard` -> customer dashboard
 - `/chat` -> job chat
+- `/profile` -> user profile
+- `/notifications` -> notifications center
+- `/admin` -> admin analytics and user management
 
 ## Access Rules
 
 - guests can only use `/` and `/register`
+- guests can also use `/reset-password`
 - customers can use `/post-job` and `/customer-dashboard`
 - workers can use `/dashboard`
+- admins can use `/admin`
 - authenticated users can use `/home` and `/chat`
 
 ## Manual Smoke Test

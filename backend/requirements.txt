@@ -8,3 +8,4 @@ pytest
 psycopg2-binary
 alembic
 websockets
+boto3

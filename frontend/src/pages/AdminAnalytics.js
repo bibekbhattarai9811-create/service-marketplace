@@ -5,24 +5,28 @@ import { apiClient } from '../api';
 function AdminAnalytics() {
     const [data, setData] = useState(null);
     const [users, setUsers] = useState([]);
+    const [disputes, setDisputes] = useState([]);
+    const [resolutionNotes, setResolutionNotes] = useState({});
     const [message, setMessage] = useState('');
-
-    useEffect(() => {
-        fetchAnalytics();
-    }, []);
 
     const fetchAnalytics = async () => {
         try {
-            const [summaryResponse, usersResponse] = await Promise.all([
+            const [summaryResponse, usersResponse, disputesResponse] = await Promise.all([
                 apiClient.get('/jobs/admin/summary'),
                 apiClient.get('/admin/users'),
+                apiClient.get('/jobs/admin/disputes'),
             ]);
             setData(summaryResponse.data);
             setUsers(usersResponse.data);
+            setDisputes(disputesResponse.data);
         } catch (error) {
             setMessage(error.response?.data?.detail || 'Failed to load admin analytics.');
         }
     };
+
+    useEffect(() => {
+        fetchAnalytics();
+    }, []);
 
     const updateUser = async (userId, payload) => {
         try {
@@ -31,6 +35,19 @@ function AdminAnalytics() {
             fetchAnalytics();
         } catch (error) {
             setMessage(error.response?.data?.detail || 'Failed to update user.');
+        }
+    };
+
+    const updateDispute = async (disputeId, status) => {
+        try {
+            await apiClient.put(`/jobs/admin/disputes/${disputeId}`, {
+                status,
+                resolution_note: resolutionNotes[disputeId] || '',
+            });
+            setMessage('Dispute updated successfully.');
+            fetchAnalytics();
+        } catch (error) {
+            setMessage(error.response?.data?.detail || 'Failed to update dispute.');
         }
     };
 
@@ -86,6 +103,53 @@ function AdminAnalytics() {
                                 <div className="summary-card"><span>Workers</span><strong>{data.summary.workers}</strong></div>
                                 <div className="summary-card"><span>Admins</span><strong>{data.summary.admins}</strong></div>
                             </div>
+                        </section>
+
+                        <section className="section-card">
+                            <div className="section-header">
+                                <div>
+                                    <h2>Disputes & Moderation</h2>
+                                    <p className="section-subtitle">Review reported issues and mark the outcome.</p>
+                                </div>
+                            </div>
+                            {disputes.length === 0 ? (
+                                <div className="empty-state">No disputes reported yet.</div>
+                            ) : (
+                                <div className="card-grid">
+                                    {disputes.map((dispute) => (
+                                        <article key={dispute.id} className="job-card">
+                                            <div className="job-card-header">
+                                                <div>
+                                                    <h3>{dispute.job_title}</h3>
+                                                    <p>{dispute.reason}</p>
+                                                </div>
+                                                <span className={`status-badge ${dispute.status === 'RESOLVED' ? 'status-completed' : 'status-open'}`}>
+                                                    {dispute.status}
+                                                </span>
+                                            </div>
+                                            <p>Reporter: {dispute.reporter_name}</p>
+                                            {dispute.target_name && <p>Against: {dispute.target_name}</p>}
+                                            {dispute.details && <p>{dispute.details}</p>}
+                                            <textarea
+                                                placeholder="Resolution note"
+                                                value={resolutionNotes[dispute.id] || dispute.resolution_note || ''}
+                                                onChange={(e) => setResolutionNotes({ ...resolutionNotes, [dispute.id]: e.target.value })}
+                                            />
+                                            <div className="button-row">
+                                                <button className="ghost-button" onClick={() => updateDispute(dispute.id, 'UNDER_REVIEW')}>
+                                                    Under Review
+                                                </button>
+                                                <button className="secondary-button" onClick={() => updateDispute(dispute.id, 'RESOLVED')}>
+                                                    Resolve
+                                                </button>
+                                                <button className="danger-button" onClick={() => updateDispute(dispute.id, 'REJECTED')}>
+                                                    Reject
+                                                </button>
+                                            </div>
+                                        </article>
+                                    ))}
+                                </div>
+                            )}
                         </section>
 
                         <section className="section-card">
