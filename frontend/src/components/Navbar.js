@@ -1,9 +1,31 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { clearSession } from "../api";
 
 function Navbar() {
     const role = localStorage.getItem("role");
+    const [isOpen, setIsOpen] = useState(false);
+    const navLinks = useMemo(() => {
+        const links = [
+            { to: "/home", label: "Home" },
+            { to: "/profile", label: "Profile" },
+            { to: "/workers", label: "Workers" },
+            { to: "/notifications", label: "Notifications" },
+        ];
+
+        if (role === "customer") {
+            links.push({ to: "/customer-dashboard", label: "Customer Dashboard" });
+            links.push({ to: "/post-job", label: "Post Job", primary: true });
+        } else if (role === "admin") {
+            links.push({ to: "/admin", label: "Admin Analytics", primary: true });
+        } else {
+            links.push({ to: "/dashboard", label: "Worker Dashboard" });
+        }
+
+        return links;
+    }, [role]);
+
+    const closeMenu = () => setIsOpen(false);
 
     return (
         <nav className="app-topbar">
@@ -12,40 +34,34 @@ function Navbar() {
                 Service Marketplace
             </Link>
 
-            <div className="app-nav">
-                <Link className="app-nav-link" to="/home">
-                    Home
-                </Link>
-                <Link className="app-nav-link" to="/profile">
-                    Profile
-                </Link>
-                <Link className="app-nav-link" to="/workers">
-                    Workers
-                </Link>
-                <Link className="app-nav-link" to="/notifications">
-                    Notifications
-                </Link>
+            <button
+                type="button"
+                className={`app-menu-toggle ${isOpen ? "open" : ""}`}
+                aria-label="Toggle navigation menu"
+                aria-expanded={isOpen}
+                onClick={() => setIsOpen((open) => !open)}
+            >
+                <span />
+                <span />
+                <span />
+            </button>
 
-                {role === "customer" ? (
-                    <>
-                        <Link className="app-nav-link" to="/customer-dashboard">
-                            Customer Dashboard
-                        </Link>
-                        <Link className="app-nav-link app-nav-link-primary" to="/post-job">
-                            Post Job
-                        </Link>
-                    </>
-                ) : role === "admin" ? (
-                    <Link className="app-nav-link app-nav-link-primary" to="/admin">
-                        Admin Analytics
+            <div className={`app-nav ${isOpen ? "open" : ""}`}>
+                {navLinks.map((link) => (
+                    <Link
+                        key={link.to}
+                        className={`app-nav-link ${link.primary ? "app-nav-link-primary" : ""}`.trim()}
+                        to={link.to}
+                        onClick={closeMenu}
+                    >
+                        {link.label}
                     </Link>
-                ) : (
-                    <Link className="app-nav-link" to="/dashboard">
-                        Worker Dashboard
-                    </Link>
-                )}
+                ))}
 
-                <Link className="app-nav-link" to="/" onClick={clearSession}>
+                <Link className="app-nav-link" to="/" onClick={() => {
+                    clearSession();
+                    closeMenu();
+                }}>
                     Logout
                 </Link>
             </div>

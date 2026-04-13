@@ -1,4 +1,5 @@
 import os
+import re
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from pydantic import BaseModel
@@ -19,6 +20,8 @@ from security import (
 from storage import store_image, validate_image_extension
 
 router = APIRouter()
+EMAIL_RE = re.compile(r"^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$", re.IGNORECASE)
+PASSWORD_RE = re.compile(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$")
 
 
 # Dependency to get DB session
@@ -73,10 +76,25 @@ class AvailabilitySlotRequest(BaseModel):
     end_time: str
 
 
+def validate_email_address(email: str) -> str:
+    cleaned_email = email.strip().lower()
+    if not EMAIL_RE.match(cleaned_email):
+        raise HTTPException(status_code=400, detail="Enter a valid email address")
+    return cleaned_email
+
+
+def validate_password_strength(password: str):
+    if not PASSWORD_RE.match(password):
+        raise HTTPException(
+            status_code=400,
+            detail="Password must be at least 8 characters and include uppercase, lowercase, and a number",
+        )
+
+
 # Register user
 @router.post("/register")
 def register_user(payload: RegisterRequest, db: Session = Depends(get_db)):
-    email = payload.email.strip().lower()
+    email = validate_email_address(payload.email)
     role = payload.role.strip().lower()
     name = payload.name.strip()
     phone = payload.phone.strip()
@@ -90,10 +108,7 @@ def register_user(payload: RegisterRequest, db: Session = Depends(get_db)):
         if not expected_secret or payload.admin_secret != expected_secret:
             raise HTTPException(status_code=403, detail="Admin registration is restricted")
 
-    if len(password) < 4:
-        raise HTTPException(
-            status_code=400, detail="Password must be at least 4 characters"
-        )
+    validate_password_strength(password)
 
     new_user = User(
         name=name,
@@ -124,7 +139,7 @@ def register_user(payload: RegisterRequest, db: Session = Depends(get_db)):
 # Login user
 @router.post("/login")
 def login(payload: LoginRequest, db: Session = Depends(get_db)):
-    email = payload.email.strip().lower()
+    email = validate_email_address(payload.email)
     password = payload.password
 
     user = db.query(User).filter(User.email == email).first()
@@ -158,7 +173,7 @@ def get_users():
 
 @router.post("/password-reset/request")
 def request_password_reset(payload: PasswordResetRequest, db: Session = Depends(get_db)):
-    email = payload.email.strip().lower()
+    email = validate_email_address(payload.email)
     user = db.query(User).filter(User.email == email).first()
     if not user:
         return {"message": "If that account exists, a reset link has been sent."}
@@ -187,8 +202,7 @@ def request_password_reset(payload: PasswordResetRequest, db: Session = Depends(
 
 @router.post("/password-reset/confirm")
 def confirm_password_reset(payload: PasswordResetConfirmRequest, db: Session = Depends(get_db)):
-    if len(payload.password) < 4:
-        raise HTTPException(status_code=400, detail="Password must be at least 4 characters")
+    validate_password_strength(payload.password)
 
     token_payload = decode_password_reset_token(payload.token)
     user = db.query(User).filter(

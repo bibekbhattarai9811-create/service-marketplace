@@ -57,7 +57,7 @@ def register_user(client, *, name, email, role):
         "email": email,
         "phone": "1234567890",
         "role": role,
-        "password": "1234",
+        "password": "StrongPass1",
     }
     if role == "admin":
         payload["admin_secret"] = "test-admin-secret"
@@ -73,7 +73,7 @@ def register_user(client, *, name, email, role):
 def login_user(client, *, email):
     response = client.post(
         "/login",
-        json={"email": email, "password": "1234"},
+        json={"email": email, "password": "StrongPass1"},
     )
     assert response.status_code == 200
     return response.json()
@@ -302,13 +302,13 @@ def test_password_reset_and_admin_disable_flow(client):
 
     reset_confirm = client.post(
         "/password-reset/confirm",
-        json={"token": reset_token, "password": "newpass"},
+        json={"token": reset_token, "password": "Newpass1"},
     )
     assert reset_confirm.status_code == 200
 
     login_after_reset = client.post(
         "/login",
-        json={"email": "customer@test.com", "password": "newpass"},
+        json={"email": "customer@test.com", "password": "Newpass1"},
     )
     assert login_after_reset.status_code == 200
 
@@ -321,9 +321,37 @@ def test_password_reset_and_admin_disable_flow(client):
 
     disabled_login = client.post(
         "/login",
-        json={"email": "customer@test.com", "password": "newpass"},
+        json={"email": "customer@test.com", "password": "Newpass1"},
     )
     assert disabled_login.status_code == 403
+
+
+def test_registration_rejects_invalid_email_and_weak_password(client):
+    invalid_email = client.post(
+        "/register",
+        json={
+            "name": "Bad Email",
+            "email": "not-an-email",
+            "phone": "1234567890",
+            "role": "customer",
+            "password": "StrongPass1",
+        },
+    )
+    assert invalid_email.status_code == 400
+    assert invalid_email.json()["detail"] == "Enter a valid email address"
+
+    weak_password = client.post(
+        "/register",
+        json={
+            "name": "Weak Password",
+            "email": "weak@test.com",
+            "phone": "1234567890",
+            "role": "customer",
+            "password": "weakpass",
+        },
+    )
+    assert weak_password.status_code == 400
+    assert "Password must be at least 8 characters" in weak_password.json()["detail"]
 
 
 def test_worker_availability_and_public_workers(client):

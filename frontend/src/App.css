@@ -179,6 +179,13 @@
   font-weight: 600;
 }
 
+.field-hint {
+  margin: -4px 4px 4px;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: #6b7280;
+}
+
 .auth-switch {
   margin: 18px 0 0;
   color: #4b5563;
@@ -255,6 +262,41 @@
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
+}
+
+.app-menu-toggle {
+  display: none;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 1px solid rgba(154, 52, 18, 0.12);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.app-menu-toggle span {
+  width: 20px;
+  height: 2px;
+  background: #6b3b15;
+  border-radius: 999px;
+  transition: transform 160ms ease, opacity 160ms ease;
+}
+
+.app-menu-toggle.open span:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+
+.app-menu-toggle.open span:nth-child(2) {
+  opacity: 0;
+}
+
+.app-menu-toggle.open span:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
 }
 
 .app-nav-link,
@@ -745,8 +787,7 @@
 
   .app-topbar {
     padding: 18px 18px;
-    align-items: flex-start;
-    flex-direction: column;
+    align-items: center;
   }
 
   .page-wrap {
@@ -756,6 +797,23 @@
 
   .chat-thread {
     height: 360px;
+  }
+
+  .app-menu-toggle {
+    display: inline-flex;
+    margin-left: auto;
+  }
+
+  .app-nav {
+    display: none;
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    padding-top: 12px;
+  }
+
+  .app-nav.open {
+    display: flex;
   }
 }
 
@@ -833,6 +891,8 @@
   .app-topbar {
     padding: 14px;
     gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
   }
 
   .app-nav {

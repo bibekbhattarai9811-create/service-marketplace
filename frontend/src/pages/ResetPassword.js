@@ -2,6 +2,9 @@ import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { apiClient } from '../api';
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
+const PASSWORD_RE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+
 function ResetPassword() {
     const token = useMemo(
         () => new URLSearchParams(window.location.search).get('token') || '',
@@ -13,8 +16,13 @@ function ResetPassword() {
     const [isError, setIsError] = useState(false);
 
     const requestReset = async () => {
+        if (!EMAIL_RE.test(email.trim())) {
+            setIsError(true);
+            setMessage('Enter a valid email address.');
+            return;
+        }
         try {
-            const response = await apiClient.post('/password-reset/request', { email });
+            const response = await apiClient.post('/password-reset/request', { email: email.trim() });
             setIsError(false);
             setMessage(response.data.reset_url || response.data.message);
         } catch (error) {
@@ -24,6 +32,11 @@ function ResetPassword() {
     };
 
     const confirmReset = async () => {
+        if (!PASSWORD_RE.test(password)) {
+            setIsError(true);
+            setMessage('Password must be at least 8 characters and include uppercase, lowercase, and a number.');
+            return;
+        }
         try {
             const response = await apiClient.post('/password-reset/confirm', { token, password });
             setIsError(false);
@@ -74,6 +87,7 @@ function ResetPassword() {
                                 onChange={(e) => setEmail(e.target.value)}
                             />
                         )}
+                        {token && <p className="field-hint">Use at least 8 characters with uppercase, lowercase, and a number.</p>}
                         <button className="auth-button" onClick={token ? confirmReset : requestReset}>
                             {token ? 'Update Password' : 'Send Reset Link'}
                         </button>

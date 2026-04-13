@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { apiClient } from '../api';
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
+const PASSWORD_RE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+
 function Register() {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
@@ -12,10 +15,19 @@ function Register() {
     const [message, setMessage] = useState('');
 
     const handleRegister = async () => {
+        if (!EMAIL_RE.test(email.trim())) {
+            setMessage('Enter a valid email address.');
+            return;
+        }
+        if (!PASSWORD_RE.test(password)) {
+            setMessage('Password must be at least 8 characters and include uppercase, lowercase, and a number.');
+            return;
+        }
+
         try {
             const response = await apiClient.post('/register', {
                 name,
-                email,
+                email: email.trim(),
                 phone,
                 role,
                 password,
@@ -94,6 +106,7 @@ function Register() {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                         />
+                        <p className="field-hint">Use at least 8 characters with uppercase, lowercase, and a number.</p>
                         <button className="auth-button" onClick={handleRegister}>
                             Register
                         </button>

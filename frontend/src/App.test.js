@@ -57,14 +57,14 @@ test('logs in a worker and saves the session details', async () => {
     target: { value: 'worker1@test.com' },
   });
   fireEvent.change(screen.getByPlaceholderText(/password/i), {
-    target: { value: '1234' },
+    target: { value: 'StrongPass1' },
   });
   fireEvent.click(screen.getByRole('button', { name: /login/i }));
 
   await waitFor(() => {
     expect(apiClient.post).toHaveBeenCalledWith('/login', {
       email: 'worker1@test.com',
-      password: '1234',
+      password: 'StrongPass1',
     });
   });
 
@@ -121,7 +121,7 @@ test('registers a customer and shows the created user id', async () => {
     target: { value: 'customer' },
   });
   fireEvent.change(screen.getByPlaceholderText(/password/i), {
-    target: { value: '1234' },
+    target: { value: 'StrongPass1' },
   });
   fireEvent.click(screen.getByRole('button', { name: /register/i }));
 
@@ -131,7 +131,7 @@ test('registers a customer and shows the created user id', async () => {
       email: 'customer7@test.com',
       phone: '1234567890',
       role: 'customer',
-      password: '1234',
+      password: 'StrongPass1',
       admin_secret: null,
     });
   });
@@ -160,9 +160,30 @@ test('shows an error message when registration fails', async () => {
     target: { value: '1234567890' },
   });
   fireEvent.change(screen.getByPlaceholderText(/password/i), {
-    target: { value: '1234' },
+    target: { value: 'StrongPass1' },
   });
   fireEvent.click(screen.getByRole('button', { name: /register/i }));
 
   expect(await screen.findByText(/email already registered/i)).toBeInTheDocument();
+});
+
+test('shows local validation for weak password on registration', async () => {
+  render(<Register />);
+
+  fireEvent.change(screen.getByPlaceholderText(/full name/i), {
+    target: { value: 'Test Customer' },
+  });
+  fireEvent.change(screen.getByPlaceholderText(/email/i), {
+    target: { value: 'customer7@test.com' },
+  });
+  fireEvent.change(screen.getByPlaceholderText(/phone/i), {
+    target: { value: '1234567890' },
+  });
+  fireEvent.change(screen.getByPlaceholderText(/password/i), {
+    target: { value: 'weakpass' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: /register/i }));
+
+  expect(await screen.findByText(/password must be at least 8 characters/i)).toBeInTheDocument();
+  expect(apiClient.post).not.toHaveBeenCalled();
 });
