@@ -2,6 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { apiClient } from '../api';
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements } from '@stripe/react-stripe-js';
+import StripeCheckout from '../components/StripeCheckout';
+
+const stripePromise = loadStripe('pk_test_TYooMQauvdEDq54NiTphI7jx');
 
 function mapLink(location) {
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`;
@@ -16,6 +21,10 @@ function CustomerDashboardV2() {
     const [disputeReason, setDisputeReason] = useState({});
     const [disputeDetails, setDisputeDetails] = useState({});
     const [transactions, setTransactions] = useState([]);
+    
+    // Stripe State
+    const [clientSecret, setClientSecret] = useState(null);
+    const [activePaymentIntentId, setActivePaymentIntentId] = useState(null);
 
     const fetchMyJobs = async () => {
         try {
@@ -51,18 +60,15 @@ function CustomerDashboardV2() {
         setMessageIsError(isError);
     };
 
-    const handlePay = async (job) => {
+    const handlePayClick = async (job) => {
         try {
-            const response = await apiClient.post('/jobs/pay', {
+            const response = await apiClient.post('/stripe/create-payment-intent', {
                 job_id: job.id,
             });
-            showMessage(
-                `Payment successful! Worker received $${response.data.worker_received} and the platform fee was $${response.data.platform_fee}.`
-            );
-            fetchMyJobs();
-            fetchTransactions();
+            setClientSecret(response.data.client_secret);
+            setActivePaymentIntentId(response.data.stripe_payment_intent_id);
         } catch (error) {
-            showMessage(error.response?.data?.detail || 'Failed to process payment.', true);
+            showMessage(error.response?.data?.detail || 'Failed to initiate payment.', true);
         }
     };
 
@@ -222,7 +228,7 @@ function CustomerDashboardV2() {
                                                 Worker receives ${Number(job.price * 0.9).toFixed(2)} and platform fee is ${Number(job.price * 0.1).toFixed(2)}.
                                             </p>
                                             <div className="button-row">
-                                                <button className="primary-button" onClick={() => handlePay(job)}>
+                                                <button className="primary-button" onClick={() => handlePayClick(job)}>
                                                     Pay Now
                                                 </button>
                                             </div>
@@ -353,6 +359,26 @@ function CustomerDashboardV2() {
                     )}
                 </section>
             </div>
+
+            {clientSecret && (
+                <Elements stripe={stripePromise} options={{ clientSecret }}>
+                    <StripeCheckout 
+                        clientSecret={clientSecret}
+                        paymentIntentId={activePaymentIntentId}
+                        onSuccess={() => {
+                            setClientSecret(null);
+                            setActivePaymentIntentId(null);
+                            showMessage("Payment successful! Funds securely Escrowed via Stripe.");
+                            fetchMyJobs();
+                            fetchTransactions();
+                        }}
+                        onCancel={() => {
+                            setClientSecret(null);
+                            setActivePaymentIntentId(null);
+                        }}
+                    />
+                </Elements>
+            )}
         </div>
     );
 }

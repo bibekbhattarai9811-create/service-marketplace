@@ -38,6 +38,7 @@ function Dashboard() {
     const [disputeReason, setDisputeReason] = useState({});
     const [disputeDetails, setDisputeDetails] = useState({});
     const [transactions, setTransactions] = useState([]);
+    const [profile, setProfile] = useState(null);
     const wsRef = useRef(null);
 
     const userId = Number(localStorage.getItem("user_id") || 0);
@@ -90,6 +91,24 @@ function Dashboard() {
         }
     }, [userId]);
 
+    const fetchProfile = useCallback(async () => {
+        try {
+            const response = await apiClient.get("/users/me");
+            setProfile(response.data);
+        } catch (error) {
+            console.log("Profile error:", error);
+        }
+    }, []);
+
+    const handleConnectStripe = async () => {
+        try {
+            const response = await apiClient.post("/stripe/create-account");
+            window.location.href = response.data.url;
+        } catch (error) {
+            setMessage({ text: "Failed to connect Stripe.", isError: true });
+        }
+    };
+
     const acceptJob = async (jobId) => {
         try {
             await apiClient.post("/jobs/accept-job", null, {
@@ -139,6 +158,7 @@ function Dashboard() {
         fetchEarnings();
         fetchRating();
         fetchTransactions();
+        fetchProfile();
 
         const interval = setInterval(() => {
             fetchTransactions();
@@ -164,7 +184,7 @@ function Dashboard() {
             if (wsRef.current) wsRef.current.close();
             clearInterval(interval);
         };
-    }, [fetchAvailableJobs, fetchWorkerJobs, fetchEarnings, fetchRating, fetchTransactions, token]);
+    }, [fetchAvailableJobs, fetchWorkerJobs, fetchEarnings, fetchRating, fetchTransactions, fetchProfile, token]);
 
     const totalJobValue = transactions.reduce((sum, t) => sum + t.total_amount, 0);
     const totalWorkerReceived = transactions.reduce((sum, t) => sum + t.worker_received, 0);
@@ -197,6 +217,15 @@ function Dashboard() {
                 {message.text && (
                     <div className={`message-banner ${message.isError ? 'error' : 'success'}`}>
                         {message.text}
+                    </div>
+                )}
+
+                {profile && !profile.stripe_account_id && (
+                    <div className="message-banner" style={{ backgroundColor: '#fff3cd', color: '#856404', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                            <strong>Action Required:</strong> You must connect your Stripe account to securely receive payouts for jobs.
+                        </div>
+                        <button className="primary-button" onClick={handleConnectStripe}>Connect Stripe</button>
                     </div>
                 )}
 

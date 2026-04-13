@@ -235,6 +235,7 @@ def get_my_profile(
         "email": current_user.email,
         "phone": current_user.phone,
         "role": current_user.role,
+        "stripe_account_id": current_user.stripe_account_id or "",
         "bio": profile.bio or "",
         "city": profile.city or "",
         "skills": profile.skills or "",

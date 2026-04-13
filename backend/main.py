@@ -12,6 +12,7 @@ from security import decode_access_token
 
 from routes import users
 from routes import jobs
+from routes import stripe_routes
 from connections import add_connection, remove_connection
 
 # -----------------------------
@@ -58,6 +59,7 @@ app.mount("/uploads", StaticFiles(directory=UPLOADS_DIR), name="uploads")
 # -----------------------------
 app.include_router(users.router)
 app.include_router(jobs.router, prefix="/jobs")
+app.include_router(stripe_routes.router, prefix="/stripe")
 
 # -----------------------------
 # Root Endpoint

@@ -15,6 +15,7 @@ class User(Base):
     role = Column(String)  # customer / worker
     password = Column(String)
     is_active = Column(Boolean, default=True)
+    stripe_account_id = Column(String, default="")
 
 
 class UserProfile(Base):
@@ -113,6 +114,7 @@ class Payment(Base):
     worker_amount = Column(Integer)
 
     status = Column(String)  # escrow / released
+    stripe_payment_intent_id = Column(String, default="")
 
 
 # ---------------------------
