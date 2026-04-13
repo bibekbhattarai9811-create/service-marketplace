@@ -178,6 +178,9 @@ function CustomerDashboardV2() {
                                     <div className="job-meta">
                                         <span className="job-meta-chip">Location: {job.location}</span>
                                         <span className="job-meta-chip">Price: ${job.price}</span>
+                                        {job.category && <span className="job-meta-chip">{job.category}</span>}
+                                        {job.service_date && <span className="job-meta-chip">{job.service_date}</span>}
+                                        {job.service_window && <span className="job-meta-chip">{job.service_window}</span>}
                                         {job.worker_id && <span className="job-meta-chip">Worker ID: {job.worker_id}</span>}
                                     </div>
 

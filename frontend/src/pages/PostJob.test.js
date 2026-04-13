@@ -12,6 +12,7 @@ jest.mock(
 
 jest.mock('../api', () => ({
   apiClient: {
+    get: jest.fn(),
     post: jest.fn(),
   },
   clearSession: jest.fn(),
@@ -22,6 +23,7 @@ describe('PostJob', () => {
     jest.clearAllMocks();
     localStorage.setItem('token', 'test-token');
     localStorage.setItem('role', 'customer');
+    apiClient.get.mockResolvedValue({ data: { unread_count: 0 } });
   });
 
   test('submits a new job and shows the created job id', async () => {
@@ -47,12 +49,15 @@ describe('PostJob', () => {
 
     await waitFor(() => {
       expect(apiClient.post).toHaveBeenCalledWith('/jobs/create-job', {
-        title: 'Fix fence',
-        description: 'Backyard fence needs repair',
-        location: 'Austin',
-        price: 75,
-      });
+      title: 'Fix fence',
+      description: 'Backyard fence needs repair',
+      location: 'Austin',
+      price: 75,
+      category: '',
+      service_date: '',
+      service_window: '',
     });
+  });
 
     expect(await screen.findByText(/job posted successfully! job id: 42/i)).toBeInTheDocument();
   });

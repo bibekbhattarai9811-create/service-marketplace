@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { apiClient } from '../api';
 
@@ -9,6 +10,8 @@ function mapLink(location) {
 function Workers() {
     const [workers, setWorkers] = useState([]);
     const [message, setMessage] = useState('');
+    const [search, setSearch] = useState('');
+    const [minimumRating, setMinimumRating] = useState('');
 
     useEffect(() => {
         fetchWorkers();
@@ -22,6 +25,15 @@ function Workers() {
             setMessage(error.response?.data?.detail || 'Failed to load workers.');
         }
     };
+
+    const filteredWorkers = useMemo(() => {
+        return workers.filter((worker) => {
+            const text = `${worker.name} ${worker.city} ${worker.service_area} ${worker.skills} ${worker.portfolio}`.toLowerCase();
+            const matchesSearch = !search.trim() || text.includes(search.trim().toLowerCase());
+            const matchesRating = !minimumRating || Number(worker.average_rating) >= Number(minimumRating);
+            return matchesSearch && matchesRating;
+        });
+    }, [workers, search, minimumRating]);
 
     return (
         <div className="app-shell">
@@ -47,15 +59,29 @@ function Workers() {
                         </div>
                     </div>
 
-                    {workers.length === 0 ? (
+                    <div className="compact-form">
+                        <input
+                            type="text"
+                            placeholder="Search workers"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                        />
+                        <select value={minimumRating} onChange={(e) => setMinimumRating(e.target.value)}>
+                            <option value="">Any rating</option>
+                            <option value="4">4 stars and up</option>
+                            <option value="4.5">4.5 stars and up</option>
+                        </select>
+                    </div>
+
+                    {filteredWorkers.length === 0 ? (
                         <div className="empty-state">No workers available yet.</div>
                     ) : (
                         <div className="card-grid">
-                            {workers.map((worker) => (
+                            {filteredWorkers.map((worker) => (
                                 <article key={worker.id} className="job-card">
                                     {worker.avatar_url && (
                                         <img
-                                            src={`${apiClient.defaults.baseURL}${worker.avatar_url}`}
+                                            src={worker.avatar_url.startsWith('http') ? worker.avatar_url : `${apiClient.defaults.baseURL}${worker.avatar_url}`}
                                             alt={worker.name}
                                             className="job-photo"
                                         />
@@ -78,6 +104,9 @@ function Workers() {
                                     </div>
                                     {(worker.city || worker.service_area) && (
                                         <div className="button-row">
+                                            <Link className="secondary-button" to={`/workers/${worker.id}`}>
+                                                View Profile
+                                            </Link>
                                             <a
                                                 className="ghost-button"
                                                 href={mapLink(worker.service_area || worker.city)}

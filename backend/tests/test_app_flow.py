@@ -397,3 +397,68 @@ def test_worker_availability_and_public_workers(client):
     workers_response = client.get("/workers")
     assert workers_response.status_code == 200
     assert workers_response.json()[0]["service_area"] == "West Loop"
+
+
+def test_job_filters_notifications_and_worker_public_profile(client):
+    register_user(
+        client,
+        name="Customer",
+        email="customer@test.com",
+        role="customer",
+    )
+    register_user(
+        client,
+        name="Worker",
+        email="worker@test.com",
+        role="worker",
+    )
+
+    customer_login = login_user(client, email="customer@test.com")
+    worker_login = login_user(client, email="worker@test.com")
+
+    client.put(
+        "/me",
+        json={
+            "bio": "Reliable worker",
+            "city": "Chicago",
+            "skills": "moving, furniture assembly",
+            "hourly_rate": 50,
+            "service_area": "Downtown",
+            "portfolio": "Handled condo moves and office setups",
+        },
+        headers=auth_headers(worker_login["token"]),
+    )
+
+    create_job_response = client.post(
+        "/jobs/create-job",
+        json={
+            "title": "Move office desk",
+            "description": "Need help moving a desk",
+            "location": "Chicago",
+            "price": 90,
+            "category": "moving",
+            "service_date": "2026-05-01",
+            "service_window": "9 AM - 12 PM",
+        },
+        headers=auth_headers(customer_login["token"]),
+    )
+    assert create_job_response.status_code == 200
+
+    filtered_jobs = client.get(
+        "/jobs/available-jobs",
+        params={"category": "moving", "service_date": "2026-05-01"},
+        headers=auth_headers(worker_login["token"]),
+    )
+    assert filtered_jobs.status_code == 200
+    assert filtered_jobs.json()[0]["category"] == "moving"
+
+    notification_summary = client.get(
+        "/jobs/notifications/summary",
+        headers=auth_headers(worker_login["token"]),
+    )
+    assert notification_summary.status_code == 200
+    assert notification_summary.json()["unread_count"] >= 1
+
+    worker_profile = client.get(f"/workers/{worker_login['user_id']}")
+    assert worker_profile.status_code == 200
+    assert worker_profile.json()["service_area"] == "Downtown"

@@ -31,6 +31,9 @@ class CreateJobRequest(BaseModel):
     location: str
     price: int
     image_url: str | None = None
+    category: str = ""
+    service_date: str = ""
+    service_window: str = ""
 
 
 class PaymentRequest(BaseModel):
@@ -56,12 +59,14 @@ def create_notification(
     title: str,
     message: str,
     notification_type: str = "general",
+    action_url: str = "",
 ):
     notification = Notification(
         user_id=user_id,
         title=title,
         message=message,
         notification_type=notification_type,
+        action_url=action_url,
         location="",
         is_read=0,
     )
@@ -108,6 +113,7 @@ async def complete_job(
         title="Job completed",
         message=f"{job.title} has been marked completed by the worker.",
         notification_type="job_completed",
+        action_url="/customer-dashboard",
     )
     await push_notification(
         job.customer_id,
@@ -117,6 +123,7 @@ async def complete_job(
             "title": notification.title,
             "message": notification.message,
             "notification_type": notification.notification_type,
+            "action_url": notification.action_url,
         },
     )
     if customer:
@@ -150,6 +157,9 @@ async def create_job(
         price=payload.price,
         customer_id=current_user.id,
         image_url=(payload.image_url or "").strip(),
+        category=payload.category.strip(),
+        service_date=payload.service_date.strip(),
+        service_window=payload.service_window.strip(),
     )
 
     db.add(new_job)
@@ -164,6 +174,7 @@ async def create_job(
             title="New job available",
             message=f"{new_job.title} is open in {new_job.location} for ${new_job.price}.",
             notification_type="new_job",
+            action_url="/home",
         )
         await push_notification(
             worker.id,
@@ -173,6 +184,7 @@ async def create_job(
                 "title": stored_notification.title,
                 "message": stored_notification.message,
                 "notification_type": stored_notification.notification_type,
+                "action_url": stored_notification.action_url,
             },
         )
         notify_user_channels(
@@ -233,6 +245,7 @@ async def accept_job(
         title="Job accepted",
         message=f"{job.title} has been accepted by a worker.",
         notification_type="job_accepted",
+        action_url="/customer-dashboard",
     )
     await push_notification(
         job.customer_id,
@@ -242,6 +255,7 @@ async def accept_job(
             "title": notification.title,
             "message": notification.message,
             "notification_type": notification.notification_type,
+            "action_url": notification.action_url,
         },
     )
     if customer:
@@ -267,6 +281,8 @@ async def accept_job(
 def get_available_jobs(
     search: str | None = Query(default=None),
     location: str | None = Query(default=None),
+    category: str | None = Query(default=None),
+    service_date: str | None = Query(default=None),
     min_price: int | None = Query(default=None),
     max_price: int | None = Query(default=None),
     sort_by: str | None = Query(default="newest"),
@@ -282,6 +298,10 @@ def get_available_jobs(
         )
     if location:
         jobs_query = jobs_query.filter(Job.location.ilike(f"%{location.strip()}%"))
+    if category:
+        jobs_query = jobs_query.filter(Job.category.ilike(f"%{category.strip()}%"))
+    if service_date:
+        jobs_query = jobs_query.filter(Job.service_date == service_date.strip())
     if min_price is not None:
         jobs_query = jobs_query.filter(Job.price >= min_price)
     if max_price is not None:
@@ -293,6 +313,10 @@ def get_available_jobs(
         jobs_query = jobs_query.order_by(Job.price.desc(), Job.id.desc())
     elif sort_by == "location":
         jobs_query = jobs_query.order_by(Job.location.asc(), Job.id.desc())
+    elif sort_by == "service_date":
+        jobs_query = jobs_query.order_by(Job.service_date.asc(), Job.id.desc())
+    elif sort_by == "category":
+        jobs_query = jobs_query.order_by(Job.category.asc(), Job.id.desc())
     else:
         jobs_query = jobs_query.order_by(Job.id.desc())
 
@@ -369,6 +393,7 @@ def rate_worker(
         title="New rating received",
         message=f"You received a {payload.rating}/5 rating for {job.title}.",
         notification_type="rating",
+        action_url="/dashboard",
     )
 
     return {
@@ -432,6 +457,7 @@ async def send_message(
         title="New chat message",
         message=f"You have a new message about {job.title}.",
         notification_type="chat_message",
+        action_url=f"/chat?job_id={payload.job_id}&receiver_id={current_user.id}",
     )
 
     chat_notification = {
@@ -497,13 +523,29 @@ def get_chat(
 # -------------------------
 @router.get("/notifications/me")
 def get_notifications(
+    unread_only: bool = Query(default=False),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    notifications = db.query(Notification).filter(
+    notifications_query = db.query(Notification).filter(
         Notification.user_id == current_user.id
-    ).order_by(Notification.id.desc()).all()
+    )
+    if unread_only:
+        notifications_query = notifications_query.filter(Notification.is_read == 0)
+    notifications = notifications_query.order_by(Notification.id.desc()).all()
     return notifications
+
+
+@router.get("/notifications/summary")
+def get_notification_summary(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    unread_count = db.query(func.count(Notification.id)).filter(
+        Notification.user_id == current_user.id,
+        Notification.is_read == 0,
+    ).scalar() or 0
+    return {"unread_count": unread_count}
 
 
 @router.post("/notifications/{notification_id}/read")
@@ -522,6 +564,19 @@ def mark_notification_read(
     notification.is_read = 1
     db.commit()
     return {"message": "Notification marked as read"}
+
+
+@router.post("/notifications/read-all")
+def mark_all_notifications_read(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    db.query(Notification).filter(
+        Notification.user_id == current_user.id,
+        Notification.is_read == 0,
+    ).update({"is_read": 1})
+    db.commit()
+    return {"message": "All notifications marked as read"}
 
 
 # -------------------------
@@ -577,6 +632,7 @@ async def make_payment(
         title="Payment received",
         message=f"Payment for {job.title} has been completed.",
         notification_type="payment",
+        action_url="/dashboard",
     )
     await push_notification(
         job.worker_id,
@@ -586,6 +642,7 @@ async def make_payment(
             "title": notification.title,
             "message": notification.message,
             "notification_type": notification.notification_type,
+            "action_url": notification.action_url,
         },
     )
     if worker:
@@ -737,6 +794,7 @@ def admin_summary(
             "average_rating": round(avg_rating, 2),
             "completed_jobs": completed_count,
             "total_earnings": worker_payments,
+            "service_area": profile.service_area if profile else "",
         })
 
     top_workers.sort(
@@ -772,9 +830,21 @@ def admin_summary(
                 "status": job.status,
                 "price": job.price,
                 "location": job.location,
+                "category": job.category,
+                "service_date": job.service_date,
                 "customer_id": job.customer_id,
                 "worker_id": job.worker_id,
             }
             for job in recent_jobs
+        ],
+        "status_breakdown": [
+            {"label": "Open", "value": open_jobs},
+            {"label": "Accepted", "value": accepted_jobs},
+            {"label": "Completed", "value": completed_jobs},
+            {"label": "Cancelled", "value": cancelled_jobs},
+        ],
+        "revenue_breakdown": [
+            {"label": "Platform Revenue", "value": platform_revenue},
+            {"label": "Worker Payouts", "value": max(total_payments - platform_revenue, 0)},
         ],
     }

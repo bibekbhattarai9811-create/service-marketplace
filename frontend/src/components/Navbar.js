@@ -1,10 +1,11 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { clearSession } from "../api";
+import { apiClient, clearSession } from "../api";
 
 function Navbar() {
     const role = localStorage.getItem("role");
     const [isOpen, setIsOpen] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
     const navLinks = useMemo(() => {
         const links = [
             { to: "/home", label: "Home" },
@@ -26,6 +27,31 @@ function Navbar() {
     }, [role]);
 
     const closeMenu = () => setIsOpen(false);
+
+    useEffect(() => {
+        let isMounted = true;
+
+        const loadSummary = async () => {
+            try {
+                const response = await apiClient.get('/jobs/notifications/summary');
+                if (isMounted) {
+                    setUnreadCount(response.data.unread_count || 0);
+                }
+            } catch (error) {
+                if (isMounted) {
+                    setUnreadCount(0);
+                }
+            }
+        };
+
+        loadSummary();
+        const interval = setInterval(loadSummary, 15000);
+
+        return () => {
+            isMounted = false;
+            clearInterval(interval);
+        };
+    }, []);
 
     return (
         <nav className="app-topbar">
@@ -55,6 +81,9 @@ function Navbar() {
                         onClick={closeMenu}
                     >
                         {link.label}
+                        {link.to === "/notifications" && unreadCount > 0 && (
+                            <span className="nav-badge">{unreadCount}</span>
+                        )}
                     </Link>
                 ))}
 

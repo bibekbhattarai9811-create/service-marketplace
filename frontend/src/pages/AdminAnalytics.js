@@ -34,6 +34,9 @@ function AdminAnalytics() {
         }
     };
 
+    const maxStatusValue = Math.max(...(data?.status_breakdown?.map((item) => item.value) || [1]));
+    const maxRevenueValue = Math.max(...(data?.revenue_breakdown?.map((item) => item.value) || [1]));
+
     return (
         <div className="app-shell">
             <Navbar />
@@ -82,6 +85,51 @@ function AdminAnalytics() {
                                 <div className="summary-card"><span>Customers</span><strong>{data.summary.customers}</strong></div>
                                 <div className="summary-card"><span>Workers</span><strong>{data.summary.workers}</strong></div>
                                 <div className="summary-card"><span>Admins</span><strong>{data.summary.admins}</strong></div>
+                            </div>
+                        </section>
+
+                        <section className="section-card">
+                            <div className="section-header">
+                                <div>
+                                    <h2>Platform Charts</h2>
+                                    <p className="section-subtitle">Quick visual breakdowns for marketplace health.</p>
+                                </div>
+                            </div>
+                            <div className="summary-grid">
+                                <div className="summary-card">
+                                    <span>Job Status Mix</span>
+                                    <div className="chart-stack">
+                                        {data.status_breakdown.map((item) => (
+                                            <div key={item.label} className="chart-row">
+                                                <div className="chart-label">{item.label}</div>
+                                                <div className="chart-bar-shell">
+                                                    <div
+                                                        className="chart-bar"
+                                                        style={{ width: `${Math.max((item.value / maxStatusValue) * 100, item.value ? 12 : 0)}%` }}
+                                                    />
+                                                </div>
+                                                <div className="chart-value">{item.value}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="summary-card">
+                                    <span>Revenue Split</span>
+                                    <div className="chart-stack">
+                                        {data.revenue_breakdown.map((item) => (
+                                            <div key={item.label} className="chart-row">
+                                                <div className="chart-label">{item.label}</div>
+                                                <div className="chart-bar-shell">
+                                                    <div
+                                                        className="chart-bar chart-bar-secondary"
+                                                        style={{ width: `${Math.max((item.value / maxRevenueValue) * 100, item.value ? 12 : 0)}%` }}
+                                                    />
+                                                </div>
+                                                <div className="chart-value">${item.value}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
                             </div>
                         </section>
 

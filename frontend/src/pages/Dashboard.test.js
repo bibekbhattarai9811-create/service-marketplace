@@ -57,6 +57,9 @@ describe('Dashboard', () => {
       if (url === '/transactions') {
         return Promise.resolve({ data: [] });
       }
+      if (url === '/jobs/notifications/summary') {
+        return Promise.resolve({ data: { unread_count: 0 } });
+      }
       return Promise.resolve({ data: [] });
     });
   });

@@ -209,6 +209,9 @@ function Dashboard() {
                                     <div className="job-meta">
                                         <span className="job-meta-chip">Location: {job.location}</span>
                                         <span className="job-meta-chip">Price: ${job.price}</span>
+                                        {job.category && <span className="job-meta-chip">{job.category}</span>}
+                                        {job.service_date && <span className="job-meta-chip">{job.service_date}</span>}
+                                        {job.service_window && <span className="job-meta-chip">{job.service_window}</span>}
                                     </div>
                                     <div className="button-row">
                                         <a className="ghost-button" href={mapLink(job.location)} target="_blank" rel="noreferrer">
@@ -255,6 +258,9 @@ function Dashboard() {
                                     <div className="job-meta">
                                         <span className="job-meta-chip">Location: {job.location}</span>
                                         <span className="job-meta-chip">Price: ${job.price}</span>
+                                        {job.category && <span className="job-meta-chip">{job.category}</span>}
+                                        {job.service_date && <span className="job-meta-chip">{job.service_date}</span>}
+                                        {job.service_window && <span className="job-meta-chip">{job.service_window}</span>}
                                     </div>
                                     <div className="button-row">
                                         <a className="ghost-button" href={mapLink(job.location)} target="_blank" rel="noreferrer">

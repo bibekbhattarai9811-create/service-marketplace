@@ -21,15 +21,14 @@ function Login() {
             localStorage.setItem('user_id', userId);
             localStorage.setItem('role', role);
             localStorage.setItem('token', token);
+            if (!localStorage.getItem('onboarding_complete')) {
+                localStorage.setItem('onboarding_complete', 'false');
+            }
             setMessage('Login successful! Redirecting...');
             setTimeout(() => {
-                if (role === 'customer') {
-                    navigate('/customer-dashboard');
-                } else if (role === 'admin') {
-                    navigate('/admin');
-                } else {
-                    navigate('/dashboard');
-                }
+                navigate(localStorage.getItem('onboarding_complete') === 'true'
+                    ? (role === 'customer' ? '/customer-dashboard' : role === 'admin' ? '/admin' : '/dashboard')
+                    : '/welcome');
             }, 1000);
         } catch (error) {
             setMessage(error.response?.data?.detail || 'Login failed. Please try again.');

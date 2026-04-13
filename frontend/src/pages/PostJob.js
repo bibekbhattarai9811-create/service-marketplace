@@ -8,6 +8,9 @@ function PostJob() {
     const [description, setDescription] = useState('');
     const [location, setLocation] = useState('');
     const [price, setPrice] = useState('');
+    const [category, setCategory] = useState('');
+    const [serviceDate, setServiceDate] = useState('');
+    const [serviceWindow, setServiceWindow] = useState('');
     const [jobImage, setJobImage] = useState(null);
     const [message, setMessage] = useState('');
 
@@ -18,6 +21,9 @@ function PostJob() {
                 description,
                 location,
                 price: Number(price),
+                category,
+                service_date: serviceDate,
+                service_window: serviceWindow,
             });
             if (jobImage) {
                 const formData = new FormData();
@@ -82,6 +88,23 @@ function PostJob() {
                             placeholder="Location"
                             value={location}
                             onChange={(e) => setLocation(e.target.value)}
+                        />
+                        <input
+                            type="text"
+                            placeholder="Category (plumbing, cleaning, moving...)"
+                            value={category}
+                            onChange={(e) => setCategory(e.target.value)}
+                        />
+                        <input
+                            type="date"
+                            value={serviceDate}
+                            onChange={(e) => setServiceDate(e.target.value)}
+                        />
+                        <input
+                            type="text"
+                            placeholder="Preferred time window (ex: 9 AM - 12 PM)"
+                            value={serviceWindow}
+                            onChange={(e) => setServiceWindow(e.target.value)}
                         />
                         <input
                             type="number"

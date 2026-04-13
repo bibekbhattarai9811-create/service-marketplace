@@ -13,6 +13,8 @@ function Home() {
     const [filters, setFilters] = useState({
         search: '',
         location: '',
+        category: '',
+        serviceDate: '',
         minPrice: '',
         maxPrice: '',
         sortBy: 'newest',
@@ -26,6 +28,8 @@ function Home() {
                 params: {
                     search: filters.search || undefined,
                     location: filters.location || undefined,
+                    category: filters.category || undefined,
+                    service_date: filters.serviceDate || undefined,
                     min_price: filters.minPrice || undefined,
                     max_price: filters.maxPrice || undefined,
                     sort_by: filters.sortBy || undefined,
@@ -103,6 +107,17 @@ function Home() {
                             onChange={(e) => setFilters((current) => ({ ...current, location: e.target.value }))}
                         />
                         <input
+                            type="text"
+                            placeholder="Category"
+                            value={filters.category}
+                            onChange={(e) => setFilters((current) => ({ ...current, category: e.target.value }))}
+                        />
+                        <input
+                            type="date"
+                            value={filters.serviceDate}
+                            onChange={(e) => setFilters((current) => ({ ...current, serviceDate: e.target.value }))}
+                        />
+                        <input
                             type="number"
                             placeholder="Min price"
                             value={filters.minPrice}
@@ -122,6 +137,8 @@ function Home() {
                             <option value="price_low">Price: Low to High</option>
                             <option value="price_high">Price: High to Low</option>
                             <option value="location">Location</option>
+                            <option value="service_date">Service Date</option>
+                            <option value="category">Category</option>
                         </select>
                         <button type="button" className="ghost-button" onClick={fetchJobs}>
                             Apply Filters
@@ -153,6 +170,9 @@ function Home() {
                                     <div className="job-meta">
                                         <span className="job-meta-chip">Location: {job.location}</span>
                                         <span className="job-meta-chip">Price: ${job.price}</span>
+                                        {job.category && <span className="job-meta-chip">{job.category}</span>}
+                                        {job.service_date && <span className="job-meta-chip">{job.service_date}</span>}
+                                        {job.service_window && <span className="job-meta-chip">{job.service_window}</span>}
                                     </div>
                                     <div className="button-row">
                                         <a className="ghost-button" href={mapLink(job.location)} target="_blank" rel="noreferrer">

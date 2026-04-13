@@ -1,14 +1,18 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { apiClient } from '../api';
 
 function Notifications() {
     const [notifications, setNotifications] = useState([]);
     const [message, setMessage] = useState('');
+    const [showUnreadOnly, setShowUnreadOnly] = useState(false);
 
     const fetchNotifications = async () => {
         try {
-            const response = await apiClient.get('/jobs/notifications/me');
+            const response = await apiClient.get('/jobs/notifications/me', {
+                params: { unread_only: showUnreadOnly || undefined },
+            });
             setNotifications(response.data);
             setMessage('');
         } catch (error) {
@@ -18,7 +22,7 @@ function Notifications() {
 
     useEffect(() => {
         fetchNotifications();
-    }, []);
+    }, [showUnreadOnly]);
 
     const markRead = async (notificationId) => {
         try {
@@ -28,6 +32,17 @@ function Notifications() {
             setMessage(error.response?.data?.detail || 'Failed to update notification.');
         }
     };
+
+    const markAllRead = async () => {
+        try {
+            await apiClient.post('/jobs/notifications/read-all');
+            fetchNotifications();
+        } catch (error) {
+            setMessage(error.response?.data?.detail || 'Failed to update notifications.');
+        }
+    };
+
+    const unreadCount = notifications.filter((notification) => !notification.is_read).length;
 
     return (
         <div className="app-shell">
@@ -51,7 +66,15 @@ function Notifications() {
                     <div className="section-header">
                         <div>
                             <h2>Recent Notifications</h2>
-                            <p className="section-subtitle">Newest items appear first.</p>
+                            <p className="section-subtitle">Newest items appear first. Unread now: {unreadCount}</p>
+                        </div>
+                        <div className="button-row">
+                            <button className="ghost-button" onClick={() => setShowUnreadOnly((current) => !current)}>
+                                {showUnreadOnly ? 'Show All' : 'Show Unread'}
+                            </button>
+                            <button className="secondary-button" onClick={markAllRead}>
+                                Mark All Read
+                            </button>
                         </div>
                     </div>
 
@@ -73,13 +96,18 @@ function Notifications() {
                                     <div className="job-meta">
                                         <span className="job-meta-chip">{notification.notification_type || 'general'}</span>
                                     </div>
-                                    {!notification.is_read && (
-                                        <div className="button-row">
+                                    <div className="button-row">
+                                        {notification.action_url && (
+                                            <Link className="secondary-button" to={notification.action_url}>
+                                                Open
+                                            </Link>
+                                        )}
+                                        {!notification.is_read && (
                                             <button className="ghost-button" onClick={() => markRead(notification.id)}>
                                                 Mark as Read
                                             </button>
-                                        </div>
-                                    )}
+                                        )}
+                                    </div>
                                 </article>
                             ))}
                         </div>

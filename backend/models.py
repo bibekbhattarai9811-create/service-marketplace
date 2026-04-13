@@ -52,6 +52,9 @@ class Job(Base):
     paid = Column(Boolean, default=False)
     rating = Column(Integer, nullable=True)
     image_url = Column(String, default="")
+    category = Column(String, default="")
+    service_date = Column(String, default="")
+    service_window = Column(String, default="")
 
 
 # ---------------------------
@@ -88,6 +91,7 @@ class Notification(Base):
     title = Column(String, default="")
     message = Column(String)
     notification_type = Column(String, default="general")
+    action_url = Column(String, default="")
     location = Column(String)
     is_read = Column(Integer, default=0)
 

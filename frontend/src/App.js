@@ -13,12 +13,18 @@ import Profile from './pages/Profile';
 import AdminAnalytics from './pages/AdminAnalytics';
 import Notifications from './pages/Notifications';
 import Workers from './pages/Workers';
+import WorkerProfilePublic from './pages/WorkerProfilePublic';
+import Onboarding from './pages/Onboarding';
 
 function getDefaultRoute() {
   const role = localStorage.getItem('role');
   if (role === 'worker') return '/dashboard';
   if (role === 'admin') return '/admin';
   return '/customer-dashboard';
+}
+
+function needsOnboarding() {
+  return localStorage.getItem('onboarding_complete') !== 'true';
 }
 
 function ProtectedRoute({ children, allowedRoles }) {
@@ -31,6 +37,10 @@ function ProtectedRoute({ children, allowedRoles }) {
 
   if (allowedRoles && !allowedRoles.includes(role)) {
     return <Navigate to={getDefaultRoute()} replace />;
+  }
+
+  if (needsOnboarding() && window.location.pathname !== '/welcome') {
+    return <Navigate to="/welcome" replace />;
   }
 
   return children;
@@ -54,7 +64,9 @@ function App() {
         <Route path="/register" element={<PublicOnlyRoute><Register /></PublicOnlyRoute>} />
         <Route path="/reset-password" element={<PublicOnlyRoute><ResetPassword /></PublicOnlyRoute>} />
         <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+        <Route path="/welcome" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
         <Route path="/workers" element={<ProtectedRoute><Workers /></ProtectedRoute>} />
+        <Route path="/workers/:workerId" element={<ProtectedRoute><WorkerProfilePublic /></ProtectedRoute>} />
         <Route
           path="/post-job"
           element={<ProtectedRoute allowedRoles={['customer']}><PostJob /></ProtectedRoute>}

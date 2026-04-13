@@ -275,6 +275,47 @@ def list_public_workers(db: Session = Depends(get_db)):
     return result
 
 
+@router.get("/workers/{worker_id}")
+def get_public_worker_profile(worker_id: int, db: Session = Depends(get_db)):
+    worker = db.query(User).filter(
+        User.id == worker_id,
+        User.role == "worker",
+        User.is_active == True,  # noqa: E712
+    ).first()
+    if not worker:
+        raise HTTPException(status_code=404, detail="Worker not found")
+
+    profile = db.query(UserProfile).filter(UserProfile.user_id == worker.id).first()
+    reviews = db.query(Rating).filter(Rating.worker_id == worker.id).order_by(Rating.id.desc()).limit(5).all()
+    availability = db.query(Availability).filter(Availability.worker_id == worker.id).order_by(
+        Availability.day.asc(), Availability.start_time.asc()
+    ).all()
+    average_rating = db.query(func.avg(Rating.rating)).filter(Rating.worker_id == worker.id).scalar() or 0
+    review_count = db.query(func.count(Rating.id)).filter(Rating.worker_id == worker.id).scalar() or 0
+
+    return {
+        "id": worker.id,
+        "name": worker.name,
+        "city": profile.city if profile else "",
+        "service_area": profile.service_area if profile else "",
+        "skills": profile.skills if profile else "",
+        "portfolio": profile.portfolio if profile else "",
+        "hourly_rate": profile.hourly_rate if profile else None,
+        "bio": profile.bio if profile else "",
+        "avatar_url": profile.avatar_url if profile else "",
+        "average_rating": round(average_rating, 2),
+        "review_count": review_count,
+        "reviews": [
+            {"rating": review.rating, "review": review.review}
+            for review in reviews
+        ],
+        "availability": [
+            {"day": slot.day, "start_time": slot.start_time, "end_time": slot.end_time}
+            for slot in availability
+        ],
+    }
+
+
 @router.put("/me")
 def update_my_profile(
     payload: ProfileUpdateRequest,
@@ -388,9 +429,13 @@ def update_user_for_admin(
         next_role = payload.role.strip().lower()
         if next_role not in {"customer", "worker", "admin"}:
             raise HTTPException(status_code=400, detail="Invalid role")
+        if user.id == current_user.id and next_role != "admin":
+            raise HTTPException(status_code=400, detail="Admins cannot remove their own admin access")
         user.role = next_role
 
     if payload.is_active is not None:
+        if user.id == current_user.id and payload.is_active is False:
+            raise HTTPException(status_code=400, detail="Admins cannot disable their own account")
         user.is_active = payload.is_active
 
     db.commit()
