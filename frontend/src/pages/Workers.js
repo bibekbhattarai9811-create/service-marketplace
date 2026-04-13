@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import Navbar from '../components/Navbar';
+import { apiClient } from '../api';
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -21,8 +23,7 @@ function getFakeCoords(locationName) {
     const lng = -74.0060 + (((hash >> 8) % 100) / 100) * 0.5 - 0.25;
     return [lat, lng];
 }
-import Navbar from '../components/Navbar';
-import { apiClient } from '../api';
+
 
 function mapLink(location) {
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`;
