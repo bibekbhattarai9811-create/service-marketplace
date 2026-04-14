@@ -192,11 +192,27 @@ async def create_job(
     db.refresh(new_job)
 
     workers = db.query(User).filter(User.role == "worker", User.is_active == True).all()  # noqa: E712
+    profiles = {p.user_id: p for p in db.query(UserProfile).filter(UserProfile.user_id.in_([w.id for w in workers] or [0])).all()}
+    
+    matched_worker_ids = set()
+
     for worker in workers:
+        profile = profiles.get(worker.id)
+        if not profile:
+            continue
+            
+        worker_skills = (profile.skills or "").lower()
+        job_category = new_job.category.lower()
+        if job_category and job_category not in worker_skills:
+            continue
+            
+        # Save ID to broadcast websocket later
+        matched_worker_ids.add(worker.id)
+
         stored_notification = create_notification(
             db,
             user_id=worker.id,
-            title="New job available",
+            title="New job matched your skills!",
             message=f"{new_job.title} is open in {new_job.location} for ${new_job.price}.",
             notification_type="new_job",
             action_url="/home",
@@ -214,9 +230,9 @@ async def create_job(
         )
         notify_user_channels(
             worker,
-            subject="New job available",
-            body=f"{new_job.title} is open in {new_job.location} for ${new_job.price}.",
-            sms_message=f"New job: {new_job.title} in {new_job.location}",
+            subject="New Job Matched Your Profile!",
+            body=f"{new_job.title} is now available in {new_job.location} for ${new_job.price}.",
+            sms_message=f"New Matched Job: {new_job.title} in {new_job.location}",
         )
 
     notification = {
@@ -226,12 +242,14 @@ async def create_job(
         "price": new_job.price
     }
 
-    for user_connections in active_connections.values():
-        for connection in list(user_connections):
-            try:
-                await connection.send_text(json.dumps(notification))
-            except Exception:
-                pass
+    # Only send live feed websocket directly to matched workers who are connected
+    for worker_id in matched_worker_ids:
+        if worker_id in active_connections:
+            for connection in list(active_connections[worker_id]):
+                try:
+                    await connection.send_text(json.dumps(notification))
+                except Exception:
+                    pass
 
     return {
         "message": "Job created",
