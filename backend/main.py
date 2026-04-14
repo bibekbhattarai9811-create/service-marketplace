@@ -1,6 +1,7 @@
 from pathlib import Path
 
-from fastapi import FastAPI, WebSocket, Depends, WebSocketDisconnect, UploadFile
+from fastapi import FastAPI, WebSocket, Depends, WebSocketDisconnect, UploadFile, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
@@ -19,6 +20,14 @@ from connections import add_connection, remove_connection
 # Create FastAPI App
 # -----------------------------
 app = FastAPI()
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    import traceback
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal Server Error", "traceback": traceback.format_exc()}
+    )
 
 # -----------------------------
 # Database Dependency
@@ -61,6 +70,42 @@ def run_migrations():
     db = SessionLocal()
     try:
         db.execute(text('ALTER TABLE users ADD COLUMN stripe_account_id VARCHAR DEFAULT \'\''))
+        db.commit()
+    except Exception:
+        db.rollback()
+
+    try:
+        db.execute(text('ALTER TABLE jobs ADD COLUMN category VARCHAR DEFAULT \'\''))
+        db.commit()
+    except Exception:
+        db.rollback()
+
+    try:
+        db.execute(text('ALTER TABLE jobs ADD COLUMN service_date VARCHAR DEFAULT \'\''))
+        db.commit()
+    except Exception:
+        db.rollback()
+
+    try:
+        db.execute(text('ALTER TABLE jobs ADD COLUMN service_window VARCHAR DEFAULT \'\''))
+        db.commit()
+    except Exception:
+        db.rollback()
+
+    try:
+        db.execute(text('ALTER TABLE notifications ADD COLUMN message VARCHAR DEFAULT \'\''))
+        db.commit()
+    except Exception:
+        db.rollback()
+
+    try:
+        db.execute(text('ALTER TABLE notifications ADD COLUMN location VARCHAR DEFAULT \'\''))
+        db.commit()
+    except Exception:
+        db.rollback()
+
+    try:
+        db.execute(text('ALTER TABLE chat_messages ADD COLUMN image_url VARCHAR DEFAULT \'\''))
         db.commit()
     except Exception:
         db.rollback()
