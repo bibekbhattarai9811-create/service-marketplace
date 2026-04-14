@@ -105,6 +105,30 @@ def run_migrations():
         db.rollback()
 
     try:
+        db.execute(text('ALTER TABLE notifications ADD COLUMN action_url VARCHAR DEFAULT \'\''))
+        db.commit()
+    except Exception:
+        db.rollback()
+        
+    try:
+        db.execute(text('ALTER TABLE notifications ADD COLUMN notification_type VARCHAR DEFAULT \'general\''))
+        db.commit()
+    except Exception:
+        db.rollback()
+        
+    try:
+        db.execute(text('ALTER TABLE notifications ADD COLUMN title VARCHAR DEFAULT \'\''))
+        db.commit()
+    except Exception:
+        db.rollback()
+
+    try:
+        db.execute(text('ALTER TABLE notifications ADD COLUMN location VARCHAR DEFAULT \'\''))
+        db.commit()
+    except Exception:
+        db.rollback()
+
+    try:
         db.execute(text('ALTER TABLE chat_messages ADD COLUMN image_url VARCHAR DEFAULT \'\''))
         db.commit()
     except Exception:
