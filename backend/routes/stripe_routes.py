@@ -29,7 +29,8 @@ def create_connect_account(
     db: Session = Depends(get_db)
 ):
     # Determine the absolute URL to redirect back to the frontend
-    frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
+    origin_header = "https://service-marketplace-17.onrender.com"
+    frontend_url = os.getenv("FRONTEND_URL", origin_header)
 
     if not current_user.stripe_account_id:
         try:
@@ -69,7 +70,8 @@ def create_identity_session(
     if current_user.id_verified:
         raise HTTPException(status_code=400, detail="Identity already verified")
         
-    frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
+    origin_header = "https://service-marketplace-17.onrender.com" # Use the actual deployed frontend
+    frontend_url = os.getenv("FRONTEND_URL", origin_header)
     if stripe.api_key == "sk_test_mock_key":
         return {
             "url": f"{frontend_url}/dashboard?verification=mock_session_123", 
