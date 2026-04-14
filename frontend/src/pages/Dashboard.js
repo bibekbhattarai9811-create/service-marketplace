@@ -93,7 +93,7 @@ function Dashboard() {
 
     const fetchProfile = useCallback(async () => {
         try {
-            const response = await apiClient.get("/users/me");
+            const response = await apiClient.get("/me");
             setProfile(response.data);
         } catch (error) {
             console.log("Profile error:", error);
