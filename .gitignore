@@ -1,0 +1,17 @@
+.codex/
+.venv/
+.venv-1/
+__pycache__/
+*.py[cod]
+*.db
+*.db-journal
+backend/__pycache__/
+backend/test.db
+backend/test.db-journal
+test.db
+test.db-journal
+frontend/build/
+frontend/build-*/
+coverage/
+.pytest_cache/
+pytest-cache-files-*/

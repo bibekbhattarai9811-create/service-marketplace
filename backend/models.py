@@ -1,0 +1,166 @@
+from sqlalchemy import Column, Integer, String, Boolean
+from database import Base
+
+
+# ---------------------------
+# User Table
+# ---------------------------
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String)
+    email = Column(String, unique=True, index=True)
+    phone = Column(String)
+    role = Column(String)  # customer / worker
+    password = Column(String)
+    is_active = Column(Boolean, default=True)
+    stripe_account_id = Column(String, default="")
+    id_verified = Column(Boolean, default=False)
+
+
+class UserProfile(Base):
+    __tablename__ = "user_profiles"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, unique=True, index=True)
+    bio = Column(String, default="")
+    city = Column(String, default="")
+    skills = Column(String, default="")
+    hourly_rate = Column(Integer, nullable=True)
+    avatar_url = Column(String, default="")
+    service_area = Column(String, default="")
+    portfolio = Column(String, default="")
+
+
+# ---------------------------
+# Job Table
+# ---------------------------
+class Job(Base):
+    __tablename__ = "jobs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String)
+    description = Column(String)
+    location = Column(String)
+
+    # price should be integer for calculations
+    price = Column(Integer)
+
+    status = Column(String, default="OPEN")
+
+    customer_id = Column(Integer)
+    worker_id = Column(Integer, nullable=True)
+    paid = Column(Boolean, default=False)
+    rating = Column(Integer, nullable=True)
+    image_url = Column(String, default="")
+    category = Column(String, default="")
+    service_date = Column(String, default="")
+    service_window = Column(String, default="")
+
+
+# ---------------------------
+# Job Acceptance History
+# ---------------------------
+class JobAcceptance(Base):
+    __tablename__ = "job_acceptance"
+
+    id = Column(Integer, primary_key=True, index=True)
+    job_id = Column(Integer)
+    worker_id = Column(Integer)
+
+
+# ---------------------------
+# Worker Ratings
+# ---------------------------
+class Rating(Base):
+    __tablename__ = "ratings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    worker_id = Column(Integer)
+    rating = Column(Integer)
+    review = Column(String)
+
+
+# ---------------------------
+# Notifications
+# ---------------------------
+class Notification(Base):
+    __tablename__ = "notifications"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, index=True)
+    title = Column(String, default="")
+    message = Column(String)
+    notification_type = Column(String, default="general")
+    action_url = Column(String, default="")
+    location = Column(String)
+    is_read = Column(Integer, default=0)
+
+
+# ---------------------------
+# Payments / Escrow
+# ---------------------------
+class Payment(Base):
+    __tablename__ = "payments"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    job_id = Column(Integer)
+    customer_id = Column(Integer)
+    worker_id = Column(Integer)
+
+    amount = Column(Integer)
+    platform_fee = Column(Integer)
+    worker_amount = Column(Integer)
+
+    status = Column(String)  # escrow / released
+    stripe_payment_intent_id = Column(String, default="")
+
+
+# ---------------------------
+# Chat System
+# ---------------------------
+class ChatMessage(Base):
+    __tablename__ = "chat_messages"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    job_id = Column(Integer)
+    sender_id = Column(Integer)
+    receiver_id = Column(Integer)
+
+    message = Column(String)
+    image_url = Column(String, default="")
+
+
+# ---------------------------
+# Worker Availability
+# ---------------------------
+class Availability(Base):
+    __tablename__ = "availability"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    worker_id = Column(Integer)
+    day = Column(String)
+
+    start_time = Column(String)
+    end_time = Column(String)
+
+
+# ---------------------------
+# Reports / Disputes
+# ---------------------------
+class Dispute(Base):
+    __tablename__ = "disputes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    job_id = Column(Integer)
+    reporter_id = Column(Integer)
+    target_user_id = Column(Integer, nullable=True)
+    dispute_type = Column(String, default="job")
+    reason = Column(String)
+    details = Column(String, default="")
+    status = Column(String, default="OPEN")
+    resolution_note = Column(String, default="")
