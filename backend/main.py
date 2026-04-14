@@ -55,6 +55,43 @@ app.add_middleware(
 if AUTO_CREATE_TABLES:
     Base.metadata.create_all(bind=engine)
 
+@app.on_event("startup")
+def run_migrations():
+    from sqlalchemy import text
+    db = SessionLocal()
+    try:
+        db.execute(text('ALTER TABLE users ADD COLUMN stripe_account_id VARCHAR DEFAULT \'\''))
+        db.commit()
+    except Exception:
+        db.rollback()
+
+    try:
+        db.execute(text('ALTER TABLE payments ADD COLUMN worker_id INTEGER DEFAULT 0'))
+        db.commit()
+    except Exception:
+        db.rollback()
+
+    try:
+        db.execute(text('ALTER TABLE payments ADD COLUMN platform_fee INTEGER DEFAULT 0'))
+        db.commit()
+    except Exception:
+        db.rollback()
+
+    try:
+        db.execute(text('ALTER TABLE payments ADD COLUMN worker_amount INTEGER DEFAULT 0'))
+        db.commit()
+    except Exception:
+        db.rollback()
+
+    try:
+        db.execute(text('ALTER TABLE payments ADD COLUMN stripe_payment_intent_id VARCHAR DEFAULT \'\''))
+        db.commit()
+    except Exception:
+        db.rollback()
+    
+    finally:
+        db.close()
+
 UPLOADS_DIR = Path(__file__).resolve().parent / "uploads"
 UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=UPLOADS_DIR), name="uploads")
