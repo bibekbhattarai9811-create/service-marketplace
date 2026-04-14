@@ -74,7 +74,7 @@ def create_identity_session(
         verification_session = stripe.identity.VerificationSession.create(
             type="document",
             metadata={"user_id": current_user.id},
-            return_url=f"{frontend_url}/dashboard?verification={{CHECKOUT_SESSION_ID}}" # Using substitution if needed, but identity API uses bare return_url usually.
+            return_url=f"{frontend_url}/dashboard?verification={{VERIFICATION_SESSION_ID}}"
         )
         return {"url": verification_session.url, "session_id": verification_session.id}
     except Exception as e:
