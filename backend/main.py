@@ -75,6 +75,12 @@ def run_migrations():
         db.rollback()
 
     try:
+        db.execute(text('ALTER TABLE users ADD COLUMN id_verified BOOLEAN DEFAULT FALSE'))
+        db.commit()
+    except Exception:
+        db.rollback()
+
+    try:
         db.execute(text('ALTER TABLE jobs ADD COLUMN category VARCHAR DEFAULT \'\''))
         db.commit()
     except Exception:

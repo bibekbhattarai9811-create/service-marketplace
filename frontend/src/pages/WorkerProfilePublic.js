@@ -36,7 +36,14 @@ function WorkerProfilePublic() {
                         <div className="page-hero">
                             <section className="hero-panel">
                                 <span className="hero-label">Worker profile</span>
-                                <h1>{worker.name}</h1>
+                                <h1>
+                                    {worker.name} 
+                                    {worker.id_verified && (
+                                        <span className="status-badge" style={{ backgroundColor: '#e2f5ec', color: '#14804a', marginLeft: '12px', fontSize: '0.8rem', verticalAlign: 'middle' }}>
+                                            ✓ ID Verified
+                                        </span>
+                                    )}
+                                </h1>
                                 <p>{worker.bio || worker.portfolio || 'This worker has not added a full introduction yet.'}</p>
                             </section>
 

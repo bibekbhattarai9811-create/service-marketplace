@@ -58,6 +58,48 @@ def create_connect_account(
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Login Link Error: {str(e)}")
 
+# -----------------------------
+# Worker Identity Verification
+# -----------------------------
+@router.post("/create-identity-session")
+def create_identity_session(
+    current_user: User = Depends(require_role("worker")), 
+    db: Session = Depends(get_db)
+):
+    if current_user.id_verified:
+        raise HTTPException(status_code=400, detail="Identity already verified")
+        
+    frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
+    try:
+        verification_session = stripe.identity.VerificationSession.create(
+            type="document",
+            metadata={"user_id": current_user.id},
+            return_url=f"{frontend_url}/dashboard?verification={{CHECKOUT_SESSION_ID}}" # Using substitution if needed, but identity API uses bare return_url usually.
+        )
+        return {"url": verification_session.url, "session_id": verification_session.id}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+class VerifyIdentityRequest(BaseModel):
+    session_id: str
+
+@router.post("/verify-identity-session")
+def verify_identity_session(
+    payload: VerifyIdentityRequest,
+    current_user: User = Depends(require_role("worker")),
+    db: Session = Depends(get_db)
+):
+    try:
+        session = stripe.identity.VerificationSession.retrieve(payload.session_id)
+        if session.status == "verified":
+            current_user.id_verified = True
+            db.commit()
+            return {"status": "verified", "message": "Identity verified successfully!"}
+        else:
+            return {"status": session.status, "message": f"Verification status is: {session.status}"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
 
 # -----------------------------
 # Customer Checkout

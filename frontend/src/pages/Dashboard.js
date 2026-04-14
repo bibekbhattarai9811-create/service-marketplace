@@ -109,6 +109,15 @@ function Dashboard() {
         }
     };
 
+    const handleVerifyIdentity = async () => {
+        try {
+            const response = await apiClient.post("/stripe/create-identity-session");
+            window.location.href = response.data.url;
+        } catch (error) {
+            setMessage({ text: error.response?.data?.detail || "Failed to start identity verification.", isError: true });
+        }
+    };
+
     const acceptJob = async (jobId) => {
         try {
             await apiClient.post("/jobs/accept-job", null, {
@@ -159,6 +168,25 @@ function Dashboard() {
         fetchRating();
         fetchTransactions();
         fetchProfile();
+
+        const queryParams = new URLSearchParams(window.location.search);
+        const verificationSessionId = queryParams.get("verification");
+        if (verificationSessionId) {
+            apiClient.post("/stripe/verify-identity-session", { session_id: verificationSessionId })
+                .then(res => {
+                    if (res.data.status === "verified") {
+                        setMessage({ text: "Identity verified successfully! You now have a checkmark.", isError: false });
+                        fetchProfile(); // reload to get id_verified flag
+                    } else {
+                        setMessage({ text: "Identity verification is still processing or failed. Status: " + res.data.status, isError: true });
+                    }
+                    // Clean URL
+                    window.history.replaceState({}, document.title, "/dashboard");
+                })
+                .catch(err => {
+                    console.error(err);
+                });
+        }
 
         const interval = setInterval(() => {
             fetchTransactions();
@@ -221,11 +249,20 @@ function Dashboard() {
                 )}
 
                 {profile && !profile.stripe_account_id && (
-                    <div className="message-banner" style={{ backgroundColor: '#fff3cd', color: '#856404', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div className="message-banner" style={{ backgroundColor: '#fff3cd', color: '#856404', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                         <div>
                             <strong>Action Required:</strong> You must connect your Stripe account to securely receive payouts for jobs.
                         </div>
                         <button className="primary-button" onClick={handleConnectStripe}>Connect Stripe</button>
+                    </div>
+                )}
+
+                {profile && !profile.id_verified && (
+                    <div className="message-banner" style={{ backgroundColor: '#d1ecf1', color: '#0c5460', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                            <strong>Boost Your Trust:</strong> Verify your government ID to get the coveted "ID Verified" badge on your public profile! Customer trust directly increases hires.
+                        </div>
+                        <button className="primary-button" onClick={handleVerifyIdentity} style={{ backgroundColor: '#17a2b8' }}>Verify Identity</button>
                     </div>
                 )}
 

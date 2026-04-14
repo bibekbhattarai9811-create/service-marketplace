@@ -114,10 +114,15 @@ function Workers() {
                                                 <h3>{worker.name}</h3>
                                                 <p>{worker.portfolio || 'No portfolio highlights yet.'}</p>
                                             </div>
-                                            <span className="status-badge status-open">
-                                                {worker.average_rating} stars
-                                            </span>
-                                        </div>
+                                                {worker.id_verified && (
+                                                    <span className="status-badge" style={{ backgroundColor: '#e2f5ec', color: '#14804a', marginLeft: '8px' }}>
+                                                        ✓ ID Verified
+                                                    </span>
+                                                )}
+                                                <span className="status-badge status-open" style={{ marginLeft: '8px' }}>
+                                                    {worker.average_rating} stars
+                                                </span>
+                                            </div>
                                         <div className="job-meta">
                                             {worker.city && <span className="job-meta-chip">{worker.city}</span>}
                                             {worker.service_area && <span className="job-meta-chip">{worker.service_area}</span>}
@@ -145,7 +150,9 @@ function Workers() {
                                             <Marker key={w.id} position={coords}>
                                                 <Popup>
                                                     <div style={{ textAlign: 'center' }}>
-                                                        <strong style={{ display: 'block', marginBottom: '4px' }}>{w.name}</strong>
+                                                        <strong style={{ display: 'block', marginBottom: '4px' }}>
+                                                            {w.name} {w.id_verified && <span style={{ color: '#14804a' }}>✓</span>}
+                                                        </strong>
                                                         {w.service_area || w.city}<br/>
                                                         <strong>${w.hourly_rate}/hr</strong><br/>
                                                         <Link to={`/workers/${w.id}`}>View Profile</Link>

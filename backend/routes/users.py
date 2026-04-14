@@ -236,6 +236,7 @@ def get_my_profile(
         "phone": current_user.phone,
         "role": current_user.role,
         "stripe_account_id": current_user.stripe_account_id or "",
+        "id_verified": getattr(current_user, "id_verified", False),
         "bio": profile.bio or "",
         "city": profile.city or "",
         "skills": profile.skills or "",
@@ -271,6 +272,7 @@ def list_public_workers(db: Session = Depends(get_db)):
             "avatar_url": profile.avatar_url if profile else "",
             "average_rating": round(average_rating, 2),
             "review_count": review_count,
+            "id_verified": worker.id_verified,
         })
 
     return result
@@ -306,6 +308,7 @@ def get_public_worker_profile(worker_id: int, db: Session = Depends(get_db)):
         "avatar_url": profile.avatar_url if profile else "",
         "average_rating": round(average_rating, 2),
         "review_count": review_count,
+        "id_verified": worker.id_verified,
         "reviews": [
             {"rating": review.rating, "review": review.review}
             for review in reviews

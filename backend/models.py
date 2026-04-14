@@ -16,6 +16,7 @@ class User(Base):
     password = Column(String)
     is_active = Column(Boolean, default=True)
     stripe_account_id = Column(String, default="")
+    id_verified = Column(Boolean, default=False)
 
 
 class UserProfile(Base):
