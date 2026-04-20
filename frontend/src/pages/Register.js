@@ -11,7 +11,6 @@ function Register() {
     const [phone, setPhone] = useState('');
     const [role, setRole] = useState('customer');
     const [password, setPassword] = useState('');
-    const [adminSecret, setAdminSecret] = useState('');
     const [message, setMessage] = useState('');
 
     const handleRegister = async () => {
@@ -31,7 +30,7 @@ function Register() {
                 phone,
                 role,
                 password,
-                admin_secret: role === 'admin' ? adminSecret : null,
+                admin_secret: null,
             });
             setMessage('Registration successful! User ID: ' + response.data.user_id);
         } catch (error) {
@@ -48,11 +47,11 @@ function Register() {
                         Service Marketplace
                     </div>
                     <div className="auth-copy">
-                        <p className="auth-kicker">Launch your workspace</p>
-                        <h1>Build your account and step into the marketplace with confidence.</h1>
+                        <p className="auth-kicker">Create your account</p>
+                        <h1>Join the marketplace with a setup that feels clear and fast.</h1>
                         <p>
-                            Sign up as a customer to post jobs or as a worker to accept projects,
-                            complete them, and grow your reputation with a polished profile.
+                            Sign up as a customer to post jobs or as a worker to accept jobs,
+                            build trust, and manage everything from one place.
                         </p>
                     </div>
                 </div>
@@ -60,23 +59,23 @@ function Register() {
                 <div className="auth-feature-grid">
                     <div className="auth-feature-card">
                         <strong>Customer tools</strong>
-                        <span>Post jobs, review worker progress, pay securely, and leave ratings.</span>
+                        <span>Post jobs, review progress, pay securely, and leave ratings.</span>
                     </div>
                     <div className="auth-feature-card">
                         <strong>Worker tools</strong>
-                        <span>Browse available jobs, accept work, and track your earnings dashboard.</span>
+                        <span>Browse available jobs, accept work, and track your earnings.</span>
                     </div>
                     <div className="auth-feature-card">
                         <strong>Built-in chat</strong>
-                        <span>Keep customers and workers connected during the job without leaving the app.</span>
+                        <span>Keep customers and workers aligned without leaving the app.</span>
                     </div>
                 </div>
             </section>
 
             <section className="auth-panel">
                 <div className="auth-card">
-                    <h2>Register</h2>
-                    <p className="auth-subtitle">Set up your profile and start using the marketplace.</p>
+                    <h2>Create Account</h2>
+                    <p className="auth-subtitle">Set up your details and start using the marketplace.</p>
                     <div className="auth-form">
                         <input
                             type="text"
@@ -112,7 +111,7 @@ function Register() {
                         </button>
                     </div>
                     <p className="auth-message">{message}</p>
-                    <p className="auth-switch">Already have an account? <Link to="/">Login</Link></p>
+                    <p className="auth-switch">Already have an account? <Link to="/">Sign in</Link></p>
                 </div>
             </section>
         </div>

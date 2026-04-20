@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { apiClient } from '../api';
@@ -8,7 +8,7 @@ function Notifications() {
     const [message, setMessage] = useState('');
     const [showUnreadOnly, setShowUnreadOnly] = useState(false);
 
-    const fetchNotifications = async () => {
+    const fetchNotifications = useCallback(async () => {
         try {
             const response = await apiClient.get('/jobs/notifications/me', {
                 params: { unread_only: showUnreadOnly || undefined },
@@ -18,11 +18,11 @@ function Notifications() {
         } catch (error) {
             setMessage(error.response?.data?.detail || 'Failed to load notifications.');
         }
-    };
+    }, [showUnreadOnly]);
 
     useEffect(() => {
         fetchNotifications();
-    }, [showUnreadOnly]);
+    }, [fetchNotifications]);
 
     const markRead = async (notificationId) => {
         try {

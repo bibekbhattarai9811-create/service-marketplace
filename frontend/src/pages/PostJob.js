@@ -98,21 +98,21 @@ function PostJob() {
                 <div className="page-hero" style={{ paddingBottom: '2rem' }}>
                     <section className="hero-panel">
                         <span className="hero-label">{targetWorkerId ? 'Private Invitation' : 'Create a request'}</span>
-                        <h1>{targetWorkerId ? 'Post a private job directly to this worker.' : 'Post a job with all the details a worker needs.'}</h1>
+                        <h1>{targetWorkerId ? 'Send a private job directly to this worker.' : 'Post a job with the details a worker needs to say yes.'}</h1>
                         <p>
                             {targetWorkerId 
-                                ? 'Because you are hiring this worker directly, this job will bypass the public marketplace and exclusively notify them.'
-                                : 'Clear descriptions, accurate map locations, and a fair budget help workers accept your request faster and reduce back-and-forth.'}
+                                ? 'This request skips the public marketplace and goes straight to the worker you selected.'
+                                : 'Clear descriptions, a correct location, and a realistic budget help workers respond faster and reduce back-and-forth.'}
                         </p>
                     </section>
 
                     <aside className="hero-side-panel">
                         <h3>Posting tips</h3>
-                        <p>Clear categories, a realistic budget, and a pinned location help workers trust the request quickly.</p>
+                        <p>Choose the right category, set a fair budget, and pin the correct location so workers can trust the request quickly.</p>
                         <div className="hero-metrics">
                             <div className="hero-metric">
-                                <strong>Map-first posting</strong>
-                                <span>Use the location panel to make the request feel concrete before it goes live.</span>
+                                <strong>Better details, faster replies</strong>
+                                <span>Workers respond faster when the title, photos, budget, and location all make sense together.</span>
                             </div>
                         </div>
                     </aside>
@@ -120,7 +120,7 @@ function PostJob() {
 
                 {targetWorkerId && (
                     <div className="message-banner" style={{ backgroundColor: '#eff6ff', color: '#1e40af', border: '1px solid #bfdbfe', marginBottom: '24px' }}>
-                        <strong>Exclusive Offer Mode:</strong> You are routing this job directly to Worker #{targetWorkerId}. Wait for them to accept!
+                        <strong>Private job:</strong> This request is being sent directly to Worker #{targetWorkerId}.
                     </div>
                 )}
 
@@ -135,7 +135,7 @@ function PostJob() {
                         <div className="section-header">
                             <div>
                                 <h2>Job Details</h2>
-                                <p className="section-subtitle">What do you need help with?</p>
+                                <p className="section-subtitle">Explain the work clearly so workers can respond with confidence.</p>
                             </div>
                         </div>
 
@@ -168,13 +168,13 @@ function PostJob() {
 
                             <input
                                 type="text"
-                                placeholder="Job Title *"
+                                placeholder="Job title *"
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
                             />
                             
                             <textarea
-                                placeholder="Job Description *"
+                                placeholder="Describe the work, what is needed, and anything important workers should know *"
                                 style={{ minHeight: '120px' }}
                                 value={description}
                                 onChange={(e) => setDescription(e.target.value)}
@@ -190,7 +190,7 @@ function PostJob() {
                                 <input
                                     type="text"
                                     style={{ flex: 2 }}
-                                    placeholder="Preferred time window (ex: 9 AM - 12 PM)"
+                                    placeholder="Preferred time window, for example 9 AM - 12 PM"
                                     value={serviceWindow}
                                     onChange={(e) => setServiceWindow(e.target.value)}
                                 />
@@ -201,7 +201,7 @@ function PostJob() {
                                 <input
                                     type="number"
                                     style={{ flex: 1, margin: 0 }}
-                                    placeholder="Price Offer *"
+                                    placeholder="Budget *"
                                     value={price}
                                     onChange={(e) => setPrice(e.target.value)}
                                 />
@@ -223,7 +223,7 @@ function PostJob() {
                         <div className="section-header">
                             <div>
                                 <h2>Location Map *</h2>
-                                <p className="section-subtitle">Click the map to pinpoint where the job takes place. Only matched local workers will be notified!</p>
+                                <p className="section-subtitle">Click the map to pin the job location, then confirm the city or area below.</p>
                             </div>
                         </div>
 
@@ -237,16 +237,16 @@ function PostJob() {
 
                             <input
                                 type="text"
-                                placeholder="Selected City or Region"
+                                placeholder="Selected city or area"
                                 value={location}
                                 onChange={(e) => setLocation(e.target.value)}
                             />
 
                             <div className="helper-row" style={{ marginTop: 'auto', paddingTop: '24px' }}>
                                 <button className="primary-button" style={{ flex: 1 }} onClick={handlePostJob}>
-                                    Publish Job Offer
+                                    Publish Job
                                 </button>
-                                <Link to="/customer-dashboard" className="ghost-button">Cancel</Link>
+                                <Link to="/customer-dashboard" className="ghost-button">Back to Dashboard</Link>
                             </div>
                         </div>
                     </section>

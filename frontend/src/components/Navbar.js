@@ -3,15 +3,28 @@ import { Link, useLocation } from "react-router-dom";
 import { apiClient, clearSession } from "../api";
 
 const PAGE_META = {
-    "/home": { title: "Marketplace Overview", subtitle: "Browse open jobs and local opportunities." },
-    "/profile": { title: "Profile Studio", subtitle: "Keep your public presence polished and trusted." },
-    "/workers": { title: "Worker Directory", subtitle: "Compare skills, ratings, and service coverage." },
-    "/notifications": { title: "Notification Center", subtitle: "Track activity, reminders, and status updates." },
-    "/customer-dashboard": { title: "Customer Command", subtitle: "Manage requests, payments, and worker activity." },
-    "/post-job": { title: "Create New Job", subtitle: "Post a request with details workers can trust." },
-    "/dashboard": { title: "Worker Command", subtitle: "Accept work, manage jobs, and monitor earnings." },
-    "/admin": { title: "Admin Analytics", subtitle: "Watch platform health, users, and disputes." },
-    "/welcome": { title: "Welcome", subtitle: "Set up your account and get moving." },
+    "/home": { title: "Find Jobs", subtitle: "Browse open work and move to the next step fast." },
+    "/profile": { title: "Your Profile", subtitle: "Update your details, trust signals, and availability." },
+    "/workers": { title: "Find Workers", subtitle: "Compare skills, ratings, and service areas." },
+    "/notifications": { title: "Notifications", subtitle: "See updates, reminders, and activity in one place." },
+    "/customer-dashboard": { title: "Customer Dashboard", subtitle: "Track requests, payments, and completed jobs." },
+    "/post-job": { title: "Post a Job", subtitle: "Create a clear request workers can understand quickly." },
+    "/dashboard": { title: "Worker Dashboard", subtitle: "Manage open jobs, active jobs, and payouts." },
+    "/admin": { title: "Admin Analytics", subtitle: "Monitor platform activity, disputes, and growth." },
+    "/welcome": { title: "Get Started", subtitle: "Finish setup and start using the marketplace." },
+    "/chat": { title: "Messages", subtitle: "Stay aligned with the customer or worker on this job." },
+};
+
+const ICONS = {
+    home: "H",
+    profile: "P",
+    workers: "W",
+    notifications: "N",
+    customer: "C",
+    post: "+",
+    admin: "A",
+    dashboard: "J",
+    logout: "L",
 };
 
 function Navbar() {
@@ -22,25 +35,23 @@ function Navbar() {
 
     const navLinks = useMemo(() => {
         const links = [
-            { to: "/home", label: "Home", icon: "⌂" },
-            { to: "/profile", label: "Profile", icon: "◔" },
-            { to: "/workers", label: "Workers", icon: "◎" },
-            { to: "/notifications", label: "Notifications", icon: "◌" },
+            { to: "/home", label: "Home", icon: ICONS.home },
+            { to: "/profile", label: "Profile", icon: ICONS.profile },
+            { to: "/workers", label: "Workers", icon: ICONS.workers },
+            { to: "/notifications", label: "Alerts", icon: ICONS.notifications },
         ];
 
         if (role === "customer") {
-            links.push({ to: "/customer-dashboard", label: "Customer", icon: "◫" });
-            links.push({ to: "/post-job", label: "Post Job", icon: "+", primary: true });
+            links.push({ to: "/customer-dashboard", label: "Dashboard", icon: ICONS.customer });
+            links.push({ to: "/post-job", label: "Post Job", icon: ICONS.post, primary: true });
         } else if (role === "admin") {
-            links.push({ to: "/admin", label: "Admin", icon: "◆", primary: true });
+            links.push({ to: "/admin", label: "Admin", icon: ICONS.admin, primary: true });
         } else {
-            links.push({ to: "/dashboard", label: "Worker", icon: "◍" });
+            links.push({ to: "/dashboard", label: "Jobs", icon: ICONS.dashboard, primary: true });
         }
 
         return links;
     }, [role]);
-
-    const closeMenu = () => setIsOpen(false);
 
     useEffect(() => {
         setIsOpen(false);
@@ -73,11 +84,25 @@ function Navbar() {
 
     const userName = localStorage.getItem("user_name") || (role ? `${role[0].toUpperCase()}${role.slice(1)}` : "Member");
     const userEmail = localStorage.getItem("user_email") || `${role || "account"}@service-marketplace.app`;
-    const meta = PAGE_META[location.pathname] || { title: "Service Marketplace", subtitle: "Manage your marketplace flow." };
+    const meta = PAGE_META[location.pathname] || {
+        title: "Service Marketplace",
+        subtitle: "Manage jobs, messages, and payments in one place.",
+    };
+    const primaryLinks = navLinks.slice(0, 4);
+    const quickActionLink = role === "customer" ? "/post-job" : role === "admin" ? "/admin" : "/dashboard";
+    const quickActionLabel = role === "customer" ? "Post" : role === "admin" ? "Admin" : "Jobs";
+    const quickActionIcon = role === "customer" ? ICONS.post : role === "admin" ? ICONS.admin : ICONS.dashboard;
 
     return (
         <>
-            {isOpen && <button type="button" className="app-nav-backdrop" aria-label="Close navigation" onClick={closeMenu} />}
+            {isOpen && (
+                <button
+                    type="button"
+                    className="app-nav-backdrop"
+                    aria-label="Close navigation"
+                    onClick={() => setIsOpen(false)}
+                />
+            )}
 
             <aside className={`app-topbar ${isOpen ? "open" : ""}`}>
                 <div className="app-sidebar-head">
@@ -85,7 +110,7 @@ function Navbar() {
                         <span className="auth-brand-badge">SM</span>
                         <span className="app-brand-copy">
                             <strong>Service Marketplace</strong>
-                            <small>{role === "worker" ? "Worker flow" : role === "admin" ? "Admin desk" : "Customer flow"}</small>
+                            <small>{role === "worker" ? "Worker workspace" : role === "admin" ? "Admin workspace" : "Customer workspace"}</small>
                         </span>
                     </Link>
 
@@ -111,13 +136,11 @@ function Navbar() {
                                     key={link.to}
                                     className={`app-nav-link ${link.primary ? "app-nav-link-primary" : ""} ${isActive ? "active" : ""}`.trim()}
                                     to={link.to}
-                                    onClick={closeMenu}
+                                    onClick={() => setIsOpen(false)}
                                 >
                                     <span className="app-nav-icon">{link.icon}</span>
                                     <span className="app-nav-text">{link.label}</span>
-                                    {link.to === "/notifications" && unreadCount > 0 && (
-                                        <span className="nav-badge">{unreadCount}</span>
-                                    )}
+                                    {link.to === "/notifications" && unreadCount > 0 && <span className="nav-badge">{unreadCount}</span>}
                                 </Link>
                             );
                         })}
@@ -129,10 +152,10 @@ function Navbar() {
                             to="/"
                             onClick={() => {
                                 clearSession();
-                                closeMenu();
+                                setIsOpen(false);
                             }}
                         >
-                            <span className="app-nav-icon">↩</span>
+                            <span className="app-nav-icon">{ICONS.logout}</span>
                             <span className="app-nav-text">Logout</span>
                         </Link>
                     </div>
@@ -148,13 +171,13 @@ function Navbar() {
 
                 <div className="app-header-tools">
                     <div className="app-header-search">
-                        <span>⌕</span>
-                        <input type="text" placeholder="Search jobs, workers, or pages" readOnly />
+                        <span className="app-header-search-icon">Go</span>
+                        <input type="text" placeholder="Search is coming soon" readOnly />
                     </div>
-                    <div className="app-header-bell">
-                        <span>◌</span>
+                    <Link to="/notifications" className="app-header-bell" aria-label="Open notifications">
+                        <span className="app-header-bell-label">N</span>
                         {unreadCount > 0 && <em>{unreadCount}</em>}
-                    </div>
+                    </Link>
                     <div className="app-user-pill">
                         <div className="app-user-avatar">{userName.slice(0, 1).toUpperCase()}</div>
                         <div className="app-user-copy">
@@ -164,6 +187,25 @@ function Navbar() {
                     </div>
                 </div>
             </header>
+
+            <nav className="mobile-quick-nav" aria-label="Quick navigation">
+                {primaryLinks.map((link) => {
+                    const isActive = location.pathname === link.to;
+                    return (
+                        <Link key={link.to} className={`mobile-quick-link ${isActive ? "active" : ""}`.trim()} to={link.to}>
+                            <span className="mobile-quick-icon">{link.icon}</span>
+                            <span className="mobile-quick-text">{link.label}</span>
+                        </Link>
+                    );
+                })}
+                <Link
+                    className={`mobile-quick-link ${location.pathname === quickActionLink ? "active" : ""}`.trim()}
+                    to={quickActionLink}
+                >
+                    <span className="mobile-quick-icon">{quickActionIcon}</span>
+                    <span className="mobile-quick-text">{quickActionLabel}</span>
+                </Link>
+            </nav>
         </>
     );
 }

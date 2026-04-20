@@ -38,16 +38,16 @@ describe('PostJob', () => {
     fireEvent.change(screen.getByPlaceholderText(/job title/i), {
       target: { value: 'Fix fence' },
     });
-    fireEvent.change(screen.getByPlaceholderText(/job description/i), {
+    fireEvent.change(screen.getByPlaceholderText(/describe the work/i), {
       target: { value: 'Backyard fence needs repair' },
     });
-    fireEvent.change(screen.getByPlaceholderText(/selected city or region/i), {
+    fireEvent.change(screen.getByPlaceholderText(/selected city or area/i), {
       target: { value: 'Austin' },
     });
-    fireEvent.change(screen.getByPlaceholderText(/price offer/i), {
+    fireEvent.change(screen.getByPlaceholderText(/budget/i), {
       target: { value: '75' },
     });
-    fireEvent.click(screen.getByRole('button', { name: /publish job offer/i }));
+    fireEvent.click(screen.getByRole('button', { name: /publish job/i }));
 
     await waitFor(() => {
       expect(apiClient.post).toHaveBeenCalledWith('/jobs/create-job', {

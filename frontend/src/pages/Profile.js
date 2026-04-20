@@ -19,13 +19,6 @@ function Profile() {
 
     const role = localStorage.getItem('role');
 
-    useEffect(() => {
-        fetchProfile();
-        if (role === 'worker') {
-            fetchAvailability();
-        }
-    }, []);
-
     const fetchProfile = async () => {
         try {
             const response = await apiClient.get('/me');
@@ -44,10 +37,6 @@ function Profile() {
         }
     };
 
-    const handleChange = (field, value) => {
-        setForm((current) => ({ ...current, [field]: value }));
-    };
-
     const fetchAvailability = async () => {
         try {
             const response = await apiClient.get('/availability/me');
@@ -55,6 +44,17 @@ function Profile() {
         } catch (error) {
             setAvailability([]);
         }
+    };
+
+    useEffect(() => {
+        fetchProfile();
+        if (role === 'worker') {
+            fetchAvailability();
+        }
+    }, [role]);
+
+    const handleChange = (field, value) => {
+        setForm((current) => ({ ...current, [field]: value }));
     };
 
     const handleSave = async () => {

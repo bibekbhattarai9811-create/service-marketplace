@@ -226,26 +226,26 @@ function Dashboard() {
                 <div className="page-hero">
                     <section className="hero-panel">
                         <span className="hero-label">Worker dashboard</span>
-                        <h1>Manage your accepted jobs, earnings, and customer conversations.</h1>
+                        <h1>Manage jobs, earnings, and customer updates from one screen.</h1>
                         <p>
-                            Track what is available, what you have already accepted, and what has
-                            already been paid out to you from one dashboard.
+                            See what is available, what you already accepted, and what has
+                            already been paid out to you without jumping between pages.
                         </p>
                     </section>
 
                     <aside className="hero-side-panel">
                         <h3>Today at a glance</h3>
                         <p>
-                            Watch new jobs come in live, move accepted work to completed status,
-                            and keep an eye on your payment history.
+                            Watch new jobs come in, move accepted work to completed,
+                            and keep your payout history easy to read.
                         </p>
                         <div className="hero-metrics">
                             <div className="hero-metric">
                                 <strong>{jobs.length} open jobs</strong>
-                                <span>New work appears here in real time so you can move quickly.</span>
+                                <span>New work appears here in real time so you can respond quickly.</span>
                             </div>
                             <div className="hero-metric">
-                                <strong>{workerJobs.length} active jobs</strong>
+                                <strong>{workerJobs.length} jobs in progress</strong>
                                 <span>Your accepted jobs, chats, disputes, and completions stay together.</span>
                             </div>
                         </div>
@@ -261,7 +261,7 @@ function Dashboard() {
                 {profile && !profile.stripe_account_id && (
                     <div className="message-banner" style={{ backgroundColor: '#fff3cd', color: '#856404', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                         <div>
-                            <strong>Action Required:</strong> You must connect your Stripe account to securely receive payouts for jobs.
+                            <strong>Connect payouts:</strong> Add Stripe so customers can pay you safely after work is completed.
                         </div>
                         <button className="primary-button" onClick={handleConnectStripe}>Connect Stripe</button>
                     </div>
@@ -270,7 +270,7 @@ function Dashboard() {
                 {profile && !profile.id_verified && (
                     <div className="message-banner" style={{ backgroundColor: '#d1ecf1', color: '#0c5460', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div>
-                            <strong>Boost Your Trust:</strong> Verify your government ID to get the coveted "ID Verified" badge on your public profile! Customer trust directly increases hires.
+                            <strong>Build trust:</strong> Verify your government ID to earn the ID Verified badge on your public profile.
                         </div>
                         <button className="primary-button" onClick={handleVerifyIdentity} style={{ backgroundColor: '#17a2b8' }}>Verify Identity</button>
                     </div>
@@ -295,7 +295,7 @@ function Dashboard() {
                     <div className="section-header">
                         <div>
                             <h2>Available Jobs</h2>
-                            <p className="section-subtitle">Open jobs you can accept right now.</p>
+                            <p className="section-subtitle">Open jobs you can review and accept right now.</p>
                         </div>
                     </div>
 
@@ -363,7 +363,7 @@ function Dashboard() {
                     <div className="section-header">
                         <div>
                             <h2>Your Jobs</h2>
-                            <p className="section-subtitle">Jobs you have already accepted and are managing.</p>
+                            <p className="section-subtitle">Jobs you already accepted and are actively managing.</p>
                         </div>
                     </div>
 

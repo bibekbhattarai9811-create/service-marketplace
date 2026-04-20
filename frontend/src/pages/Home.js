@@ -54,28 +54,27 @@ function Home() {
                 <div className="page-hero">
                     <section className="hero-panel">
                         <span className="hero-label">Marketplace feed</span>
-                        <h1>Browse live jobs and jump into the work that fits you.</h1>
+                        <h1>Browse open jobs and find the right match faster.</h1>
                         <p>
-                            This is your central feed for open jobs. Customers can post work,
-                            and workers can quickly move into their dashboard to accept jobs
-                            and start earning.
+                            Use this feed to search open jobs, compare details quickly,
+                            and move into the next step without hunting through the app.
                         </p>
                     </section>
 
                     <aside className="hero-side-panel">
                         <h3>Quick actions</h3>
                         <p>
-                            Keep the flow simple: browse jobs, post requests, and move into the
-                            right dashboard without bouncing around the app.
+                            Browse jobs, post work, or jump into your dashboard without
+                            bouncing around the app.
                         </p>
                         <div className="hero-metrics">
                             <div className="hero-metric">
                                 <strong>{jobs.length} jobs visible</strong>
-                                <span>Live results update as filters change so the feed stays useful.</span>
+                                <span>Live results update as filters change so the list stays useful.</span>
                             </div>
                             <div className="hero-metric">
-                                <strong>Sorted for speed</strong>
-                                <span>Use category, service date, and price to narrow the right work fast.</span>
+                                <strong>Filters that stay practical</strong>
+                                <span>Use category, service date, price, and location to cut down noise fast.</span>
                             </div>
                         </div>
                         <div className="button-row">
@@ -99,7 +98,7 @@ function Home() {
                     <div className="section-header">
                         <div>
                             <h2>Available Jobs</h2>
-                            <p className="section-subtitle">See which jobs are open right now across the marketplace.</p>
+                            <p className="section-subtitle">See what is open right now across the marketplace.</p>
                         </div>
                     </div>
 
@@ -200,20 +199,20 @@ function Home() {
                                     <div>
                                         <h3>How to use this feed</h3>
                                         <p className="mini-note">
-                                            Start with search or location, then refine by category and service date to cut down noise.
+                                            Start with search or location, then narrow by category, date, and budget.
                                         </p>
                                     </div>
                                     <div className="surface-list">
                                         <div className="surface-row">
                                             <div>
-                                                <strong>Flexible sorting</strong>
-                                                <span>Newest, price, location, date, or category.</span>
+                                                <strong>Simple sorting</strong>
+                                                <span>Sort by newest, price, location, date, or category.</span>
                                             </div>
                                         </div>
                                         <div className="surface-row">
                                             <div>
-                                                <strong>Job details stay visible</strong>
-                                                <span>Price, timing, and location are surfaced on every card.</span>
+                                                <strong>Key details stay visible</strong>
+                                                <span>Price, timing, and location appear on every card.</span>
                                             </div>
                                         </div>
                                     </div>

@@ -17,7 +17,6 @@ function Login() {
             const userId = response.data.user_id;
             const role = response.data.role;
             const token = response.data.token;
-            console.log("Login response:", response.data);
             localStorage.setItem('user_id', userId);
             localStorage.setItem('role', role);
             localStorage.setItem('token', token);
@@ -44,35 +43,35 @@ function Login() {
                         Service Marketplace
                     </div>
                     <div className="auth-copy">
-                        <p className="auth-kicker">Welcome Back</p>
-                        <h1>Get everything you want from one clean service workspace.</h1>
+                        <p className="auth-kicker">Welcome back</p>
+                        <h1>Book trusted local help without the confusion.</h1>
                         <p>
-                            Post jobs, chat with workers, track payments, and manage every step
-                            of the service flow from one premium command center.
+                            Post a job, message workers, pay securely, and keep every step
+                            of the job in one simple dashboard.
                         </p>
                     </div>
                 </div>
 
                 <div className="auth-feature-grid">
                     <div className="auth-feature-card">
-                        <strong>Smart requests</strong>
-                        <span>Create a request, set the budget, and share the location in seconds.</span>
+                        <strong>Post jobs faster</strong>
+                        <span>Write a clear request, set your budget, and share the location in minutes.</span>
                     </div>
                     <div className="auth-feature-card">
-                        <strong>Live worker flow</strong>
-                        <span>Workers can accept, complete, and update jobs from their dashboard.</span>
+                        <strong>Track every step</strong>
+                        <span>See when work is accepted, completed, paid, and rated from one place.</span>
                     </div>
                     <div className="auth-feature-card">
-                        <strong>Payments and trust</strong>
-                        <span>Track completed jobs, payments, and customer feedback in one place.</span>
+                        <strong>Stay connected</strong>
+                        <span>Use built-in chat so customers and workers stay aligned during the job.</span>
                     </div>
                 </div>
             </section>
 
             <section className="auth-panel">
                 <div className="auth-card">
-                    <h2>Login</h2>
-                    <p className="auth-subtitle">Welcome back. Sign in to continue managing your jobs.</p>
+                    <h2>Sign In</h2>
+                    <p className="auth-subtitle">Use your email and password to open your workspace.</p>
                     <div className="auth-form">
                         <input
                             type="email"
@@ -97,11 +96,11 @@ function Login() {
                             Sign In
                         </button>
                         <button type="button" className="auth-outline-button">
-                            Continue with Google
+                            Google sign-in coming soon
                         </button>
                     </div>
                     <p className="auth-message">{message}</p>
-                    <p className="auth-switch">Don't have an account? <Link to="/register">Register</Link></p>
+                    <p className="auth-switch">Need an account? <Link to="/register">Create one</Link></p>
                 </div>
             </section>
         </div>

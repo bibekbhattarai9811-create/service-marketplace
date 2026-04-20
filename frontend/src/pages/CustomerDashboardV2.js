@@ -129,10 +129,10 @@ function CustomerDashboardV2() {
                 <div className="page-hero">
                     <section className="hero-panel">
                         <span className="hero-label">Customer dashboard</span>
-                        <h1>Track posted jobs, payments, and worker ratings in one place.</h1>
+                        <h1>Track jobs, payments, and ratings without losing the thread.</h1>
                         <p>
-                            This dashboard keeps your active jobs, completed work, payment steps,
-                            and worker feedback all organized in one view.
+                            Keep active jobs, completed work, payment steps, and worker feedback
+                            organized in one clear view.
                         </p>
                     </section>
 
@@ -145,11 +145,11 @@ function CustomerDashboardV2() {
                         <div className="hero-metrics">
                             <div className="hero-metric">
                                 <strong>{myJobs.length} jobs tracked</strong>
-                                <span>Open requests, active jobs, and completed work all stay in one place.</span>
+                                <span>Open requests, active jobs, and completed work all stay together.</span>
                             </div>
                             <div className="hero-metric">
                                 <strong>${totalPaid} total paid</strong>
-                                <span>Payment progress and ratings are surfaced right alongside each job card.</span>
+                                <span>Payment progress and ratings stay visible right beside each job.</span>
                             </div>
                         </div>
                         <Link to="/post-job" className="primary-button">Post a New Job</Link>
@@ -181,7 +181,7 @@ function CustomerDashboardV2() {
                     <div className="section-header">
                         <div>
                             <h2>My Posted Jobs</h2>
-                            <p className="section-subtitle">Manage every job from open request to paid completion.</p>
+                            <p className="section-subtitle">Manage each job from posting to payment and rating.</p>
                         </div>
                     </div>
 
@@ -235,7 +235,7 @@ function CustomerDashboardV2() {
                                             <h3>Pay Worker</h3>
                                             <p className="muted-text">Total: ${job.price}</p>
                                             <p className="muted-text">
-                                                Worker receives ${Number(job.price * 0.9).toFixed(2)} and platform fee is ${Number(job.price * 0.1).toFixed(2)}.
+                                                The worker receives ${Number(job.price * 0.9).toFixed(2)} and the platform fee is ${Number(job.price * 0.1).toFixed(2)}.
                                             </p>
                                             <div className="button-row">
                                                 <button className="primary-button" onClick={() => handlePayClick(job)}>
@@ -247,7 +247,7 @@ function CustomerDashboardV2() {
 
                                     {job.paid && (
                                         <div className="message-banner success" style={{ marginBottom: 0 }}>
-                                            Payment has been completed for this job.
+                                            Payment completed for this job.
                                         </div>
                                     )}
 
@@ -256,7 +256,7 @@ function CustomerDashboardV2() {
                                             <div className="section-header">
                                                 <div>
                                                     <h3>Rate this Worker</h3>
-                                                    <p className="section-subtitle">Leave a score and short review for completed work.</p>
+                                                    <p className="section-subtitle">Leave a rating and short review for the completed job.</p>
                                                 </div>
                                             </div>
                                             <div className="page-form">
@@ -291,7 +291,7 @@ function CustomerDashboardV2() {
                                             <div className="section-header">
                                                 <div>
                                                     <h3>Report an issue</h3>
-                                                    <p className="section-subtitle">Use this if there is a dispute with the job or worker.</p>
+                                                    <p className="section-subtitle">Use this if there is a dispute with the job or the worker.</p>
                                                 </div>
                                             </div>
                                             <div className="page-form">
