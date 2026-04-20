@@ -239,6 +239,16 @@ function Dashboard() {
                             Watch new jobs come in live, move accepted work to completed status,
                             and keep an eye on your payment history.
                         </p>
+                        <div className="hero-metrics">
+                            <div className="hero-metric">
+                                <strong>{jobs.length} open jobs</strong>
+                                <span>New work appears here in real time so you can move quickly.</span>
+                            </div>
+                            <div className="hero-metric">
+                                <strong>{workerJobs.length} active jobs</strong>
+                                <span>Your accepted jobs, chats, disputes, and completions stay together.</span>
+                            </div>
+                        </div>
                     </aside>
                 </div>
 
@@ -281,7 +291,7 @@ function Dashboard() {
                     </div>
                 </div>
 
-                <section className="section-card">
+                <section className="section-card section-card-accent">
                     <div className="section-header">
                         <div>
                             <h2>Available Jobs</h2>
@@ -292,8 +302,8 @@ function Dashboard() {
                     {jobs.length === 0 ? (
                         <div className="empty-state">No available jobs right now.</div>
                     ) : (
-                        <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
-                            <div className="card-grid" style={{ flex: 1, minWidth: '300px', maxHeight: '600px', overflowY: 'auto', alignContent: 'start' }}>
+                        <div className="page-two-column">
+                            <div className="stack-list">
                                 {jobs.map((job) => (
                                     <article key={job.id} className="job-card">
                                         {job.image_url && (
@@ -325,7 +335,7 @@ function Dashboard() {
                                     </article>
                                 ))}
                             </div>
-                            <div style={{ flex: 1, minWidth: '300px', height: '600px', borderRadius: '12px', overflow: 'hidden', border: '1px solid #e1e4e8' }}>
+                            <div className="map-panel">
                                 <MapContainer center={[40.7128, -74.0060]} zoom={10} style={{ height: '100%', width: '100%' }}>
                                     <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                                     {jobs.map(job => {

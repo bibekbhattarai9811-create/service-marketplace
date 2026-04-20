@@ -75,6 +75,16 @@ function AdminAnalytics() {
                             See user totals, payment flow, job status counts, top workers, and
                             the most recent jobs from one panel.
                         </p>
+                        <div className="hero-metrics">
+                            <div className="hero-metric">
+                                <strong>{data?.summary?.total_users || 0} users tracked</strong>
+                                <span>Customers, workers, and admins stay visible in one operating layer.</span>
+                            </div>
+                            <div className="hero-metric">
+                                <strong>{disputes.length} active disputes</strong>
+                                <span>Moderation and resolution live beside platform metrics instead of in a separate tool.</span>
+                            </div>
+                        </div>
                     </aside>
                 </div>
 

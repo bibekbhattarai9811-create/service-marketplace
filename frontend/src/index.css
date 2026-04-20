@@ -1,9 +1,31 @@
+:root {
+  --bg-cream: #fff8ec;
+  --bg-shell: #f7f3ec;
+  --bg-panel: rgba(255, 255, 255, 0.86);
+  --ink-strong: #111827;
+  --ink-body: #4b5563;
+  --ink-muted: #6b7280;
+  --line-soft: rgba(154, 52, 18, 0.12);
+  --line-card: rgba(255, 255, 255, 0.85);
+  --brand-orange: #ea580c;
+  --brand-rose: #fb7185;
+  --brand-amber: #facc15;
+  --brand-blue: #2563eb;
+  --shadow-soft: 0 24px 54px rgba(15, 23, 42, 0.09);
+  --shadow-strong: 0 30px 70px rgba(15, 23, 42, 0.14);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   margin: 0;
-  font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+  font-family: "Segoe UI Variable", "Segoe UI", "Trebuchet MS", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: #f7efe2;
+  background: var(--bg-shell);
+  color: var(--ink-strong);
 }
 
 code {
@@ -15,6 +37,28 @@ code {
   box-sizing: border-box;
 }
 
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 a {
   color: inherit;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+::selection {
+  background: rgba(249, 115, 22, 0.22);
+  color: var(--ink-strong);
 }

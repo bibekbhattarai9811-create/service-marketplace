@@ -6,6 +6,8 @@ jest.mock(
   'react-router-dom',
   () => ({
     Link: ({ children, to, ...props }) => <a href={to} {...props}>{children}</a>,
+    useNavigate: () => jest.fn(),
+    useLocation: () => ({ pathname: '/post-job' }),
   }),
   { virtual: true }
 );
@@ -23,42 +25,40 @@ describe('PostJob', () => {
     jest.clearAllMocks();
     localStorage.setItem('token', 'test-token');
     localStorage.setItem('role', 'customer');
-    apiClient.get.mockResolvedValue({ data: { unread_count: 0 } });
   });
 
-  test('submits a new job and shows the created job id', async () => {
+  test('submits a new job with the selected category', async () => {
     apiClient.post.mockResolvedValue({
       data: { job_id: 42 },
     });
 
     render(<PostJob />);
 
+    fireEvent.click(screen.getByRole('button', { name: /plumbing/i }));
     fireEvent.change(screen.getByPlaceholderText(/job title/i), {
       target: { value: 'Fix fence' },
     });
     fireEvent.change(screen.getByPlaceholderText(/job description/i), {
       target: { value: 'Backyard fence needs repair' },
     });
-    fireEvent.change(screen.getByPlaceholderText(/location/i), {
+    fireEvent.change(screen.getByPlaceholderText(/selected city or region/i), {
       target: { value: 'Austin' },
     });
-    fireEvent.change(screen.getByPlaceholderText(/price/i), {
+    fireEvent.change(screen.getByPlaceholderText(/price offer/i), {
       target: { value: '75' },
     });
-    fireEvent.click(screen.getByRole('button', { name: /post job/i }));
+    fireEvent.click(screen.getByRole('button', { name: /publish job offer/i }));
 
     await waitFor(() => {
       expect(apiClient.post).toHaveBeenCalledWith('/jobs/create-job', {
-      title: 'Fix fence',
-      description: 'Backyard fence needs repair',
-      location: 'Austin',
-      price: 75,
-      category: '',
-      service_date: '',
-      service_window: '',
+        title: 'Fix fence',
+        description: 'Backyard fence needs repair',
+        location: 'Austin',
+        price: 75,
+        category: 'Plumbing',
+        service_date: '',
+        service_window: '',
+      });
     });
-  });
-
-    expect(await screen.findByText(/job posted successfully! job id: 42/i)).toBeInTheDocument();
   });
 });

@@ -6,6 +6,7 @@ jest.mock(
   'react-router-dom',
   () => ({
     Link: ({ children, to, ...props }) => <a href={to} {...props}>{children}</a>,
+    useLocation: () => ({ pathname: '/dashboard' }),
   }),
   { virtual: true }
 );
@@ -69,7 +70,7 @@ describe('Dashboard', () => {
 
     render(<Dashboard />);
 
-    expect(await screen.findByText(/fix sink/i)).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /fix sink/i })).toBeInTheDocument();
     expect(WS_API).toBe('ws://example.test/ws');
 
     fireEvent.click(screen.getByRole('button', { name: /accept job/i }));

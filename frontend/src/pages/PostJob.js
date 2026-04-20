@@ -38,6 +38,8 @@ function LocationPicker({ position, setPosition, setLocationName }) {
 
 function PostJob() {
     const navigate = useNavigate();
+    const targetWorkerId = new URLSearchParams(window.location.search).get('target_worker');
+    
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [location, setLocation] = useState('');
@@ -59,7 +61,7 @@ function PostJob() {
         }
 
         try {
-            const response = await apiClient.post('/jobs/create-job', {
+            const payload = {
                 title,
                 description,
                 location,
@@ -67,7 +69,12 @@ function PostJob() {
                 category,
                 service_date: serviceDate,
                 service_window: serviceWindow,
-            });
+            };
+            if (targetWorkerId) {
+                payload.target_worker_id = Number(targetWorkerId);
+            }
+
+            const response = await apiClient.post('/jobs/create-job', payload);
             if (jobImage) {
                 const formData = new FormData();
                 formData.append('file', jobImage);
@@ -90,14 +97,32 @@ function PostJob() {
             <div className="page-wrap">
                 <div className="page-hero" style={{ paddingBottom: '2rem' }}>
                     <section className="hero-panel">
-                        <span className="hero-label">Create a request</span>
-                        <h1>Post a job with all the details a worker needs.</h1>
+                        <span className="hero-label">{targetWorkerId ? 'Private Invitation' : 'Create a request'}</span>
+                        <h1>{targetWorkerId ? 'Post a private job directly to this worker.' : 'Post a job with all the details a worker needs.'}</h1>
                         <p>
-                            Clear descriptions, accurate map locations, and a fair budget help workers
-                            accept your request faster and reduce back-and-forth.
+                            {targetWorkerId 
+                                ? 'Because you are hiring this worker directly, this job will bypass the public marketplace and exclusively notify them.'
+                                : 'Clear descriptions, accurate map locations, and a fair budget help workers accept your request faster and reduce back-and-forth.'}
                         </p>
                     </section>
+
+                    <aside className="hero-side-panel">
+                        <h3>Posting tips</h3>
+                        <p>Clear categories, a realistic budget, and a pinned location help workers trust the request quickly.</p>
+                        <div className="hero-metrics">
+                            <div className="hero-metric">
+                                <strong>Map-first posting</strong>
+                                <span>Use the location panel to make the request feel concrete before it goes live.</span>
+                            </div>
+                        </div>
+                    </aside>
                 </div>
+
+                {targetWorkerId && (
+                    <div className="message-banner" style={{ backgroundColor: '#eff6ff', color: '#1e40af', border: '1px solid #bfdbfe', marginBottom: '24px' }}>
+                        <strong>Exclusive Offer Mode:</strong> You are routing this job directly to Worker #{targetWorkerId}. Wait for them to accept!
+                    </div>
+                )}
 
                 {message && (
                     <div className={`message-banner ${messageIsError ? 'error' : 'success'}`} style={{ marginBottom: '24px' }}>
@@ -105,8 +130,8 @@ function PostJob() {
                     </div>
                 )}
 
-                <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
-                    <section className="section-card form-card" style={{ flex: 1, minWidth: '350px', margin: 0 }}>
+                <div className="page-two-column">
+                    <section className="section-card form-card section-card-accent" style={{ width: '100%', margin: 0 }}>
                         <div className="section-header">
                             <div>
                                 <h2>Job Details</h2>
@@ -194,7 +219,7 @@ function PostJob() {
                         </div>
                     </section>
 
-                    <section className="section-card form-card" style={{ flex: 1, minWidth: '350px', margin: 0 }}>
+                    <section className="section-card form-card" style={{ width: '100%', margin: 0 }}>
                         <div className="section-header">
                             <div>
                                 <h2>Location Map *</h2>
@@ -203,7 +228,7 @@ function PostJob() {
                         </div>
 
                         <div className="page-form" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                            <div style={{ height: '350px', borderRadius: '12px', overflow: 'hidden', border: '1px solid #e1e4e8', zIndex: 0 }}>
+                            <div className="map-panel" style={{ minHeight: '350px', zIndex: 0 }}>
                                 <MapContainer center={position} zoom={11} style={{ height: '100%', width: '100%' }}>
                                     <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                                     <LocationPicker position={position} setPosition={setPosition} setLocationName={setLocation} />

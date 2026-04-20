@@ -147,11 +147,19 @@ function Profile() {
 
                     <aside className="hero-side-panel">
                         <h3>Profile summary</h3>
-                        <p>
-                            {profile ? `${profile.name} • ${profile.role}` : 'Loading profile details...'}
-                        </p>
+                        <p>{profile ? `${profile.name} • ${profile.role}` : 'Loading profile details...'}</p>
                         <p>{profile?.email || ''}</p>
                         <p>{profile?.phone || ''}</p>
+                        <div className="hero-metrics">
+                            <div className="hero-metric">
+                                <strong>{role === 'worker' ? 'Public trust matters' : 'Keep it current'}</strong>
+                                <span>
+                                    {role === 'worker'
+                                        ? 'A clear service area, skills list, and polished portfolio help customers choose faster.'
+                                        : 'A complete profile makes job conversations and account management easier.'}
+                                </span>
+                            </div>
+                        </div>
                     </aside>
                 </div>
 
@@ -161,7 +169,7 @@ function Profile() {
                     </div>
                 )}
 
-                <section className="section-card form-card">
+                <section className="section-card form-card section-card-accent">
                     <div className="section-header">
                         <div>
                             <h2>Profile Details</h2>
@@ -174,7 +182,7 @@ function Profile() {
                     <div className="page-form">
                         {profile?.avatar_url && (
                             <img
-                                src={`${apiClient.defaults.baseURL}${profile.avatar_url}`}
+                                src={profile.avatar_url.startsWith('http') ? profile.avatar_url : `${apiClient.defaults.baseURL}${profile.avatar_url}`}
                                 alt={`${profile.name} avatar`}
                                 className="profile-avatar"
                             />

@@ -68,6 +68,16 @@ function Home() {
                             Keep the flow simple: browse jobs, post requests, and move into the
                             right dashboard without bouncing around the app.
                         </p>
+                        <div className="hero-metrics">
+                            <div className="hero-metric">
+                                <strong>{jobs.length} jobs visible</strong>
+                                <span>Live results update as filters change so the feed stays useful.</span>
+                            </div>
+                            <div className="hero-metric">
+                                <strong>Sorted for speed</strong>
+                                <span>Use category, service date, and price to narrow the right work fast.</span>
+                            </div>
+                        </div>
                         <div className="button-row">
                             {role === 'customer' ? (
                                 <>
@@ -85,7 +95,7 @@ function Home() {
 
                 {message && <div className="message-banner error">{message}</div>}
 
-                <section className="section-card">
+                <section className="section-card section-card-accent">
                     <div className="section-header">
                         <div>
                             <h2>Available Jobs</h2>
@@ -93,8 +103,10 @@ function Home() {
                         </div>
                     </div>
 
-                    <div className="compact-form">
+                    <div className="filter-shell">
+                        <div className="filter-toolbar">
                         <input
+                            className="filter-toolbar-wide"
                             type="text"
                             placeholder="Search jobs"
                             value={filters.search}
@@ -143,46 +155,72 @@ function Home() {
                         <button type="button" className="ghost-button" onClick={fetchJobs}>
                             Apply Filters
                         </button>
-                    </div>
-
-                    {jobs.length === 0 ? (
-                        <div className="empty-state">No jobs available right now.</div>
-                    ) : (
-                        <div className="card-grid">
-                            {jobs.map((job) => (
-                                <article key={job.id} className="job-card">
-                                    {job.image_url && (
-                                        <img
-                                            src={`${apiClient.defaults.baseURL}${job.image_url}`}
-                                            alt={job.title}
-                                            className="job-photo"
-                                        />
-                                    )}
-                                    <div className="job-card-header">
-                                        <div>
-                                            <h3>{job.title}</h3>
-                                            <p>{job.description}</p>
-                                        </div>
-                                        <span className={`status-badge status-${job.status.toLowerCase()}`}>
-                                            {job.status}
-                                        </span>
-                                    </div>
-                                    <div className="job-meta">
-                                        <span className="job-meta-chip">Location: {job.location}</span>
-                                        <span className="job-meta-chip">Price: ${job.price}</span>
-                                        {job.category && <span className="job-meta-chip">{job.category}</span>}
-                                        {job.service_date && <span className="job-meta-chip">{job.service_date}</span>}
-                                        {job.service_window && <span className="job-meta-chip">{job.service_window}</span>}
-                                    </div>
-                                    <div className="button-row">
-                                        <a className="ghost-button" href={mapLink(job.location)} target="_blank" rel="noreferrer">
-                                            View Map
-                                        </a>
-                                    </div>
-                                </article>
-                            ))}
                         </div>
-                    )}
+
+                        {jobs.length === 0 ? (
+                            <div className="empty-state">No jobs available right now.</div>
+                        ) : (
+                            <div className="page-two-column">
+                                <div className="stack-list">
+                                    {jobs.map((job) => (
+                                        <article key={job.id} className="job-card">
+                                            {job.image_url && (
+                                                <img
+                                                    src={`${apiClient.defaults.baseURL}${job.image_url}`}
+                                                    alt={job.title}
+                                                    className="job-photo"
+                                                />
+                                            )}
+                                            <div className="job-card-header">
+                                                <div>
+                                                    <h3>{job.title}</h3>
+                                                    <p>{job.description}</p>
+                                                </div>
+                                                <span className={`status-badge status-${job.status.toLowerCase()}`}>
+                                                    {job.status}
+                                                </span>
+                                            </div>
+                                            <div className="job-meta">
+                                                <span className="job-meta-chip">Location: {job.location}</span>
+                                                <span className="job-meta-chip">Price: ${job.price}</span>
+                                                {job.category && <span className="job-meta-chip">{job.category}</span>}
+                                                {job.service_date && <span className="job-meta-chip">{job.service_date}</span>}
+                                                {job.service_window && <span className="job-meta-chip">{job.service_window}</span>}
+                                            </div>
+                                            <div className="button-row">
+                                                <a className="ghost-button" href={mapLink(job.location)} target="_blank" rel="noreferrer">
+                                                    View Map
+                                                </a>
+                                            </div>
+                                        </article>
+                                    ))}
+                                </div>
+
+                                <aside className="hero-side-panel dashboard-rail">
+                                    <div>
+                                        <h3>How to use this feed</h3>
+                                        <p className="mini-note">
+                                            Start with search or location, then refine by category and service date to cut down noise.
+                                        </p>
+                                    </div>
+                                    <div className="surface-list">
+                                        <div className="surface-row">
+                                            <div>
+                                                <strong>Flexible sorting</strong>
+                                                <span>Newest, price, location, date, or category.</span>
+                                            </div>
+                                        </div>
+                                        <div className="surface-row">
+                                            <div>
+                                                <strong>Job details stay visible</strong>
+                                                <span>Price, timing, and location are surfaced on every card.</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </aside>
+                            </div>
+                        )}
+                    </div>
                 </section>
             </div>
         </div>

@@ -142,6 +142,16 @@ function CustomerDashboardV2() {
                             Post new work, jump into chat, complete payments, and leave ratings
                             once a job is done.
                         </p>
+                        <div className="hero-metrics">
+                            <div className="hero-metric">
+                                <strong>{myJobs.length} jobs tracked</strong>
+                                <span>Open requests, active jobs, and completed work all stay in one place.</span>
+                            </div>
+                            <div className="hero-metric">
+                                <strong>${totalPaid} total paid</strong>
+                                <span>Payment progress and ratings are surfaced right alongside each job card.</span>
+                            </div>
+                        </div>
                         <Link to="/post-job" className="primary-button">Post a New Job</Link>
                     </aside>
                 </div>
@@ -167,7 +177,7 @@ function CustomerDashboardV2() {
                     </div>
                 </div>
 
-                <section className="section-card">
+                <section className="section-card section-card-accent">
                     <div className="section-header">
                         <div>
                             <h2>My Posted Jobs</h2>

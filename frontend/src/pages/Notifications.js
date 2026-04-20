@@ -58,11 +58,22 @@ function Notifications() {
                             need to bounce around dashboards to understand what changed.
                         </p>
                     </section>
+
+                    <aside className="hero-side-panel">
+                        <h3>What to watch</h3>
+                        <p>Unread items, payment updates, and chat activity all land here first.</p>
+                        <div className="hero-metrics">
+                            <div className="hero-metric">
+                                <strong>{unreadCount} unread now</strong>
+                                <span>Use unread-only view to clear the highest-signal activity faster.</span>
+                            </div>
+                        </div>
+                    </aside>
                 </div>
 
                 {message && <div className="message-banner error">{message}</div>}
 
-                <section className="section-card">
+                <section className="section-card section-card-accent">
                     <div className="section-header">
                         <div>
                             <h2>Recent Notifications</h2>

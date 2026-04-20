@@ -44,18 +44,18 @@ function Login() {
                         Service Marketplace
                     </div>
                     <div className="auth-copy">
-                        <p className="auth-kicker">Hire faster</p>
-                        <h1>Book trusted local help in minutes.</h1>
+                        <p className="auth-kicker">Welcome Back</p>
+                        <h1>Get everything you want from one clean service workspace.</h1>
                         <p>
                             Post jobs, chat with workers, track payments, and manage every step
-                            of the service flow from one place.
+                            of the service flow from one premium command center.
                         </p>
                     </div>
                 </div>
 
                 <div className="auth-feature-grid">
                     <div className="auth-feature-card">
-                        <strong>Post jobs fast</strong>
+                        <strong>Smart requests</strong>
                         <span>Create a request, set the budget, and share the location in seconds.</span>
                     </div>
                     <div className="auth-feature-card">
@@ -63,7 +63,7 @@ function Login() {
                         <span>Workers can accept, complete, and update jobs from their dashboard.</span>
                     </div>
                     <div className="auth-feature-card">
-                        <strong>Pay and rate</strong>
+                        <strong>Payments and trust</strong>
                         <span>Track completed jobs, payments, and customer feedback in one place.</span>
                     </div>
                 </div>
@@ -86,12 +86,21 @@ function Login() {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                         />
+                        <div className="auth-row">
+                            <label className="auth-check">
+                                <input type="checkbox" />
+                                <span>Remember me</span>
+                            </label>
+                            <Link to="/reset-password" className="auth-inline-link">Forgot password?</Link>
+                        </div>
                         <button className="auth-button" onClick={handleLogin}>
-                            Login
+                            Sign In
+                        </button>
+                        <button type="button" className="auth-outline-button">
+                            Continue with Google
                         </button>
                     </div>
                     <p className="auth-message">{message}</p>
-                    <p className="auth-switch"><Link to="/reset-password">Forgot password?</Link></p>
                     <p className="auth-switch">Don't have an account? <Link to="/register">Register</Link></p>
                 </div>
             </section>

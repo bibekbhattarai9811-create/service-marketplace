@@ -48,11 +48,11 @@ function Register() {
                         Service Marketplace
                     </div>
                     <div className="auth-copy">
-                        <p className="auth-kicker">Join the network</p>
-                        <h1>Create an account and start booking local services.</h1>
+                        <p className="auth-kicker">Launch your workspace</p>
+                        <h1>Build your account and step into the marketplace with confidence.</h1>
                         <p>
                             Sign up as a customer to post jobs or as a worker to accept projects,
-                            complete them, and grow your reputation.
+                            complete them, and grow your reputation with a polished profile.
                         </p>
                     </div>
                 </div>
@@ -108,7 +108,7 @@ function Register() {
                         />
                         <p className="field-hint">Use at least 8 characters with uppercase, lowercase, and a number.</p>
                         <button className="auth-button" onClick={handleRegister}>
-                            Register
+                            Create Account
                         </button>
                     </div>
                     <p className="auth-message">{message}</p>

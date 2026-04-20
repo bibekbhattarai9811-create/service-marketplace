@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import Navbar from '../components/Navbar';
@@ -22,11 +22,6 @@ function getFakeCoords(locationName) {
     const lat = 40.7128 + ((hash % 100) / 100) * 0.5 - 0.25;
     const lng = -74.0060 + (((hash >> 8) % 100) / 100) * 0.5 - 0.25;
     return [lat, lng];
-}
-
-
-function mapLink(location) {
-    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`;
 }
 
 function Workers() {
@@ -69,11 +64,22 @@ function Workers() {
                             This directory helps customers compare worker trust signals before posting or assigning work.
                         </p>
                     </section>
+
+                    <aside className="hero-side-panel">
+                        <h3>Hiring shortcuts</h3>
+                        <p>Use skill search and review filters to narrow the list before opening a full public profile.</p>
+                        <div className="hero-metrics">
+                            <div className="hero-metric">
+                                <strong>{filteredWorkers.length} workers shown</strong>
+                                <span>Profiles, pricing, ratings, and service areas stay visible while you browse.</span>
+                            </div>
+                        </div>
+                    </aside>
                 </div>
 
                 {message && <div className="message-banner error">{message}</div>}
 
-                <section className="section-card">
+                <section className="section-card section-card-accent">
                     <div className="section-header">
                         <div>
                             <h2>Available Workers</h2>
@@ -81,8 +87,9 @@ function Workers() {
                         </div>
                     </div>
 
-                    <div className="compact-form">
+                    <div className="filter-toolbar">
                         <input
+                            className="filter-toolbar-wide"
                             type="text"
                             placeholder="Search workers"
                             value={search}
@@ -98,8 +105,8 @@ function Workers() {
                     {filteredWorkers.length === 0 ? (
                         <div className="empty-state">No workers available yet.</div>
                     ) : (
-                        <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
-                            <div className="card-grid" style={{ flex: 1, minWidth: '300px', maxHeight: '600px', overflowY: 'auto', alignContent: 'start' }}>
+                        <div className="page-two-column">
+                            <div className="stack-list">
                                 {filteredWorkers.map((worker) => (
                                     <article key={worker.id} className="job-card">
                                         {worker.avatar_url && (
@@ -114,15 +121,17 @@ function Workers() {
                                                 <h3>{worker.name}</h3>
                                                 <p>{worker.portfolio || 'No portfolio highlights yet.'}</p>
                                             </div>
+                                            <div className="button-row">
                                                 {worker.id_verified && (
-                                                    <span className="status-badge" style={{ backgroundColor: '#e2f5ec', color: '#14804a', marginLeft: '8px' }}>
-                                                        ✓ ID Verified
+                                                    <span className="status-badge status-open">
+                                                        ID Verified
                                                     </span>
                                                 )}
-                                                <span className="status-badge status-open" style={{ marginLeft: '8px' }}>
+                                                <span className="status-badge status-completed">
                                                     {worker.average_rating} stars
                                                 </span>
                                             </div>
+                                        </div>
                                         <div className="job-meta">
                                             {worker.city && <span className="job-meta-chip">{worker.city}</span>}
                                             {worker.service_area && <span className="job-meta-chip">{worker.service_area}</span>}
@@ -130,32 +139,30 @@ function Workers() {
                                             {worker.hourly_rate && <span className="job-meta-chip">${worker.hourly_rate}/hr</span>}
                                             <span className="job-meta-chip">{worker.review_count} reviews</span>
                                         </div>
-                                        {(worker.city || worker.service_area) && (
-                                            <div className="button-row">
-                                                <Link className="secondary-button" to={`/workers/${worker.id}`}>
-                                                    View Profile
-                                                </Link>
-                                            </div>
-                                        )}
+                                        <div className="button-row">
+                                            <Link className="secondary-button" to={`/workers/${worker.id}`}>
+                                                View Profile
+                                            </Link>
+                                        </div>
                                     </article>
                                 ))}
                             </div>
-                            <div style={{ flex: 1, minWidth: '300px', height: '600px', borderRadius: '12px', overflow: 'hidden', border: '1px solid #e1e4e8' }}>
+                            <div className="map-panel">
                                 <MapContainer center={[40.7128, -74.0060]} zoom={10} style={{ height: '100%', width: '100%' }}>
                                     <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                                    {filteredWorkers.map(w => {
-                                        if (!w.city && !w.service_area) return null;
-                                        const coords = getFakeCoords(w.service_area || w.city);
+                                    {filteredWorkers.map((worker) => {
+                                        if (!worker.city && !worker.service_area) return null;
+                                        const coords = getFakeCoords(worker.service_area || worker.city);
                                         return (
-                                            <Marker key={w.id} position={coords}>
+                                            <Marker key={worker.id} position={coords}>
                                                 <Popup>
                                                     <div style={{ textAlign: 'center' }}>
                                                         <strong style={{ display: 'block', marginBottom: '4px' }}>
-                                                            {w.name} {w.id_verified && <span style={{ color: '#14804a' }}>✓</span>}
+                                                            {worker.name} {worker.id_verified && <span style={{ color: '#14804a' }}>✓</span>}
                                                         </strong>
-                                                        {w.service_area || w.city}<br/>
-                                                        <strong>${w.hourly_rate}/hr</strong><br/>
-                                                        <Link to={`/workers/${w.id}`}>View Profile</Link>
+                                                        {worker.service_area || worker.city}<br />
+                                                        <strong>${worker.hourly_rate}/hr</strong><br />
+                                                        <Link to={`/workers/${worker.id}`}>View Profile</Link>
                                                     </div>
                                                 </Popup>
                                             </Marker>

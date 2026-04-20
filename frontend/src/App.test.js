@@ -39,7 +39,7 @@ test('renders the login screen on the default route', () => {
   expect(screen.getByRole('heading', { name: /login/i })).toBeInTheDocument();
   expect(screen.getByPlaceholderText(/email/i)).toBeInTheDocument();
   expect(screen.getByPlaceholderText(/password/i)).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: /login/i })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument();
 });
 
 test('logs in a worker and saves the session details', async () => {
@@ -59,7 +59,7 @@ test('logs in a worker and saves the session details', async () => {
   fireEvent.change(screen.getByPlaceholderText(/password/i), {
     target: { value: 'StrongPass1' },
   });
-  fireEvent.click(screen.getByRole('button', { name: /login/i }));
+  fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
 
   await waitFor(() => {
     expect(apiClient.post).toHaveBeenCalledWith('/login', {
@@ -91,7 +91,7 @@ test('shows an error message when login fails', async () => {
   fireEvent.change(screen.getByPlaceholderText(/password/i), {
     target: { value: 'wrong-password' },
   });
-  fireEvent.click(screen.getByRole('button', { name: /login/i }));
+  fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
 
   expect(await screen.findByText(/invalid email or password/i)).toBeInTheDocument();
   expect(localStorage.getItem('user_id')).toBeNull();
@@ -123,7 +123,7 @@ test('registers a customer and shows the created user id', async () => {
   fireEvent.change(screen.getByPlaceholderText(/password/i), {
     target: { value: 'StrongPass1' },
   });
-  fireEvent.click(screen.getByRole('button', { name: /register/i }));
+  fireEvent.click(screen.getByRole('button', { name: /create account/i }));
 
   await waitFor(() => {
     expect(apiClient.post).toHaveBeenCalledWith('/register', {
@@ -162,7 +162,7 @@ test('shows an error message when registration fails', async () => {
   fireEvent.change(screen.getByPlaceholderText(/password/i), {
     target: { value: 'StrongPass1' },
   });
-  fireEvent.click(screen.getByRole('button', { name: /register/i }));
+  fireEvent.click(screen.getByRole('button', { name: /create account/i }));
 
   expect(await screen.findByText(/email already registered/i)).toBeInTheDocument();
 });
@@ -182,7 +182,7 @@ test('shows local validation for weak password on registration', async () => {
   fireEvent.change(screen.getByPlaceholderText(/password/i), {
     target: { value: 'weakpass' },
   });
-  fireEvent.click(screen.getByRole('button', { name: /register/i }));
+  fireEvent.click(screen.getByRole('button', { name: /create account/i }));
 
   expect(await screen.findByText(/password must be at least 8 characters/i)).toBeInTheDocument();
   expect(apiClient.post).not.toHaveBeenCalled();
