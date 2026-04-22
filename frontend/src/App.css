@@ -1616,23 +1616,69 @@
     left: 14px;
     right: 14px;
     top: 14px;
-    flex-wrap: wrap;
-    padding: 14px 16px;
+    flex-wrap: nowrap;
+    align-items: center;
+    padding: 12px 14px;
+    border-radius: 22px;
+    gap: 10px;
   }
 
   .app-header-tools {
-    width: 100%;
-    flex-wrap: wrap;
+    width: auto;
+    flex-wrap: nowrap;
+    margin-left: auto;
+    gap: 8px;
   }
 
   .app-header-search {
+    display: none;
+  }
+
+  .app-header-copy {
     min-width: 0;
-    flex: 1 1 220px;
+    gap: 0;
+  }
+
+  .app-header-kicker,
+  .app-header-copy small,
+  .app-user-copy small {
+    display: none;
+  }
+
+  .app-header-copy strong {
+    font-size: 1.05rem;
+    line-height: 1.1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .app-header-bell {
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    flex-shrink: 0;
+  }
+
+  .app-user-pill {
+    gap: 8px;
+    padding: 6px 10px 6px 6px;
+    flex-shrink: 0;
+  }
+
+  .app-user-avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 0.88rem;
+  }
+
+  .app-user-copy strong {
+    font-size: 0.84rem;
   }
 
   .page-wrap {
     margin-left: 0;
-    padding: 132px 14px 108px;
+    padding: 96px 14px 108px;
   }
 
   .mobile-quick-nav {
@@ -1757,12 +1803,19 @@
   }
 
   .app-header-copy strong {
-    font-size: 1.2rem;
+    font-size: 0.98rem;
   }
 
   .app-user-pill {
-    width: 100%;
-    justify-content: flex-start;
+    padding: 4px;
+  }
+
+  .app-user-copy {
+    display: none;
+  }
+
+  .page-wrap {
+    padding-top: 88px;
   }
 
   .mobile-quick-nav {
