@@ -5,7 +5,7 @@ import HomeFooter from '../components/HomeFooter';
 import HomeHero from '../components/HomeHero';
 import HomeHowItWorks from '../components/HomeHowItWorks';
 import HomeServiceCategories from '../components/HomeServiceCategories';
-import { apiClient } from '../api';
+import { apiClient, handleAssetImageError, resolveAssetUrl } from '../api';
 
 const MOCK_WORKERS = [
     {
@@ -219,9 +219,10 @@ function Home() {
                                         <article key={job.id} className="job-card">
                                             {job.image_url && (
                                                 <img
-                                                    src={`${apiClient.defaults.baseURL}${job.image_url}`}
+                                                    src={resolveAssetUrl(job.image_url)}
                                                     alt={job.title}
                                                     className="job-photo"
+                                                    onError={handleAssetImageError}
                                                 />
                                             )}
                                             <div className="job-card-header">

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
-import { apiClient } from '../api';
+import { apiClient, handleAssetImageError, resolveAssetUrl } from '../api';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
 import StripeCheckout from '../components/StripeCheckout';
@@ -193,9 +193,10 @@ function CustomerDashboardV2() {
                                 <article key={job.id} className="job-card">
                                     {job.image_url && (
                                         <img
-                                            src={`${apiClient.defaults.baseURL}${job.image_url}`}
+                                            src={resolveAssetUrl(job.image_url)}
                                             alt={job.title}
                                             className="job-photo"
+                                            onError={handleAssetImageError}
                                         />
                                     )}
                                     <div className="job-card-header">

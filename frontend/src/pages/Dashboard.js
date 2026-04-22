@@ -4,7 +4,7 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import Navbar from "../components/Navbar";
-import { WS_API, apiClient } from "../api";
+import { WS_API, apiClient, handleAssetImageError, resolveAssetUrl } from "../api";
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -308,9 +308,10 @@ function Dashboard() {
                                     <article key={job.id} className="job-card">
                                         {job.image_url && (
                                             <img
-                                                src={`${apiClient.defaults.baseURL}${job.image_url}`}
+                                                src={resolveAssetUrl(job.image_url)}
                                                 alt={job.title}
                                                 className="job-photo"
+                                                onError={handleAssetImageError}
                                             />
                                         )}
                                         <div className="job-card-header">
@@ -375,9 +376,10 @@ function Dashboard() {
                                 <article key={job.id} className="job-card">
                                     {job.image_url && (
                                         <img
-                                            src={`${apiClient.defaults.baseURL}${job.image_url}`}
+                                            src={resolveAssetUrl(job.image_url)}
                                             alt={job.title}
                                             className="job-photo"
+                                            onError={handleAssetImageError}
                                         />
                                     )}
                                     <div className="job-card-header">

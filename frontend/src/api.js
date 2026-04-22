@@ -23,3 +23,30 @@ export function clearSession() {
   localStorage.removeItem('user_id');
   localStorage.removeItem('role');
 }
+
+export function resolveAssetUrl(path) {
+  if (!path) {
+    return '';
+  }
+
+  const trimmedPath = String(path).trim();
+  if (!trimmedPath) {
+    return '';
+  }
+
+  if (/^https?:\/\//i.test(trimmedPath)) {
+    return trimmedPath;
+  }
+
+  if (trimmedPath.startsWith('//')) {
+    return `https:${trimmedPath}`;
+  }
+
+  return `${apiClient.defaults.baseURL}${trimmedPath}`;
+}
+
+export function handleAssetImageError(event) {
+  if (event?.currentTarget) {
+    event.currentTarget.style.display = 'none';
+  }
+}

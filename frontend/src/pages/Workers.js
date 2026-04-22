@@ -4,7 +4,7 @@ import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import Navbar from '../components/Navbar';
-import { apiClient } from '../api';
+import { apiClient, handleAssetImageError, resolveAssetUrl } from '../api';
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -111,9 +111,10 @@ function Workers() {
                                     <article key={worker.id} className="job-card">
                                         {worker.avatar_url && (
                                             <img
-                                                src={worker.avatar_url.startsWith('http') ? worker.avatar_url : `${apiClient.defaults.baseURL}${worker.avatar_url}`}
+                                                src={resolveAssetUrl(worker.avatar_url)}
                                                 alt={worker.name}
                                                 className="job-photo"
+                                                onError={handleAssetImageError}
                                             />
                                         )}
                                         <div className="job-card-header">
