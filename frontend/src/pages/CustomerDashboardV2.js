@@ -230,7 +230,7 @@ function CustomerDashboardV2() {
                                             {job.worker_id ? (
                                                 <Link to={chatLink(job)} className="secondary-button">Chat</Link>
                                             ) : (
-                                                <Link to="/workers" className="secondary-button">Find Worker</Link>
+                                                <Link to="/post-job" className="secondary-button">View Request</Link>
                                             )}
                                         </div>
 
@@ -244,8 +244,8 @@ function CustomerDashboardV2() {
 
                                         {job.status === 'COMPLETED' && !job.paid && (
                                             <div className="summary-card summary-card-soft">
-                                                <h3>Pay worker</h3>
-                                                <p className="muted-text">Worker gets ${Number(job.price * 0.9).toFixed(2)}. Platform fee: ${Number(job.price * 0.1).toFixed(2)}.</p>
+                                                <h3>Complete payment</h3>
+                                                <p className="muted-text">Provider receives ${Number(job.price * 0.9).toFixed(2)}. Platform fee: ${Number(job.price * 0.1).toFixed(2)}.</p>
                                                 <div className="button-row">
                                                     <button className="primary-button" onClick={() => handlePayClick(job)}>
                                                         Pay Now
@@ -265,7 +265,7 @@ function CustomerDashboardV2() {
                                                 <div className="section-header">
                                                     <div>
                                                         <h3>Leave a rating</h3>
-                                                        <p className="section-subtitle">Rate the worker and add a short review.</p>
+                                                        <p className="section-subtitle">Rate the service and add a short review.</p>
                                                     </div>
                                                 </div>
                                                 <div className="page-form">
@@ -304,7 +304,7 @@ function CustomerDashboardV2() {
                         <div className="section-header">
                             <div>
                                 <h2>Payment history</h2>
-                                <p className="section-subtitle">Totals, worker payouts, and platform fees.</p>
+                                <p className="section-subtitle">Totals, provider payouts, and platform fees.</p>
                             </div>
                         </div>
 
@@ -314,7 +314,7 @@ function CustomerDashboardV2() {
                                 <strong>${totalPaid}</strong>
                             </article>
                             <article className="worker-stat-card">
-                                <span>Worker got</span>
+                                <span>Provider got</span>
                                 <strong>${totalWorkerGot}</strong>
                             </article>
                             <article className="worker-stat-card">

@@ -2696,6 +2696,14 @@
   gap: 16px;
 }
 
+.customer-action-card {
+  text-decoration: none;
+}
+
+.customer-action-card strong {
+  color: #9a3412;
+}
+
 .customer-job-card .job-photo {
   border-radius: 18px;
   max-height: 200px;

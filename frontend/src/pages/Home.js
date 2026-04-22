@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import HomeFeaturedWorkers from '../components/HomeFeaturedWorkers';
 import HomeFooter from '../components/HomeFooter';
@@ -59,6 +60,7 @@ function clientNameForJob(job) {
 
 function Home() {
     const [jobs, setJobs] = useState([]);
+    const [customerJobs, setCustomerJobs] = useState([]);
     const [featuredWorkers, setFeaturedWorkers] = useState([]);
     const [message, setMessage] = useState('');
     const [workerMessage, setWorkerMessage] = useState('');
@@ -129,6 +131,15 @@ function Home() {
         }
     }, []);
 
+    const fetchCustomerJobs = useCallback(async () => {
+        try {
+            const response = await apiClient.get('/jobs/customer-jobs/me');
+            setCustomerJobs(response.data);
+        } catch (error) {
+            setCustomerJobs([]);
+        }
+    }, []);
+
     useEffect(() => {
         fetchJobs();
     }, [fetchJobs]);
@@ -136,6 +147,12 @@ function Home() {
     useEffect(() => {
         fetchFeaturedWorkers();
     }, [fetchFeaturedWorkers]);
+
+    useEffect(() => {
+        if (role === 'customer') {
+            fetchCustomerJobs();
+        }
+    }, [fetchCustomerJobs, role]);
 
     useEffect(() => {
         localStorage.setItem('workerOnlineStatus', online ? 'online' : 'offline');
@@ -288,6 +305,95 @@ function Home() {
                                             <button type="button" className="primary-button" onClick={() => acceptWorkerJob(job.id)}>
                                                 Accept
                                             </button>
+                                        </div>
+                                    </article>
+                                ))}
+                            </div>
+                        )}
+                    </section>
+                </div>
+            </div>
+        );
+    }
+
+    if (role === 'customer') {
+        const customerName = localStorage.getItem('user_name') || 'Customer';
+
+        return (
+            <div className="app-shell">
+                <Navbar />
+
+                <div className="page-wrap worker-mobile-shell customer-mobile-shell">
+                    <section className="worker-mobile-header-card customer-mobile-header-card">
+                        <div>
+                            <span className="worker-mobile-kicker">Customer home</span>
+                            <h1>Welcome back, {customerName}</h1>
+                            <p>{customerJobs.length} jobs in your account</p>
+                        </div>
+                        <Link to="/post-job" className="primary-button">
+                            Post Job
+                        </Link>
+                    </section>
+
+                    <section className="worker-tab-section">
+                        <div className="section-header">
+                            <div>
+                                <h2>Quick actions</h2>
+                                <p className="section-subtitle">Start a request or manage existing jobs.</p>
+                            </div>
+                        </div>
+
+                        <div className="worker-stat-grid">
+                            <Link to="/post-job" className="worker-stat-card customer-action-card">
+                                <span>New request</span>
+                                <strong>Post</strong>
+                            </Link>
+                            <Link to="/customer-dashboard" className="worker-stat-card customer-action-card">
+                                <span>Track jobs</span>
+                                <strong>Open</strong>
+                            </Link>
+                            <Link to="/notifications" className="worker-stat-card customer-action-card">
+                                <span>Updates</span>
+                                <strong>Inbox</strong>
+                            </Link>
+                            <Link to="/profile" className="worker-stat-card customer-action-card">
+                                <span>Account</span>
+                                <strong>Profile</strong>
+                            </Link>
+                        </div>
+                    </section>
+
+                    <section className="worker-tab-section">
+                        <div className="section-header">
+                            <div>
+                                <h2>Recent jobs</h2>
+                                <p className="section-subtitle">Your latest service requests.</p>
+                            </div>
+                        </div>
+
+                        {customerJobs.length === 0 ? (
+                            <div className="empty-state">You have not posted any jobs yet.</div>
+                        ) : (
+                            <div className="customer-job-list">
+                                {customerJobs.slice(0, 4).map((job) => (
+                                    <article key={job.id} className="worker-job-card customer-job-card">
+                                        <div className="worker-job-card-top">
+                                            <div>
+                                                <div className="worker-job-type">{job.title}</div>
+                                                <div className="worker-job-client-name">{job.description}</div>
+                                            </div>
+                                            <span className={`worker-urgency-badge ${job.status === 'COMPLETED' ? 'scheduled' : 'urgent'}`.trim()}>
+                                                {job.status}
+                                            </span>
+                                        </div>
+                                        <div className="worker-job-client">
+                                            <span>{job.location} | ${job.price}</span>
+                                            {job.service_date && <span>{job.service_date}</span>}
+                                        </div>
+                                        <div className="worker-job-actions">
+                                            <Link to="/customer-dashboard" className="secondary-button">
+                                                Open Dashboard
+                                            </Link>
                                         </div>
                                     </article>
                                 ))}
