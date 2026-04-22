@@ -24,7 +24,7 @@ function HomeHowItWorks() {
             <div className="landing-section-head">
                 <div>
                     <span className="landing-section-kicker">How it works</span>
-                    <h2>Move from request to finished job without the guesswork</h2>
+                    <h2>From request to finished job</h2>
                 </div>
             </div>
             <div className="how-grid">

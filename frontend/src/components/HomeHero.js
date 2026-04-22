@@ -18,8 +18,8 @@ function HomeHero({ role, jobsCount, featuredWorkerCount, completedJobCount, her
                 <span className="landing-kicker">Local services made simple</span>
                 <h1>Find Skilled Workers Near You</h1>
                 <p>
-                    Hire trusted local workers for urgent repairs, routine jobs, and custom projects.
-                    Search by service, compare worker quality, and move from request to completion faster.
+                    Hire trusted local workers for repairs, routine jobs, and custom projects.
+                    Search by service, compare quality, and move from request to completion faster.
                 </p>
 
                 <div className="landing-search-card">
@@ -91,12 +91,12 @@ function HomeHero({ role, jobsCount, featuredWorkerCount, completedJobCount, her
                 <div className="landing-hero-stat">
                     <span>Featured workers</span>
                     <strong>{featuredWorkerCount}</strong>
-                    <small>Curated professionals ready to book</small>
+                    <small>Professionals ready to book</small>
                 </div>
                 <div className="landing-hero-stat">
-                    <span>Completed jobs tracked</span>
+                    <span>Completed jobs</span>
                     <strong>{completedJobCount}</strong>
-                    <small>Jobs already moved through the platform</small>
+                    <small>Completed through the platform</small>
                 </div>
             </aside>
         </section>

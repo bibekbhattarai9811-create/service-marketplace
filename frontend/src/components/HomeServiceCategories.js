@@ -13,7 +13,7 @@ function HomeServiceCategories({ setFilters }) {
             <div className="landing-section-head">
                 <div>
                     <span className="landing-section-kicker">Popular services</span>
-                    <h2>Book common home and business services in a few clicks</h2>
+                    <h2>Popular services customers book every day</h2>
                 </div>
             </div>
             <div className="services-grid">

@@ -8,7 +8,7 @@ function HomeFooter() {
                 <span className="site-footer-logo">SM</span>
                 <div>
                     <strong>Service Marketplace</strong>
-                    <p>Hire skilled local workers with a cleaner, faster booking flow.</p>
+                    <p>Hire skilled local workers with a faster booking flow.</p>
                 </div>
             </div>
             <div className="site-footer-links">

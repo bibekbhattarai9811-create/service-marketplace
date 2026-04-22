@@ -80,23 +80,23 @@ function AdminAnalytics() {
                 <div className="page-hero">
                     <section className="hero-panel">
                         <span className="hero-label">Admin analytics</span>
-                        <h1>Watch platform health, user operations, moderation, and marketplace flow in one workspace.</h1>
+                        <h1>Run the marketplace from one clear control center.</h1>
                         <p>
-                            This page now combines marketplace metrics with stronger user management and dispute controls so you can operate the app faster.
+                            Review platform health, manage users, and resolve disputes without hopping between screens.
                         </p>
                     </section>
 
                     <aside className="hero-side-panel">
-                        <h3>Admin view</h3>
-                        <p>See job health, payment flow, search across users, and resolve disputes without leaving the admin panel.</p>
+                        <h3>Operations</h3>
+                        <p>Users, disputes, jobs, and revenue stay visible in one place.</p>
                         <div className="hero-metrics">
                             <div className="hero-metric">
                                 <strong>{data?.summary?.total_users || 0} users tracked</strong>
-                                <span>Customers, workers, and admins stay visible in one operating layer.</span>
+                                <span>Customers, workers, and admins in one view.</span>
                             </div>
                             <div className="hero-metric">
                                 <strong>{openDisputeCount} open disputes</strong>
-                                <span>Moderation, filters, and resolution notes live right beside platform metrics.</span>
+                                <span>Moderation and resolution notes stay close at hand.</span>
                             </div>
                         </div>
                     </aside>
@@ -133,14 +133,14 @@ function AdminAnalytics() {
                             <div className="section-header">
                                 <div>
                                     <h2>Disputes & Moderation</h2>
-                                    <p className="section-subtitle">Review reported issues, filter them, and mark the outcome.</p>
+                                    <p className="section-subtitle">Review issues and mark outcomes.</p>
                                 </div>
                             </div>
                             <div className="filter-toolbar">
                                 <input
                                     className="filter-toolbar-wide"
                                     type="text"
-                                    placeholder="Search disputes by job, reporter, target, or reason"
+                                    placeholder="Search by job, reporter, target, or reason"
                                     value={disputeSearch}
                                     onChange={(e) => setDisputeSearch(e.target.value)}
                                 />
@@ -198,7 +198,7 @@ function AdminAnalytics() {
                             <div className="section-header">
                                 <div>
                                     <h2>Platform Charts</h2>
-                                    <p className="section-subtitle">Quick visual breakdowns for marketplace health.</p>
+                                    <p className="section-subtitle">Quick platform breakdowns.</p>
                                 </div>
                             </div>
                             <div className="summary-grid">
@@ -243,7 +243,7 @@ function AdminAnalytics() {
                             <div className="section-header">
                                 <div>
                                     <h2>Top Workers</h2>
-                                    <p className="section-subtitle">Workers ranked by completed jobs, rating, and earnings.</p>
+                                    <p className="section-subtitle">Top workers by jobs, rating, and earnings.</p>
                                 </div>
                             </div>
                             {data.top_workers.length === 0 ? (
@@ -276,7 +276,7 @@ function AdminAnalytics() {
                             <div className="section-header">
                                 <div>
                                     <h2>Recent Jobs</h2>
-                                    <p className="section-subtitle">Latest jobs posted across the marketplace.</p>
+                                    <p className="section-subtitle">Latest jobs across the marketplace.</p>
                                 </div>
                             </div>
                             <div className="table-wrap">
@@ -309,14 +309,14 @@ function AdminAnalytics() {
                             <div className="section-header">
                                 <div>
                                     <h2>User Management</h2>
-                                    <p className="section-subtitle">Search by name or email, filter by role or account status, and manage access safely.</p>
+                                    <p className="section-subtitle">Search, filter, and manage account access.</p>
                                 </div>
                             </div>
                             <div className="filter-toolbar">
                                 <input
                                     className="filter-toolbar-wide"
                                     type="text"
-                                    placeholder="Search users by name, email, or phone"
+                                    placeholder="Search by name, email, or phone"
                                     value={userSearch}
                                     onChange={(e) => setUserSearch(e.target.value)}
                                 />
