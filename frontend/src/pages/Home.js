@@ -7,33 +7,6 @@ import HomeHowItWorks from '../components/HomeHowItWorks';
 import HomeServiceCategories from '../components/HomeServiceCategories';
 import { apiClient, handleAssetImageError, resolveAssetUrl } from '../api';
 
-const MOCK_WORKERS = [
-    {
-        id: 101,
-        name: 'Jordan Hayes',
-        avatar_url: '',
-        category: 'Plumbing',
-        rating: 4.9,
-        service_area: 'Chicago',
-    },
-    {
-        id: 102,
-        name: 'Avery Brooks',
-        avatar_url: '',
-        category: 'Electrical',
-        rating: 4.8,
-        service_area: 'Naperville',
-    },
-    {
-        id: 103,
-        name: 'Taylor Cruz',
-        avatar_url: '',
-        category: 'Cleaning',
-        rating: 4.7,
-        service_area: 'Evanston',
-    },
-];
-
 function mapLink(location) {
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`;
 }
@@ -105,12 +78,12 @@ function Home() {
                 setFeaturedWorkers(normalizedWorkers);
                 setWorkerMessage('');
             } else {
-                setFeaturedWorkers(MOCK_WORKERS);
-                setWorkerMessage('Featured workers are using demo data for now.');
+                setFeaturedWorkers([]);
+                setWorkerMessage('No featured workers yet. Real worker profiles will appear here as workers complete their profiles.');
             }
         } catch (error) {
-            setFeaturedWorkers(MOCK_WORKERS);
-            setWorkerMessage('Featured workers are using demo data for now.');
+            setFeaturedWorkers([]);
+            setWorkerMessage('Featured workers are not available right now.');
         }
     }, []);
 
