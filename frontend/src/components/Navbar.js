@@ -60,7 +60,12 @@ function Navbar() {
 
     useEffect(() => {
         const handleScroll = () => {
-            setIsScrolled(window.scrollY > 24);
+            const scrollTop =
+                window.scrollY ||
+                document.documentElement.scrollTop ||
+                document.body.scrollTop ||
+                0;
+            setIsScrolled(scrollTop > 24);
         };
 
         handleScroll();
@@ -176,7 +181,7 @@ function Navbar() {
                 </div>
             </aside>
 
-            <header className={`app-header-bar ${isScrolled ? "is-condensed" : ""}`.trim()}>
+            <header className={`app-header-bar ${isScrolled ? "is-hidden" : ""}`.trim()}>
                 <div className="app-header-copy">
                     <span className="app-header-kicker">Workspace</span>
                     <strong>{meta.title}</strong>
