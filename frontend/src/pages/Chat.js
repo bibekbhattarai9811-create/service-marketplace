@@ -139,7 +139,11 @@ function Chat() {
                                     <div className="chat-bubble">
                                         {msg.image_url ? (
                                             <div>
-                                                <img src={msg.image_url} alt="attached" style={{ maxWidth: '200px', borderRadius: '8px', marginBottom: '4px', display: 'block' }} />
+                                                <img
+                                                    src={msg.image_url}
+                                                    alt="attached"
+                                                    style={{ maxWidth: '200px', borderRadius: '8px', marginBottom: '4px', display: 'block' }}
+                                                />
                                                 <div style={{ fontSize: '0.9em' }}>{msg.message}</div>
                                             </div>
                                         ) : (
@@ -160,8 +164,13 @@ function Chat() {
                             ref={fileInputRef}
                             onChange={handleFileUpload}
                         />
-                        <button className="icon-button" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
-                            {uploading ? '...' : '📎'}
+                        <button
+                            type="button"
+                            className="chat-attach-button"
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={uploading}
+                        >
+                            {uploading ? '...' : 'Attach'}
                         </button>
                         <input
                             type="text"
