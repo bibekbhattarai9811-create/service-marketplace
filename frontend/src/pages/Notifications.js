@@ -3,11 +3,45 @@ import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { apiClient } from '../api';
 
+function notificationTitle(notification) {
+    const type = notification.notification_type || 'general';
+    if (notification.title) return notification.title;
+    if (type === 'payment') return 'Payment received';
+    if (type === 'review') return 'Customer review';
+    if (type === 'job') return 'New job request';
+    if (type === 'system') return 'System announcement';
+    return 'Marketplace update';
+}
+
+function notificationTimeLabel(timestamp) {
+    if (!timestamp) return 'Just now';
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+}
+
+function notificationVisual(notification) {
+    const type = notification.notification_type || 'general';
+    if (type === 'payment') {
+        return { icon: '$', label: 'Payment', tone: 'payment' };
+    }
+    if (type === 'review') {
+        return { icon: '★', label: 'Review', tone: 'review' };
+    }
+    if (type === 'job') {
+        return { icon: '⚒', label: 'Job', tone: 'job' };
+    }
+    if (type === 'system') {
+        return { icon: '•', label: 'System', tone: 'system' };
+    }
+    return { icon: '•', label: 'Update', tone: 'general' };
+}
+
 function Notifications() {
     const [notifications, setNotifications] = useState([]);
     const [message, setMessage] = useState('');
     const [showUnreadOnly, setShowUnreadOnly] = useState(false);
     const [typeFilter, setTypeFilter] = useState('');
+    const role = localStorage.getItem('role');
 
     const fetchNotifications = useCallback(async () => {
         try {
@@ -59,6 +93,121 @@ function Notifications() {
         }
         return (notification.notification_type || 'general') === typeFilter;
     });
+
+    const groupedNotifications = useMemo(() => {
+        const buckets = {
+            Today: [],
+            Yesterday: [],
+            Earlier: [],
+        };
+
+        const now = new Date();
+        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const yesterdayStart = new Date(todayStart);
+        yesterdayStart.setDate(todayStart.getDate() - 1);
+
+        filteredNotifications.forEach((notification) => {
+            const sourceDate = notification.created_at ? new Date(notification.created_at) : now;
+            if (sourceDate >= todayStart) {
+                buckets.Today.push(notification);
+            } else if (sourceDate >= yesterdayStart) {
+                buckets.Yesterday.push(notification);
+            } else {
+                buckets.Earlier.push(notification);
+            }
+        });
+
+        return buckets;
+    }, [filteredNotifications]);
+
+    if (role === 'worker') {
+        return (
+            <div className="app-shell">
+                <Navbar />
+
+                <div className="page-wrap worker-mobile-shell">
+                    <section className="worker-mobile-header-card">
+                        <div>
+                            <span className="worker-mobile-kicker">Notifications</span>
+                            <h1>Stay on top of new work and updates.</h1>
+                            <p>Job requests, payouts, reviews, and system notices all show up here.</p>
+                        </div>
+                        <button type="button" className="ghost-button" onClick={markAllRead}>
+                            Mark all read
+                        </button>
+                    </section>
+
+                    {message && <div className="message-banner error">{message}</div>}
+
+                    <section className="worker-filter-card">
+                        <div className="worker-filter-row worker-filter-row-inline">
+                            <button
+                                type="button"
+                                className={`worker-filter-chip ${showUnreadOnly ? 'active' : ''}`.trim()}
+                                onClick={() => setShowUnreadOnly((current) => !current)}
+                            >
+                                {showUnreadOnly ? 'Unread only' : 'All notifications'}
+                            </button>
+                            <select value={typeFilter} onChange={(event) => setTypeFilter(event.target.value)}>
+                                <option value="">All types</option>
+                                {Object.keys(groupedCounts).sort().map((type) => (
+                                    <option key={type} value={type}>
+                                        {type}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    </section>
+
+                    <section className="worker-tab-section">
+                        {Object.entries(groupedNotifications).map(([groupLabel, items]) => (
+                            items.length > 0 ? (
+                                <div key={groupLabel} className="worker-notification-group">
+                                    <div className="worker-group-title">{groupLabel}</div>
+                                    <div className="worker-notification-list">
+                                        {items.map((notification) => (
+                                            <article key={notification.id} className={`worker-notification-card worker-notification-card-${notificationVisual(notification).tone}`.trim()}>
+                                                <div className="worker-notification-head">
+                                                    <div className={`worker-notification-icon worker-notification-icon-${notificationVisual(notification).tone}`.trim()}>
+                                                        {notificationVisual(notification).icon}
+                                                    </div>
+                                                    <div className="worker-notification-title-row">
+                                                        {!notification.is_read && <span className="worker-unread-dot" />}
+                                                        <div className="worker-notification-copy">
+                                                            <span className="worker-notification-label">{notificationVisual(notification).label}</span>
+                                                            <strong>{notificationTitle(notification)}</strong>
+                                                        </div>
+                                                    </div>
+                                                    <span>{notificationTimeLabel(notification.created_at)}</span>
+                                                </div>
+                                                <p>{notification.message}</p>
+                                                <div className="worker-notification-actions">
+                                                    {notification.action_url && (
+                                                        <Link className="secondary-button" to={notification.action_url}>
+                                                            Open
+                                                        </Link>
+                                                    )}
+                                                    {!notification.is_read && (
+                                                        <button type="button" className="ghost-button" onClick={() => markRead(notification.id)}>
+                                                            Mark read
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </article>
+                                        ))}
+                                    </div>
+                                </div>
+                            ) : null
+                        ))}
+
+                        {filteredNotifications.length === 0 && (
+                            <div className="empty-state">No notifications match this view.</div>
+                        )}
+                    </section>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="app-shell">

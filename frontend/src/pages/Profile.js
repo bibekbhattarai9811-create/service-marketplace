@@ -4,6 +4,8 @@ import { apiClient, handleAssetImageError, resolveAssetUrl } from '../api';
 
 function Profile() {
     const [profile, setProfile] = useState(null);
+    const [isEditing, setIsEditing] = useState(false);
+    const [workerAvailable, setWorkerAvailable] = useState(localStorage.getItem('workerAvailabilityStatus') !== 'offline');
     const [form, setForm] = useState({
         name: '',
         phone: '',
@@ -62,6 +64,10 @@ function Profile() {
             fetchAvailability();
         }
     }, [role]);
+
+    useEffect(() => {
+        localStorage.setItem('workerAvailabilityStatus', workerAvailable ? 'online' : 'offline');
+    }, [workerAvailable]);
 
     const handleChange = (field, value) => {
         setForm((current) => ({ ...current, [field]: value }));
@@ -142,6 +148,261 @@ function Profile() {
             setMessage(error.response?.data?.detail || 'Failed to update availability.');
         }
     };
+
+    if (role === 'worker') {
+        const workerSkills = (profile?.skills || form.skills || '')
+            .split(',')
+            .map((skill) => skill.trim())
+            .filter(Boolean);
+        const workerTrade = workerSkills[0] || profile?.service_area || 'Service Professional';
+        const verificationBadges = [
+            profile?.id_verified ? 'ID Verified' : null,
+            profile?.stripe_account_id ? 'Payout Ready' : null,
+            availability.length > 0 ? 'Availability Set' : null,
+        ].filter(Boolean);
+
+        return (
+            <div className="app-shell">
+                <Navbar />
+
+                <div className="page-wrap worker-mobile-shell">
+                    <section className="worker-profile-hero">
+                        <div className="worker-profile-top">
+                            {profile?.avatar_url ? (
+                                <img
+                                    src={resolveAssetUrl(profile.avatar_url)}
+                                    alt={`${profile.name} avatar`}
+                                    data-fallback-label={profile.name}
+                                    className="worker-profile-avatar"
+                                    onError={handleAssetImageError}
+                                />
+                            ) : (
+                                <div className="worker-profile-avatar worker-profile-avatar-fallback">
+                                    {(profile?.name || 'W').slice(0, 1).toUpperCase()}
+                                </div>
+                            )}
+                            <div>
+                                <span className="worker-mobile-kicker">Profile</span>
+                                <h1>{profile?.name || 'Worker profile'}</h1>
+                                <p>{workerTrade}</p>
+                                <p>{profile?.city || 'City not set'}{profile?.service_area ? ` • ${profile.service_area}` : ''}</p>
+                            </div>
+                        </div>
+
+                        <div className="worker-profile-actions">
+                            <button
+                                type="button"
+                                className={`worker-online-toggle ${workerAvailable ? 'active' : ''}`.trim()}
+                                onClick={() => setWorkerAvailable((current) => !current)}
+                            >
+                                <span className="worker-online-toggle-dot" />
+                                {workerAvailable ? 'Available' : 'Unavailable'}
+                            </button>
+                            <button type="button" className="primary-button" onClick={() => setIsEditing((current) => !current)}>
+                                {isEditing ? 'Close Edit' : 'Edit Profile'}
+                            </button>
+                        </div>
+                    </section>
+
+                    {message && (
+                        <div className={`message-banner ${messageIsError ? 'error' : 'success'}`}>
+                            {message}
+                        </div>
+                    )}
+
+                    <section className="worker-profile-grid">
+                        <article className="worker-profile-card">
+                            <h3>About me</h3>
+                            <p>{profile?.bio || 'Add a short introduction so customers understand your work style and specialties.'}</p>
+                        </article>
+
+                        <article className="worker-profile-card">
+                            <h3>Skills & services</h3>
+                            {workerSkills.length > 0 ? (
+                                <div className="worker-chip-row">
+                                    {workerSkills.map((skill) => (
+                                        <span key={skill} className="worker-filter-chip active">
+                                            {skill}
+                                        </span>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p>Add your trade skills to help customers find you faster.</p>
+                            )}
+                        </article>
+
+                        <article className="worker-profile-card">
+                            <h3>Contact</h3>
+                            <div className="worker-profile-list">
+                                <div>
+                                    <span>Phone</span>
+                                    <strong>{profile?.phone || 'Not added yet'}</strong>
+                                </div>
+                                <div>
+                                    <span>Email</span>
+                                    <strong>{profile?.email || 'Not added yet'}</strong>
+                                </div>
+                            </div>
+                        </article>
+
+                        <article className="worker-profile-card">
+                            <h3>Verification</h3>
+                            {verificationBadges.length > 0 ? (
+                                <div className="worker-chip-row">
+                                    {verificationBadges.map((badge) => (
+                                        <span key={badge} className="worker-filter-chip active">
+                                            {badge}
+                                        </span>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p>Verification badges will appear here as you complete setup.</p>
+                            )}
+                        </article>
+                    </section>
+
+                    {isEditing && (
+                        <section className="worker-tab-section">
+                            <div className="section-header">
+                                <div>
+                                    <h2>Edit profile</h2>
+                                    <p className="section-subtitle">Keep your public details accurate and easy for customers to trust.</p>
+                                </div>
+                            </div>
+
+                            <div className="page-form worker-edit-form">
+                                <div className="compact-form compact-form-profile">
+                                    <input
+                                        type="file"
+                                        accept=".png,.jpg,.jpeg,.webp"
+                                        onChange={(e) => setAvatarFile(e.target.files?.[0] || null)}
+                                    />
+                                    <button type="button" className="ghost-button" onClick={handleAvatarUpload}>
+                                        Upload photo
+                                    </button>
+                                </div>
+                                <input
+                                    type="text"
+                                    placeholder="Full name"
+                                    value={form.name}
+                                    onChange={(e) => handleChange('name', e.target.value)}
+                                />
+                                <input
+                                    type="text"
+                                    placeholder="Phone"
+                                    value={form.phone}
+                                    onChange={(e) => handleChange('phone', e.target.value)}
+                                />
+                                <input type="text" value={profile?.email || ''} disabled placeholder="Email" />
+                                <input
+                                    type="text"
+                                    placeholder="City"
+                                    value={form.city}
+                                    onChange={(e) => handleChange('city', e.target.value)}
+                                />
+                                <input
+                                    type="text"
+                                    placeholder="Service area"
+                                    value={form.service_area}
+                                    onChange={(e) => handleChange('service_area', e.target.value)}
+                                />
+                                <textarea
+                                    placeholder="About me"
+                                    value={form.bio}
+                                    onChange={(e) => handleChange('bio', e.target.value)}
+                                />
+                                <input
+                                    type="text"
+                                    placeholder="Skills (comma separated)"
+                                    value={form.skills}
+                                    onChange={(e) => handleChange('skills', e.target.value)}
+                                />
+                                <textarea
+                                    placeholder="Portfolio or work highlights"
+                                    value={form.portfolio}
+                                    onChange={(e) => handleChange('portfolio', e.target.value)}
+                                />
+                                <input
+                                    type="number"
+                                    placeholder="Hourly rate"
+                                    value={form.hourly_rate}
+                                    onChange={(e) => handleChange('hourly_rate', e.target.value)}
+                                />
+                                <div className="button-row">
+                                    <button className="primary-button" onClick={handleSave}>
+                                        Save profile
+                                    </button>
+                                </div>
+                            </div>
+                        </section>
+                    )}
+
+                    <section className="worker-tab-section">
+                        <div className="section-header">
+                            <div>
+                                <h2>Availability</h2>
+                                <p className="section-subtitle">Show when you are ready to take service requests.</p>
+                            </div>
+                        </div>
+
+                        {availability.length > 0 ? (
+                            <div className="worker-chip-row">
+                                {availability.map((slot, index) => (
+                                    <span key={`${slot.day}-${index}`} className="worker-filter-chip active">
+                                        {slot.day}: {slot.start_time} - {slot.end_time}
+                                    </span>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="empty-state">No availability slots added yet.</div>
+                        )}
+
+                        {isEditing && (
+                            <div className="page-form worker-edit-form">
+                                {availability.map((slot, index) => (
+                                    <div key={`${slot.day}-${index}`} className="compact-form compact-form-availability">
+                                        <select
+                                            value={slot.day}
+                                            onChange={(e) => updateAvailabilitySlot(index, 'day', e.target.value)}
+                                        >
+                                            <option>Monday</option>
+                                            <option>Tuesday</option>
+                                            <option>Wednesday</option>
+                                            <option>Thursday</option>
+                                            <option>Friday</option>
+                                            <option>Saturday</option>
+                                            <option>Sunday</option>
+                                        </select>
+                                        <input
+                                            type="time"
+                                            value={slot.start_time}
+                                            onChange={(e) => updateAvailabilitySlot(index, 'start_time', e.target.value)}
+                                        />
+                                        <input
+                                            type="time"
+                                            value={slot.end_time}
+                                            onChange={(e) => updateAvailabilitySlot(index, 'end_time', e.target.value)}
+                                        />
+                                        <button type="button" className="danger-button" onClick={() => removeAvailabilitySlot(index)}>
+                                            Remove
+                                        </button>
+                                    </div>
+                                ))}
+                                <div className="button-row">
+                                    <button type="button" className="ghost-button" onClick={addAvailabilitySlot}>
+                                        Add slot
+                                    </button>
+                                    <button type="button" className="primary-button" onClick={saveAvailability}>
+                                        Save availability
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </section>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="app-shell">

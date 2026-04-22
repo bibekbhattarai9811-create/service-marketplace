@@ -35,6 +35,15 @@ function Navbar() {
     const [isScrolled, setIsScrolled] = useState(false);
 
     const navLinks = useMemo(() => {
+        if (role === "worker") {
+            return [
+                { to: "/home", label: "Home", icon: ICONS.home },
+                { to: "/notifications", label: "Notifications", icon: ICONS.notifications },
+                { to: "/dashboard", label: "Dashboard", icon: ICONS.dashboard, primary: true },
+                { to: "/profile", label: "Profile", icon: ICONS.profile },
+            ];
+        }
+
         const links = [
             { to: "/home", label: "Home", icon: ICONS.home },
             { to: "/profile", label: "Profile", icon: ICONS.profile },
@@ -107,7 +116,7 @@ function Navbar() {
         title: "Service Marketplace",
         subtitle: "Jobs, payments, and messages in one place.",
     };
-    const primaryLinks = navLinks.slice(0, 4);
+    const primaryLinks = role === "worker" ? navLinks : navLinks.slice(0, 4);
     const quickActionLink = role === "customer" ? "/post-job" : role === "admin" ? "/admin" : "/dashboard";
     const quickActionLabel = role === "customer" ? "Post" : role === "admin" ? "Admin" : "Jobs";
     const quickActionIcon = role === "customer" ? ICONS.post : role === "admin" ? ICONS.admin : ICONS.dashboard;
@@ -202,7 +211,7 @@ function Navbar() {
                 </div>
             </header>
 
-            <nav className="mobile-quick-nav" aria-label="Quick navigation">
+            <nav className={`mobile-quick-nav ${role === "worker" ? "worker-mobile-quick-nav" : ""}`.trim()} aria-label="Quick navigation">
                 {primaryLinks.map((link) => {
                     const isActive = location.pathname === link.to;
                     return (
@@ -212,24 +221,28 @@ function Navbar() {
                         </Link>
                     );
                 })}
-                <Link
-                    className={`mobile-quick-link ${location.pathname === quickActionLink ? "active" : ""}`.trim()}
-                    to={quickActionLink}
-                >
-                    <span className="mobile-quick-icon">{quickActionIcon}</span>
-                    <span className="mobile-quick-text">{quickActionLabel}</span>
-                </Link>
-                <Link
-                    className="mobile-quick-link mobile-quick-logout"
-                    to="/"
-                    onClick={() => {
-                        clearSession();
-                        setIsOpen(false);
-                    }}
-                >
-                    <span className="mobile-quick-icon">{ICONS.logout}</span>
-                    <span className="mobile-quick-text">Logout</span>
-                </Link>
+                {role !== "worker" && (
+                    <>
+                        <Link
+                            className={`mobile-quick-link ${location.pathname === quickActionLink ? "active" : ""}`.trim()}
+                            to={quickActionLink}
+                        >
+                            <span className="mobile-quick-icon">{quickActionIcon}</span>
+                            <span className="mobile-quick-text">{quickActionLabel}</span>
+                        </Link>
+                        <Link
+                            className="mobile-quick-link mobile-quick-logout"
+                            to="/"
+                            onClick={() => {
+                                clearSession();
+                                setIsOpen(false);
+                            }}
+                        >
+                            <span className="mobile-quick-icon">{ICONS.logout}</span>
+                            <span className="mobile-quick-text">Logout</span>
+                        </Link>
+                    </>
+                )}
             </nav>
         </>
     );
