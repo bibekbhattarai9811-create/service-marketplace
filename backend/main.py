@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 from fastapi import FastAPI, WebSocket, Depends, WebSocketDisconnect, UploadFile, Request
@@ -14,7 +15,7 @@ from security import decode_access_token
 from routes import users
 from routes import jobs
 from routes import stripe_routes
-from connections import add_connection, remove_connection
+from connections import add_connection, remove_connection, send_json_to_user
 
 # -----------------------------
 # Create FastAPI App
@@ -236,7 +237,56 @@ async def websocket_endpoint(websocket: WebSocket):
     print("WebSocket connected", user_id)
     try:
         while True:
-            await websocket.receive_text()
+            raw_message = await websocket.receive_text()
+            try:
+                payload = json.loads(raw_message)
+            except Exception:
+                continue
+
+            message_type = str(payload.get("type", "")).strip()
+            if message_type == "ping":
+                await websocket.send_text(json.dumps({"type": "pong"}))
+                continue
+
+            if message_type not in {
+                "video_call_invite",
+                "video_call_accept",
+                "video_call_reject",
+                "video_call_end",
+                "video_signal",
+            }:
+                continue
+
+            target_user_id = int(payload.get("target_user_id") or 0)
+            job_id = int(payload.get("job_id") or 0)
+            if not target_user_id or not job_id or target_user_id == user_id:
+                continue
+
+            db = SessionLocal()
+            try:
+                job = db.query(Job).filter(Job.id == job_id).first()
+                if not job:
+                    continue
+
+                allowed_ids = {job.customer_id, job.worker_id}
+                if user_id not in allowed_ids or target_user_id not in allowed_ids:
+                    continue
+            finally:
+                db.close()
+
+            relay_payload = {
+                "type": message_type,
+                "job_id": job_id,
+                "sender_id": user_id,
+                "target_user_id": target_user_id,
+            }
+
+            if message_type == "video_signal":
+                relay_payload["signal"] = payload.get("signal", {})
+            else:
+                relay_payload["status"] = str(payload.get("status", "")).strip()
+
+            await send_json_to_user(target_user_id, relay_payload)
     except WebSocketDisconnect:
         pass
     except Exception as e:
