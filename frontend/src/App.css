@@ -1707,7 +1707,7 @@
     bottom: 12px;
     z-index: 18;
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 8px;
     padding: 10px;
     border-radius: 24px;
@@ -1733,6 +1733,10 @@
     transform: translateY(-1px);
   }
 
+  .mobile-quick-logout {
+    color: #fecaca;
+  }
+
   .mobile-quick-icon {
     width: 28px;
     height: 28px;
@@ -1746,7 +1750,7 @@
   }
 
   .mobile-quick-text {
-    font-size: 0.68rem;
+    font-size: 0.64rem;
     font-weight: 700;
     letter-spacing: 0.02em;
   }
@@ -1843,11 +1847,11 @@
   }
 
   .mobile-quick-link {
-    padding: 8px 4px;
+    padding: 8px 2px;
   }
 
   .mobile-quick-text {
-    font-size: 0.62rem;
+    font-size: 0.58rem;
   }
 
   .landing-hero-copy,

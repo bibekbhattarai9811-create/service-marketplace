@@ -224,6 +224,17 @@ function Navbar() {
                     <span className="mobile-quick-icon">{quickActionIcon}</span>
                     <span className="mobile-quick-text">{quickActionLabel}</span>
                 </Link>
+                <Link
+                    className="mobile-quick-link mobile-quick-logout"
+                    to="/"
+                    onClick={() => {
+                        clearSession();
+                        setIsOpen(false);
+                    }}
+                >
+                    <span className="mobile-quick-icon">{ICONS.logout}</span>
+                    <span className="mobile-quick-text">Logout</span>
+                </Link>
             </nav>
         </>
     );
