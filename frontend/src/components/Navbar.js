@@ -3,16 +3,16 @@ import { Link, useLocation } from "react-router-dom";
 import { apiClient, clearSession } from "../api";
 
 const PAGE_META = {
-    "/home": { title: "Find Jobs", subtitle: "Browse open work and move to the next step fast." },
-    "/profile": { title: "Your Profile", subtitle: "Update your details, trust signals, and availability." },
-    "/workers": { title: "Find Workers", subtitle: "Compare skills, ratings, and service areas." },
-    "/notifications": { title: "Notifications", subtitle: "See updates, reminders, and activity in one place." },
-    "/customer-dashboard": { title: "Customer Dashboard", subtitle: "Track requests, payments, and completed jobs." },
-    "/post-job": { title: "Post a Job", subtitle: "Create a clear request workers can understand quickly." },
-    "/dashboard": { title: "Worker Dashboard", subtitle: "Manage open jobs, active jobs, and payouts." },
-    "/admin": { title: "Admin Analytics", subtitle: "Monitor platform activity, disputes, and growth." },
-    "/welcome": { title: "Get Started", subtitle: "Finish setup and start using the marketplace." },
-    "/chat": { title: "Messages", subtitle: "Stay aligned with the customer or worker on this job." },
+    "/home": { title: "Jobs", subtitle: "Open work across the marketplace." },
+    "/profile": { title: "Profile", subtitle: "Account, trust, and availability." },
+    "/workers": { title: "Workers", subtitle: "Compare skills, ratings, and location." },
+    "/notifications": { title: "Notifications", subtitle: "Updates and reminders." },
+    "/customer-dashboard": { title: "Customer Dashboard", subtitle: "Jobs, payments, and ratings." },
+    "/post-job": { title: "Post a Job", subtitle: "Create a clear request." },
+    "/dashboard": { title: "Worker Dashboard", subtitle: "Jobs, payouts, and customer updates." },
+    "/admin": { title: "Admin", subtitle: "Platform activity and moderation." },
+    "/welcome": { title: "Get Started", subtitle: "Finish setup." },
+    "/chat": { title: "Messages", subtitle: "Job conversation." },
 };
 
 const ICONS = {
@@ -101,11 +101,11 @@ function Navbar() {
         };
     }, []);
 
-    const userName = localStorage.getItem("user_name") || (role ? `${role[0].toUpperCase()}${role.slice(1)}` : "Member");
-    const userEmail = localStorage.getItem("user_email") || `${role || "account"}@service-marketplace.app`;
+    const storedName = localStorage.getItem("user_name");
+    const userName = storedName || (role ? `${role[0].toUpperCase()}${role.slice(1)}` : "Member");
     const meta = PAGE_META[location.pathname] || {
         title: "Service Marketplace",
-        subtitle: "Manage jobs, messages, and payments in one place.",
+        subtitle: "Jobs, payments, and messages in one place.",
     };
     const primaryLinks = navLinks.slice(0, 4);
     const quickActionLink = role === "customer" ? "/post-job" : role === "admin" ? "/admin" : "/dashboard";
@@ -129,7 +129,7 @@ function Navbar() {
                         <span className="auth-brand-badge">SM</span>
                         <span className="app-brand-copy">
                             <strong>Service Marketplace</strong>
-                            <small>{role === "worker" ? "Worker workspace" : role === "admin" ? "Admin workspace" : "Customer workspace"}</small>
+                            <small>{role === "worker" ? "Worker" : role === "admin" ? "Admin" : "Customer"}</small>
                         </span>
                     </Link>
 
@@ -183,16 +183,11 @@ function Navbar() {
 
             <header className={`app-header-bar ${isScrolled ? "is-hidden" : ""}`.trim()}>
                 <div className="app-header-copy">
-                    <span className="app-header-kicker">Workspace</span>
                     <strong>{meta.title}</strong>
                     <small>{meta.subtitle}</small>
                 </div>
 
                 <div className="app-header-tools">
-                    <div className="app-header-search">
-                        <span className="app-header-search-icon">Go</span>
-                        <input type="text" placeholder="Search is coming soon" readOnly />
-                    </div>
                     <Link to="/notifications" className="app-header-bell" aria-label="Open notifications">
                         <span className="app-header-bell-label">N</span>
                         {unreadCount > 0 && <em>{unreadCount}</em>}
@@ -201,7 +196,7 @@ function Navbar() {
                         <div className="app-user-avatar">{userName.slice(0, 1).toUpperCase()}</div>
                         <div className="app-user-copy">
                             <strong>{userName}</strong>
-                            <small>{userEmail}</small>
+                            <small>{role === "worker" ? "Worker account" : role === "admin" ? "Admin account" : "Customer account"}</small>
                         </div>
                     </div>
                 </div>

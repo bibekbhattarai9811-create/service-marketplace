@@ -244,27 +244,25 @@ function Dashboard() {
                 <div className="page-hero">
                     <section className="hero-panel">
                         <span className="hero-label">Worker dashboard</span>
-                        <h1>Manage jobs, earnings, and customer updates from one screen.</h1>
+                        <h1>Manage jobs, messages, and payouts in one place.</h1>
                         <p>
-                            See what is available, what you already accepted, and what has
-                            already been paid out to you without jumping between pages.
+                            Review open work, manage active jobs, and keep payouts easy to track.
                         </p>
                     </section>
 
                     <aside className="hero-side-panel">
-                        <h3>Today at a glance</h3>
+                        <h3>Today</h3>
                         <p>
-                            Watch new jobs come in, move accepted work to completed,
-                            and keep your payout history easy to read.
+                            See open work, active jobs, and the next actions that matter.
                         </p>
                         <div className="hero-metrics">
                             <div className="hero-metric">
                                 <strong>{jobs.length} open jobs</strong>
-                                <span>New work appears here in real time so you can respond quickly.</span>
+                                <span>New work ready to review.</span>
                             </div>
                             <div className="hero-metric">
                                 <strong>{workerJobs.length} jobs in progress</strong>
-                                <span>Your accepted jobs, chats, disputes, and completions stay together.</span>
+                                <span>Accepted jobs you are actively managing.</span>
                             </div>
                         </div>
                     </aside>
@@ -279,7 +277,7 @@ function Dashboard() {
                 {profile && !profile.stripe_account_id && (
                     <div className="message-banner" style={{ backgroundColor: '#fff3cd', color: '#856404', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                         <div>
-                            <strong>Connect payouts:</strong> Add Stripe so customers can pay you safely after work is completed.
+                            <strong>Connect payouts:</strong> Set up Stripe to receive payments.
                         </div>
                         <button className="primary-button" onClick={handleConnectStripe}>Connect Stripe</button>
                     </div>
@@ -288,7 +286,7 @@ function Dashboard() {
                 {profile && !profile.id_verified && (
                     <div className="message-banner" style={{ backgroundColor: '#d1ecf1', color: '#0c5460', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div>
-                            <strong>Build trust:</strong> Verify your government ID to earn the ID Verified badge on your public profile.
+                            <strong>Verify identity:</strong> Add an ID badge to your public profile.
                         </div>
                         <button className="primary-button" onClick={handleVerifyIdentity} style={{ backgroundColor: '#17a2b8' }}>Verify Identity</button>
                     </div>
@@ -313,7 +311,7 @@ function Dashboard() {
                     <div className="section-header">
                         <div>
                             <h2>Available Jobs</h2>
-                            <p className="section-subtitle">Open jobs you can review and accept right now.</p>
+                            <p className="section-subtitle">Open jobs you can accept now.</p>
                         </div>
                     </div>
 
@@ -384,7 +382,7 @@ function Dashboard() {
                     <div className="section-header">
                         <div>
                             <h2>Your Jobs</h2>
-                            <p className="section-subtitle">Jobs you already accepted and are actively managing.</p>
+                            <p className="section-subtitle">Jobs already assigned to you.</p>
                         </div>
                     </div>
 
@@ -452,7 +450,7 @@ function Dashboard() {
                                             <div className="section-header">
                                                 <div>
                                                     <h3>Issue status</h3>
-                                                    <p className="section-subtitle">Keep an eye on moderation updates tied to this job.</p>
+                                                    <p className="section-subtitle">Updates tied to this job.</p>
                                                 </div>
                                             </div>
                                             <div className="stack-list">
@@ -476,7 +474,7 @@ function Dashboard() {
                     <div className="section-header">
                         <div>
                             <h2>Payment History</h2>
-                            <p className="section-subtitle">Track what customers paid and what you received.</p>
+                            <p className="section-subtitle">What customers paid and what you received.</p>
                         </div>
                     </div>
 

@@ -79,11 +79,11 @@ function Home() {
                 setWorkerMessage('');
             } else {
                 setFeaturedWorkers([]);
-                setWorkerMessage('No featured workers yet. Real worker profiles will appear here as workers complete their profiles.');
+                setWorkerMessage('');
             }
         } catch (error) {
             setFeaturedWorkers([]);
-            setWorkerMessage('Featured workers are not available right now.');
+            setWorkerMessage('');
         }
     }, []);
 
@@ -125,7 +125,7 @@ function Home() {
                     <div className="section-header">
                         <div>
                             <h2>Available Jobs</h2>
-                            <p className="section-subtitle">See what is open right now across the marketplace.</p>
+                            <p className="section-subtitle">Open requests right now.</p>
                         </div>
                     </div>
 
@@ -226,22 +226,22 @@ function Home() {
 
                                 <aside className="hero-side-panel dashboard-rail">
                                     <div>
-                                        <h3>How to use this feed</h3>
+                                        <h3>Quick tips</h3>
                                         <p className="mini-note">
-                                            Start with search or location, then narrow by category, date, and budget.
+                                            Filter by search, location, date, or budget.
                                         </p>
                                     </div>
                                     <div className="surface-list">
                                         <div className="surface-row">
                                             <div>
                                                 <strong>Simple sorting</strong>
-                                                <span>Sort by newest, price, location, date, or category.</span>
+                                                <span>Sort by newest, price, date, or location.</span>
                                             </div>
                                         </div>
                                         <div className="surface-row">
                                             <div>
-                                                <strong>Key details stay visible</strong>
-                                                <span>Price, timing, and location appear on every card.</span>
+                                                <strong>Clear cards</strong>
+                                                <span>Price, timing, and location stay visible on each job.</span>
                                             </div>
                                         </div>
                                     </div>
