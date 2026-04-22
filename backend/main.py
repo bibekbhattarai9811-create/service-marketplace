@@ -51,9 +51,12 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "http://127.0.0.1:3000",
+        "https://service-marketplace-16.onrender.com",
+        "http://service-marketplace-16.onrender.com",
         "https://service-marketplace-17.onrender.com",
-        "http://service-marketplace-17.onrender.com"
+        "http://service-marketplace-17.onrender.com",
     ],
+    allow_origin_regex=r"https?://service-marketplace-\d+\.onrender\.com",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
