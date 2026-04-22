@@ -10,9 +10,11 @@ function Login() {
 
     const handleLogin = async () => {
         try {
+            const normalizedEmail = email.trim().toLowerCase();
+            const normalizedPassword = password.trim();
             const response = await apiClient.post('/login', {
-                email: email.trim().toLowerCase(),
-                password,
+                email: normalizedEmail,
+                password: normalizedPassword,
             });
             const userId = response.data.user_id;
             const role = response.data.role;
