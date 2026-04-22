@@ -433,6 +433,153 @@ function Profile() {
         );
     }
 
+    if (role === 'customer') {
+        const memberSince = profile?.created_at
+            ? new Date(profile.created_at).toLocaleDateString([], { month: 'long', year: 'numeric' })
+            : 'Recently joined';
+
+        return (
+            <div className="app-shell">
+                <Navbar />
+
+                <div className="page-wrap worker-mobile-shell customer-mobile-shell">
+                    <section className="worker-profile-hero customer-profile-hero">
+                        <div className="worker-profile-top">
+                            {profile?.avatar_url ? (
+                                <img
+                                    src={resolveAssetUrl(profile.avatar_url)}
+                                    alt={`${profile?.name || 'Customer'} avatar`}
+                                    data-fallback-label={profile?.name}
+                                    className="worker-profile-avatar"
+                                    onError={handleAssetImageError}
+                                />
+                            ) : (
+                                <div className="worker-profile-avatar worker-profile-avatar-fallback">
+                                    {(profile?.name || 'C').slice(0, 1).toUpperCase()}
+                                </div>
+                            )}
+                            <div>
+                                <span className="worker-mobile-kicker">Profile</span>
+                                <h1>{profile?.name || 'Customer profile'}</h1>
+                                <p>{profile?.city || 'Local customer account'}</p>
+                            </div>
+                        </div>
+
+                        <div className="worker-profile-actions">
+                            <button type="button" className="primary-button" onClick={() => setIsEditing((current) => !current)}>
+                                {isEditing ? 'Close Edit' : 'Edit Profile'}
+                            </button>
+                            <Link className="secondary-button" to="/post-job">
+                                Post Job
+                            </Link>
+                            <Link
+                                className="danger-button worker-logout-button"
+                                to="/"
+                                onClick={() => {
+                                    clearSession();
+                                }}
+                            >
+                                Logout
+                            </Link>
+                        </div>
+                    </section>
+
+                    {message && (
+                        <div className={`message-banner ${messageIsError ? 'error' : 'success'}`}>
+                            {message}
+                        </div>
+                    )}
+
+                    <section className="worker-profile-grid worker-profile-grid-reference">
+                        <article className="worker-profile-card">
+                            <div className="worker-profile-card-label">Personal Info</div>
+                            <div className="worker-profile-detail-list">
+                                <div className="worker-profile-detail-row">
+                                    <span>Name</span>
+                                    <strong>{profile?.name || 'Not added yet'}</strong>
+                                </div>
+                                <div className="worker-profile-detail-row">
+                                    <span>City</span>
+                                    <strong>{profile?.city || 'Not added yet'}</strong>
+                                </div>
+                                <div className="worker-profile-detail-row">
+                                    <span>Phone</span>
+                                    <strong>{profile?.phone || 'Not added yet'}</strong>
+                                </div>
+                                <div className="worker-profile-detail-row">
+                                    <span>Email</span>
+                                    <strong>{profile?.email || 'Not added yet'}</strong>
+                                </div>
+                                <div className="worker-profile-detail-row">
+                                    <span>Member since</span>
+                                    <strong>{memberSince}</strong>
+                                </div>
+                            </div>
+                        </article>
+
+                        <article className="worker-profile-card">
+                            <div className="worker-profile-card-label">About Me</div>
+                            <p>{profile?.bio || 'Add a short note about the kinds of help you usually look for.'}</p>
+                        </article>
+                    </section>
+
+                    {isEditing && (
+                        <section className="worker-tab-section">
+                            <div className="section-header">
+                                <div>
+                                    <h2>Edit profile</h2>
+                                    <p className="section-subtitle">Keep your customer account details current.</p>
+                                </div>
+                            </div>
+
+                            <div className="page-form worker-edit-form">
+                                <div className="compact-form compact-form-profile">
+                                    <input
+                                        type="file"
+                                        accept=".png,.jpg,.jpeg,.webp"
+                                        onChange={(e) => setAvatarFile(e.target.files?.[0] || null)}
+                                    />
+                                    <button type="button" className="ghost-button" onClick={handleAvatarUpload}>
+                                        Upload photo
+                                    </button>
+                                </div>
+                                <input
+                                    type="text"
+                                    placeholder="Full name"
+                                    value={form.name}
+                                    onChange={(e) => handleChange('name', e.target.value)}
+                                />
+                                <input
+                                    type="text"
+                                    placeholder="Phone"
+                                    value={form.phone}
+                                    onChange={(e) => handleChange('phone', e.target.value)}
+                                />
+                                <input type="text" value={profile?.email || ''} disabled placeholder="Email" />
+                                <input
+                                    type="text"
+                                    placeholder="City"
+                                    value={form.city}
+                                    onChange={(e) => handleChange('city', e.target.value)}
+                                />
+                                <textarea
+                                    placeholder="About me"
+                                    value={form.bio}
+                                    onChange={(e) => handleChange('bio', e.target.value)}
+                                />
+                                <div className="button-row">
+                                    <button className="primary-button" onClick={handleSave}>
+                                        Save profile
+                                    </button>
+                                </div>
+                            </div>
+                        </section>
+                    )}
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="app-shell">
             <Navbar />

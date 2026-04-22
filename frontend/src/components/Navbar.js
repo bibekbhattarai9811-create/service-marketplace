@@ -44,6 +44,15 @@ function Navbar() {
             ];
         }
 
+        if (role === "customer") {
+            return [
+                { to: "/home", label: "Home", icon: ICONS.home },
+                { to: "/notifications", label: "Notifications", icon: ICONS.notifications },
+                { to: "/customer-dashboard", label: "Dashboard", icon: ICONS.customer, primary: true },
+                { to: "/profile", label: "Profile", icon: ICONS.profile },
+            ];
+        }
+
         const links = [
             { to: "/home", label: "Home", icon: ICONS.home },
             { to: "/profile", label: "Profile", icon: ICONS.profile },
@@ -116,7 +125,7 @@ function Navbar() {
         title: "Service Marketplace",
         subtitle: "Jobs, payments, and messages in one place.",
     };
-    const primaryLinks = role === "worker" ? navLinks : navLinks.slice(0, 4);
+    const primaryLinks = role === "worker" || role === "customer" ? navLinks : navLinks.slice(0, 4);
     const quickActionLink = role === "customer" ? "/post-job" : role === "admin" ? "/admin" : "/dashboard";
     const quickActionLabel = role === "customer" ? "Post" : role === "admin" ? "Admin" : "Jobs";
     const quickActionIcon = role === "customer" ? ICONS.post : role === "admin" ? ICONS.admin : ICONS.dashboard;
@@ -211,7 +220,7 @@ function Navbar() {
                 </div>
             </header>
 
-            <nav className={`mobile-quick-nav ${role === "worker" ? "worker-mobile-quick-nav" : ""}`.trim()} aria-label="Quick navigation">
+            <nav className={`mobile-quick-nav ${role === "worker" || role === "customer" ? "worker-mobile-quick-nav" : ""}`.trim()} aria-label="Quick navigation">
                 {primaryLinks.map((link) => {
                     const isActive = location.pathname === link.to;
                     return (
@@ -221,7 +230,7 @@ function Navbar() {
                         </Link>
                     );
                 })}
-                {role !== "worker" && (
+                {role !== "worker" && role !== "customer" && (
                     <>
                         <Link
                             className={`mobile-quick-link ${location.pathname === quickActionLink ? "active" : ""}`.trim()}

@@ -2673,6 +2673,39 @@
   color: #1d4ed8;
 }
 
+.customer-mobile-shell .worker-mobile-header-card,
+.customer-mobile-shell .worker-profile-hero {
+  background:
+    radial-gradient(circle at top right, rgba(255, 255, 255, 0.08), transparent 28%),
+    linear-gradient(180deg, #7c2d12 0%, #c2410c 100%);
+}
+
+.customer-mobile-shell .worker-mobile-header-card h1,
+.customer-mobile-shell .worker-profile-hero h1 {
+  color: #ffffff;
+}
+
+.customer-mobile-shell .worker-mobile-header-card p,
+.customer-mobile-shell .worker-profile-hero p,
+.customer-mobile-shell .worker-mobile-kicker {
+  color: rgba(255, 255, 255, 0.76);
+}
+
+.customer-job-list {
+  display: grid;
+  gap: 16px;
+}
+
+.customer-job-card .job-photo {
+  border-radius: 18px;
+  max-height: 200px;
+}
+
+.customer-mobile-header-card .primary-button {
+  background: #ffffff;
+  color: #9a3412;
+}
+
 .mobile-quick-nav {
   display: none;
 }

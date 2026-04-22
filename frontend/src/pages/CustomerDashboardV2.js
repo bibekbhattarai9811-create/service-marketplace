@@ -139,6 +139,215 @@ function CustomerDashboardV2() {
         return acc;
     }, {});
 
+    const role = localStorage.getItem('role');
+
+    if (role === 'customer') {
+        const customerName = localStorage.getItem('user_name') || 'Customer';
+
+        return (
+            <div className="app-shell">
+                <Navbar />
+
+                <div className="page-wrap worker-mobile-shell customer-mobile-shell">
+                    <section className="worker-mobile-header-card customer-mobile-header-card">
+                        <div>
+                            <span className="worker-mobile-kicker">Customer dashboard</span>
+                            <h1>Good day, {customerName}</h1>
+                            <p>{myJobs.length} jobs tracked and ${totalPaid} total paid</p>
+                        </div>
+                        <Link to="/post-job" className="primary-button">
+                            Post Job
+                        </Link>
+                    </section>
+
+                    {message && (
+                        <div className={`message-banner ${messageIsError ? 'error' : 'success'}`}>
+                            {message}
+                        </div>
+                    )}
+
+                    <section className="worker-stat-grid">
+                        <article className="worker-stat-card">
+                            <span>Total jobs</span>
+                            <strong>{myJobs.length}</strong>
+                        </article>
+                        <article className="worker-stat-card">
+                            <span>Completed</span>
+                            <strong>{myJobs.filter((job) => job.status === 'COMPLETED').length}</strong>
+                        </article>
+                        <article className="worker-stat-card">
+                            <span>Total paid</span>
+                            <strong>${totalPaid}</strong>
+                        </article>
+                        <article className="worker-stat-card">
+                            <span>Open issues</span>
+                            <strong>{disputes.length}</strong>
+                        </article>
+                    </section>
+
+                    <section className="worker-tab-section">
+                        <div className="section-header">
+                            <div>
+                                <h2>My jobs</h2>
+                                <p className="section-subtitle">Manage each request from posting to payment.</p>
+                            </div>
+                        </div>
+
+                        {myJobs.length === 0 ? (
+                            <div className="empty-state">You have not posted any jobs yet.</div>
+                        ) : (
+                            <div className="customer-job-list">
+                                {myJobs.map((job) => (
+                                    <article key={job.id} className="worker-job-card customer-job-card">
+                                        {job.image_url && (
+                                            <img
+                                                src={resolveAssetUrl(job.image_url)}
+                                                alt={job.title}
+                                                data-fallback-label={job.title}
+                                                className="job-photo"
+                                                onError={handleAssetImageError}
+                                            />
+                                        )}
+                                        <div className="worker-job-card-top">
+                                            <div>
+                                                <div className="worker-job-type">{job.title}</div>
+                                                <div className="worker-job-client-name">{job.description}</div>
+                                            </div>
+                                            <span className={`worker-urgency-badge ${job.status === 'COMPLETED' ? 'scheduled' : 'urgent'}`.trim()}>
+                                                {job.status}
+                                            </span>
+                                        </div>
+
+                                        <div className="worker-job-client">
+                                            <span>{job.location} | ${job.price}</span>
+                                            {job.worker_id && <span>Worker ID: {job.worker_id}</span>}
+                                        </div>
+
+                                        <div className="worker-job-actions">
+                                            <a className="ghost-button" href={mapLink(job.location)} target="_blank" rel="noreferrer">
+                                                View Map
+                                            </a>
+                                            {job.worker_id ? (
+                                                <Link to={chatLink(job)} className="secondary-button">Chat</Link>
+                                            ) : (
+                                                <Link to="/workers" className="secondary-button">Find Worker</Link>
+                                            )}
+                                        </div>
+
+                                        {job.status !== 'COMPLETED' && job.status !== 'CANCELLED' && (
+                                            <div className="worker-job-actions">
+                                                <button className="danger-button" onClick={() => handleCancel(job)}>
+                                                    Cancel Job
+                                                </button>
+                                            </div>
+                                        )}
+
+                                        {job.status === 'COMPLETED' && !job.paid && (
+                                            <div className="summary-card summary-card-soft">
+                                                <h3>Pay worker</h3>
+                                                <p className="muted-text">Worker gets ${Number(job.price * 0.9).toFixed(2)}. Platform fee: ${Number(job.price * 0.1).toFixed(2)}.</p>
+                                                <div className="button-row">
+                                                    <button className="primary-button" onClick={() => handlePayClick(job)}>
+                                                        Pay Now
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {job.paid && (
+                                            <div className="message-banner success" style={{ marginBottom: 0 }}>
+                                                Payment completed for this job.
+                                            </div>
+                                        )}
+
+                                        {job.status === 'COMPLETED' && job.paid && !job.rating && (
+                                            <div className="section-card section-card-inline">
+                                                <div className="section-header">
+                                                    <div>
+                                                        <h3>Leave a rating</h3>
+                                                        <p className="section-subtitle">Rate the worker and add a short review.</p>
+                                                    </div>
+                                                </div>
+                                                <div className="page-form">
+                                                    <input
+                                                        type="number"
+                                                        min="1"
+                                                        max="5"
+                                                        placeholder="Rating (1-5)"
+                                                        onChange={(e) => setRatingData({ ...ratingData, [job.id]: e.target.value })}
+                                                    />
+                                                    <textarea
+                                                        placeholder="Write a review..."
+                                                        onChange={(e) => setReviewData({ ...reviewData, [job.id]: e.target.value })}
+                                                    />
+                                                    <div className="button-row">
+                                                        <button className="primary-button" onClick={() => handleRate(job)}>
+                                                            Submit Rating
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {job.rating && (
+                                            <div className="message-banner success" style={{ marginBottom: 0 }}>
+                                                Rating submitted. Score: {job.rating}/5
+                                            </div>
+                                        )}
+                                    </article>
+                                ))}
+                            </div>
+                        )}
+                    </section>
+
+                    <section className="worker-tab-section">
+                        <div className="section-header">
+                            <div>
+                                <h2>Payment history</h2>
+                                <p className="section-subtitle">Totals, worker payouts, and platform fees.</p>
+                            </div>
+                        </div>
+
+                        <div className="worker-stat-grid">
+                            <article className="worker-stat-card">
+                                <span>Total paid</span>
+                                <strong>${totalPaid}</strong>
+                            </article>
+                            <article className="worker-stat-card">
+                                <span>Worker got</span>
+                                <strong>${totalWorkerGot}</strong>
+                            </article>
+                            <article className="worker-stat-card">
+                                <span>Platform fee</span>
+                                <strong>${totalFee}</strong>
+                            </article>
+                        </div>
+                    </section>
+                </div>
+
+                {clientSecret && (
+                    <Elements stripe={stripePromise} options={{ clientSecret }}>
+                        <StripeCheckout
+                            clientSecret={clientSecret}
+                            paymentIntentId={activePaymentIntentId}
+                            onSuccess={() => {
+                                setClientSecret(null);
+                                setActivePaymentIntentId(null);
+                                showMessage("Payment successful! Funds securely Escrowed via Stripe.");
+                                fetchMyJobs();
+                                fetchTransactions();
+                            }}
+                            onCancel={() => {
+                                setClientSecret(null);
+                                setActivePaymentIntentId(null);
+                            }}
+                        />
+                    </Elements>
+                )}
+            </div>
+        );
+    }
+
     return (
         <div className="app-shell">
             <Navbar />
