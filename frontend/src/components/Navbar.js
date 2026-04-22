@@ -16,15 +16,15 @@ const PAGE_META = {
 };
 
 const ICONS = {
-    home: "H",
-    profile: "P",
-    workers: "W",
-    notifications: "N",
-    customer: "C",
+    home: "\u2302",
+    profile: "\u263A",
+    workers: "\u2692",
+    notifications: "\u25CF",
+    customer: "\u25A3",
     post: "+",
-    admin: "A",
-    dashboard: "J",
-    logout: "L",
+    admin: "\u2699",
+    dashboard: "\u25A5",
+    logout: "\u2192",
 };
 
 function Navbar() {
@@ -189,7 +189,7 @@ function Navbar() {
 
                 <div className="app-header-tools">
                     <Link to="/notifications" className="app-header-bell" aria-label="Open notifications">
-                        <span className="app-header-bell-label">N</span>
+                        <span className="app-header-bell-label">{ICONS.notifications}</span>
                         {unreadCount > 0 && <em>{unreadCount}</em>}
                     </Link>
                     <div className="app-user-pill">
