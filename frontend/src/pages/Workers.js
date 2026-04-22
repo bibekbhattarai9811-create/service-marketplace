@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -28,29 +28,30 @@ function Workers() {
     const [workers, setWorkers] = useState([]);
     const [message, setMessage] = useState('');
     const [search, setSearch] = useState('');
+    const [city, setCity] = useState('');
     const [minimumRating, setMinimumRating] = useState('');
+    const [sortBy, setSortBy] = useState('top_rated');
 
-    useEffect(() => {
-        fetchWorkers();
-    }, []);
-
-    const fetchWorkers = async () => {
+    const fetchWorkers = useCallback(async () => {
         try {
-            const response = await apiClient.get('/workers');
+            const response = await apiClient.get('/workers', {
+                params: {
+                    search: search || undefined,
+                    city: city || undefined,
+                    min_rating: minimumRating || undefined,
+                    sort_by: sortBy,
+                },
+            });
             setWorkers(response.data);
+            setMessage('');
         } catch (error) {
             setMessage(error.response?.data?.detail || 'Failed to load workers.');
         }
-    };
+    }, [city, minimumRating, search, sortBy]);
 
-    const filteredWorkers = useMemo(() => {
-        return workers.filter((worker) => {
-            const text = `${worker.name} ${worker.city} ${worker.service_area} ${worker.skills} ${worker.portfolio}`.toLowerCase();
-            const matchesSearch = !search.trim() || text.includes(search.trim().toLowerCase());
-            const matchesRating = !minimumRating || Number(worker.average_rating) >= Number(minimumRating);
-            return matchesSearch && matchesRating;
-        });
-    }, [workers, search, minimumRating]);
+    useEffect(() => {
+        fetchWorkers();
+    }, [fetchWorkers]);
 
     return (
         <div className="app-shell">
@@ -59,19 +60,19 @@ function Workers() {
                 <div className="page-hero">
                     <section className="hero-panel">
                         <span className="hero-label">Worker directory</span>
-                        <h1>Browse trusted workers, ratings, skills, and service areas.</h1>
+                        <h1>Compare trust, pricing, availability, and experience before you book.</h1>
                         <p>
-                            This directory helps customers compare worker trust signals before posting or assigning work.
+                            Search by skill or city, sort by rating or completed work, and open stronger public profiles before sending a private offer.
                         </p>
                     </section>
 
                     <aside className="hero-side-panel">
                         <h3>Hiring shortcuts</h3>
-                        <p>Use skill search and review filters to narrow the list before opening a full public profile.</p>
+                        <p>Use search, city, rating, and sort controls to narrow the list before opening a full worker profile.</p>
                         <div className="hero-metrics">
                             <div className="hero-metric">
-                                <strong>{filteredWorkers.length} workers shown</strong>
-                                <span>Profiles, pricing, ratings, and service areas stay visible while you browse.</span>
+                                <strong>{workers.length} workers shown</strong>
+                                <span>Profiles now include review counts, completed jobs, service area, and availability signals.</span>
                             </div>
                         </div>
                     </aside>
@@ -83,7 +84,7 @@ function Workers() {
                     <div className="section-header">
                         <div>
                             <h2>Available Workers</h2>
-                            <p className="section-subtitle">Portfolio highlights, ratings, and service coverage.</p>
+                            <p className="section-subtitle">Search by expertise, city, trust signals, and work history.</p>
                         </div>
                     </div>
 
@@ -91,23 +92,37 @@ function Workers() {
                         <input
                             className="filter-toolbar-wide"
                             type="text"
-                            placeholder="Search workers"
+                            placeholder="Search workers by name, skill, service area, or portfolio"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
+                        />
+                        <input
+                            type="text"
+                            placeholder="City or area"
+                            value={city}
+                            onChange={(e) => setCity(e.target.value)}
                         />
                         <select value={minimumRating} onChange={(e) => setMinimumRating(e.target.value)}>
                             <option value="">Any rating</option>
                             <option value="4">4 stars and up</option>
                             <option value="4.5">4.5 stars and up</option>
                         </select>
+                        <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+                            <option value="top_rated">Top rated</option>
+                            <option value="completed">Most completed jobs</option>
+                            <option value="reviews">Most reviews</option>
+                            <option value="price_low">Lowest hourly rate</option>
+                            <option value="price_high">Highest hourly rate</option>
+                            <option value="name">Name</option>
+                        </select>
                     </div>
 
-                    {filteredWorkers.length === 0 ? (
-                        <div className="empty-state">No workers available yet.</div>
+                    {workers.length === 0 ? (
+                        <div className="empty-state">No workers match those filters yet.</div>
                     ) : (
                         <div className="page-two-column">
                             <div className="stack-list">
-                                {filteredWorkers.map((worker) => (
+                                {workers.map((worker) => (
                                     <article key={worker.id} className="job-card">
                                         {worker.avatar_url && (
                                             <img
@@ -125,9 +140,7 @@ function Workers() {
                                             </div>
                                             <div className="button-row">
                                                 {worker.id_verified && (
-                                                    <span className="status-badge status-open">
-                                                        ID Verified
-                                                    </span>
+                                                    <span className="status-badge status-open">ID Verified</span>
                                                 )}
                                                 <span className="status-badge status-completed">
                                                     {worker.average_rating} stars
@@ -140,10 +153,17 @@ function Workers() {
                                             {worker.skills && <span className="job-meta-chip">{worker.skills}</span>}
                                             {worker.hourly_rate && <span className="job-meta-chip">${worker.hourly_rate}/hr</span>}
                                             <span className="job-meta-chip">{worker.review_count} reviews</span>
+                                            <span className="job-meta-chip">{worker.completed_jobs} completed</span>
+                                            {worker.availability_count > 0 && (
+                                                <span className="job-meta-chip">{worker.availability_count} schedule slots</span>
+                                            )}
                                         </div>
                                         <div className="button-row">
                                             <Link className="secondary-button" to={`/workers/${worker.id}`}>
                                                 View Profile
+                                            </Link>
+                                            <Link className="ghost-button" to={`/post-job?target_worker=${worker.id}`}>
+                                                Send Private Job
                                             </Link>
                                         </div>
                                     </article>
@@ -152,7 +172,7 @@ function Workers() {
                             <div className="map-panel">
                                 <MapContainer center={[40.7128, -74.0060]} zoom={10} style={{ height: '100%', width: '100%' }}>
                                     <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                                    {filteredWorkers.map((worker) => {
+                                    {workers.map((worker) => {
                                         if (!worker.city && !worker.service_area) return null;
                                         const coords = getFakeCoords(worker.service_area || worker.city);
                                         return (
@@ -160,10 +180,11 @@ function Workers() {
                                                 <Popup>
                                                     <div style={{ textAlign: 'center' }}>
                                                         <strong style={{ display: 'block', marginBottom: '4px' }}>
-                                                            {worker.name} {worker.id_verified && <span style={{ color: '#14804a' }}>✓</span>}
+                                                            {worker.name}
                                                         </strong>
                                                         {worker.service_area || worker.city}<br />
-                                                        <strong>${worker.hourly_rate}/hr</strong><br />
+                                                        <strong>{worker.average_rating} stars</strong><br />
+                                                        {worker.hourly_rate ? `$${worker.hourly_rate}/hr` : 'Rate on request'}<br />
                                                         <Link to={`/workers/${worker.id}`}>View Profile</Link>
                                                     </div>
                                                 </Popup>

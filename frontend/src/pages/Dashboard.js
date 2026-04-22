@@ -5,6 +5,7 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import Navbar from "../components/Navbar";
 import { WS_API, apiClient, handleAssetImageError, resolveAssetUrl } from "../api";
+import JobProgress from "../components/JobProgress";
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -37,6 +38,7 @@ function Dashboard() {
     const [rating, setRating] = useState(null);
     const [disputeReason, setDisputeReason] = useState({});
     const [disputeDetails, setDisputeDetails] = useState({});
+    const [disputes, setDisputes] = useState([]);
     const [transactions, setTransactions] = useState([]);
     const [profile, setProfile] = useState(null);
     const wsRef = useRef(null);
@@ -97,6 +99,15 @@ function Dashboard() {
             setProfile(response.data);
         } catch (error) {
             console.log("Profile error:", error);
+        }
+    }, []);
+
+    const fetchDisputes = useCallback(async () => {
+        try {
+            const response = await apiClient.get('/jobs/disputes/me');
+            setDisputes(response.data);
+        } catch (error) {
+            setDisputes([]);
         }
     }, []);
 
@@ -168,6 +179,7 @@ function Dashboard() {
         fetchRating();
         fetchTransactions();
         fetchProfile();
+        fetchDisputes();
 
         const queryParams = new URLSearchParams(window.location.search);
         const verificationSessionId = queryParams.get("verification");
@@ -191,6 +203,7 @@ function Dashboard() {
         const interval = setInterval(() => {
             fetchTransactions();
             fetchEarnings();
+            fetchDisputes();
         }, 5000);
 
         const ws = new WebSocket(`${WS_API}?token=${encodeURIComponent(token || "")}`);
@@ -212,11 +225,16 @@ function Dashboard() {
             if (wsRef.current) wsRef.current.close();
             clearInterval(interval);
         };
-    }, [fetchAvailableJobs, fetchWorkerJobs, fetchEarnings, fetchRating, fetchTransactions, fetchProfile, token]);
+    }, [fetchAvailableJobs, fetchWorkerJobs, fetchEarnings, fetchRating, fetchTransactions, fetchProfile, fetchDisputes, token]);
 
     const totalJobValue = transactions.reduce((sum, t) => sum + t.total_amount, 0);
     const totalWorkerReceived = transactions.reduce((sum, t) => sum + t.worker_received, 0);
     const totalFees = transactions.reduce((sum, t) => sum + t.platform_fee, 0);
+    const disputesByJob = disputes.reduce((acc, dispute) => {
+        acc[dispute.job_id] = acc[dispute.job_id] || [];
+        acc[dispute.job_id].push(dispute);
+        return acc;
+    }, {});
 
     return (
         <div className="app-shell">
@@ -322,6 +340,7 @@ function Dashboard() {
                                             </div>
                                             <span className={`status-badge status-${job.status.toLowerCase()}`}>{job.status}</span>
                                         </div>
+                                        <JobProgress job={job} />
                                         <div className="job-meta">
                                             <span className="job-meta-chip">Location: {job.location}</span>
                                             <span className="job-meta-chip">Price: ${job.price}</span>
@@ -391,6 +410,7 @@ function Dashboard() {
                                         </div>
                                         <span className={`status-badge status-${job.status.toLowerCase()}`}>{job.status}</span>
                                     </div>
+                                    <JobProgress job={job} />
                                     <div className="job-meta">
                                         <span className="job-meta-chip">Location: {job.location}</span>
                                         <span className="job-meta-chip">Price: ${job.price}</span>
@@ -424,6 +444,25 @@ function Dashboard() {
                                                 <button className="danger-button" onClick={() => reportIssue(job.id)}>
                                                     Report Issue
                                                 </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {disputesByJob[job.id]?.length > 0 && (
+                                        <div className="section-card" style={{ padding: '18px', marginBottom: 0 }}>
+                                            <div className="section-header">
+                                                <div>
+                                                    <h3>Issue status</h3>
+                                                    <p className="section-subtitle">Keep an eye on moderation updates tied to this job.</p>
+                                                </div>
+                                            </div>
+                                            <div className="stack-list">
+                                                {disputesByJob[job.id].map((dispute) => (
+                                                    <div key={dispute.id} className="surface-row">
+                                                        <strong>{dispute.status}</strong>
+                                                        <span>{dispute.reason}</span>
+                                                        {dispute.resolution_note && <span>Admin note: {dispute.resolution_note}</span>}
+                                                    </div>
+                                                ))}
                                             </div>
                                         </div>
                                     )}

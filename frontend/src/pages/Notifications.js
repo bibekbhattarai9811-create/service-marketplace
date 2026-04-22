@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { apiClient } from '../api';
@@ -7,6 +7,7 @@ function Notifications() {
     const [notifications, setNotifications] = useState([]);
     const [message, setMessage] = useState('');
     const [showUnreadOnly, setShowUnreadOnly] = useState(false);
+    const [typeFilter, setTypeFilter] = useState('');
 
     const fetchNotifications = useCallback(async () => {
         try {
@@ -43,6 +44,21 @@ function Notifications() {
     };
 
     const unreadCount = notifications.filter((notification) => !notification.is_read).length;
+    const groupedCounts = useMemo(() => {
+        const result = {};
+        notifications.forEach((notification) => {
+            const key = notification.notification_type || 'general';
+            result[key] = (result[key] || 0) + 1;
+        });
+        return result;
+    }, [notifications]);
+
+    const filteredNotifications = notifications.filter((notification) => {
+        if (!typeFilter) {
+            return true;
+        }
+        return (notification.notification_type || 'general') === typeFilter;
+    });
 
     return (
         <div className="app-shell">
@@ -52,20 +68,19 @@ function Notifications() {
                 <div className="page-hero">
                     <section className="hero-panel">
                         <span className="hero-label">Notification center</span>
-                        <h1>Catch up on job activity, chat updates, and payments in one place.</h1>
+                        <h1>Catch up on jobs, chat, payments, and disputes from one clean inbox.</h1>
                         <p>
-                            This page keeps the latest marketplace activity together so you do not
-                            need to bounce around dashboards to understand what changed.
+                            Track the most important marketplace events here so you do not need to bounce between dashboards just to stay current.
                         </p>
                     </section>
 
                     <aside className="hero-side-panel">
                         <h3>What to watch</h3>
-                        <p>Unread items, payment updates, and chat activity all land here first.</p>
+                        <p>Unread items, chat updates, job changes, payment events, and moderation notices all land here first.</p>
                         <div className="hero-metrics">
                             <div className="hero-metric">
                                 <strong>{unreadCount} unread now</strong>
-                                <span>Use unread-only view to clear the highest-signal activity faster.</span>
+                                <span>Use the unread and type filters to focus on the updates that matter most right now.</span>
                             </div>
                         </div>
                     </aside>
@@ -73,11 +88,26 @@ function Notifications() {
 
                 {message && <div className="message-banner error">{message}</div>}
 
+                <div className="stats-grid">
+                    <div className="stat-card">
+                        <span>Total Notifications</span>
+                        <strong>{notifications.length}</strong>
+                    </div>
+                    <div className="stat-card">
+                        <span>Unread</span>
+                        <strong>{unreadCount}</strong>
+                    </div>
+                    <div className="stat-card">
+                        <span>Types Active</span>
+                        <strong>{Object.keys(groupedCounts).length}</strong>
+                    </div>
+                </div>
+
                 <section className="section-card section-card-accent">
                     <div className="section-header">
                         <div>
                             <h2>Recent Notifications</h2>
-                            <p className="section-subtitle">Newest items appear first. Unread now: {unreadCount}</p>
+                            <p className="section-subtitle">Newest items appear first. Filter by unread items or by event type.</p>
                         </div>
                         <div className="button-row">
                             <button className="ghost-button" onClick={() => setShowUnreadOnly((current) => !current)}>
@@ -89,11 +119,22 @@ function Notifications() {
                         </div>
                     </div>
 
-                    {notifications.length === 0 ? (
-                        <div className="empty-state">No notifications yet.</div>
+                    <div className="filter-toolbar">
+                        <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
+                            <option value="">All types</option>
+                            {Object.keys(groupedCounts).sort().map((type) => (
+                                <option key={type} value={type}>
+                                    {type} ({groupedCounts[type]})
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {filteredNotifications.length === 0 ? (
+                        <div className="empty-state">No notifications match that view.</div>
                     ) : (
                         <div className="card-grid">
-                            {notifications.map((notification) => (
+                            {filteredNotifications.map((notification) => (
                                 <article key={notification.id} className="job-card">
                                     <div className="job-card-header">
                                         <div>

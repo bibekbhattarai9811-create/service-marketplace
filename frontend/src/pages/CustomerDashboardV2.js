@@ -5,6 +5,7 @@ import { apiClient, handleAssetImageError, resolveAssetUrl } from '../api';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
 import StripeCheckout from '../components/StripeCheckout';
+import JobProgress from '../components/JobProgress';
 
 const stripePromise = loadStripe('pk_test_TYooMQauvdEDq54NiTphI7jx');
 
@@ -20,6 +21,7 @@ function CustomerDashboardV2() {
     const [reviewData, setReviewData] = useState({});
     const [disputeReason, setDisputeReason] = useState({});
     const [disputeDetails, setDisputeDetails] = useState({});
+    const [disputes, setDisputes] = useState([]);
     const [transactions, setTransactions] = useState([]);
     
     // Stripe State
@@ -45,12 +47,23 @@ function CustomerDashboardV2() {
         }
     };
 
+    const fetchDisputes = async () => {
+        try {
+            const response = await apiClient.get('/jobs/disputes/me');
+            setDisputes(response.data);
+        } catch (error) {
+            setDisputes([]);
+        }
+    };
+
     useEffect(() => {
         fetchMyJobs();
         fetchTransactions();
+        fetchDisputes();
         const interval = setInterval(() => {
             fetchMyJobs();
             fetchTransactions();
+            fetchDisputes();
         }, 5000);
         return () => clearInterval(interval);
     }, []);
@@ -120,6 +133,11 @@ function CustomerDashboardV2() {
     const totalPaid = transactions.reduce((sum, t) => sum + t.total_amount, 0);
     const totalWorkerGot = transactions.reduce((sum, t) => sum + t.worker_received, 0);
     const totalFee = transactions.reduce((sum, t) => sum + t.platform_fee, 0);
+    const disputesByJob = disputes.reduce((acc, dispute) => {
+        acc[dispute.job_id] = acc[dispute.job_id] || [];
+        acc[dispute.job_id].push(dispute);
+        return acc;
+    }, {});
 
     return (
         <div className="app-shell">
@@ -207,6 +225,7 @@ function CustomerDashboardV2() {
                                         </div>
                                         <span className={`status-badge status-${job.status.toLowerCase()}`}>{job.status}</span>
                                     </div>
+                                    <JobProgress job={job} />
 
                                     <div className="job-meta">
                                         <span className="job-meta-chip">Location: {job.location}</span>
@@ -311,6 +330,26 @@ function CustomerDashboardV2() {
                                                         Report Issue
                                                     </button>
                                                 </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {disputesByJob[job.id]?.length > 0 && (
+                                        <div className="section-card" style={{ padding: '18px', marginBottom: 0 }}>
+                                            <div className="section-header">
+                                                <div>
+                                                    <h3>Issue status</h3>
+                                                    <p className="section-subtitle">Track dispute progress for this job.</p>
+                                                </div>
+                                            </div>
+                                            <div className="stack-list">
+                                                {disputesByJob[job.id].map((dispute) => (
+                                                    <div key={dispute.id} className="surface-row">
+                                                        <strong>{dispute.status}</strong>
+                                                        <span>{dispute.reason}</span>
+                                                        {dispute.resolution_note && <span>Admin note: {dispute.resolution_note}</span>}
+                                                    </div>
+                                                ))}
                                             </div>
                                         </div>
                                     )}

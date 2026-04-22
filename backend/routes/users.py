@@ -1,14 +1,14 @@
 import os
 import re
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from pydantic import BaseModel
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from auth import get_current_user, require_role
 from database import SessionLocal
-from models import Availability, Rating, User, UserProfile
+from models import Availability, Dispute, Job, Notification, Payment, Rating, User, UserProfile
 from notification_service import send_email_notification, send_sms_notification
 from security import (
     create_access_token,
@@ -57,6 +57,8 @@ class PasswordResetConfirmRequest(BaseModel):
 
 
 class ProfileUpdateRequest(BaseModel):
+    name: str = ""
+    phone: str = ""
     bio: str = ""
     city: str = ""
     skills: str = ""
@@ -231,6 +233,51 @@ def get_my_profile(
         db.commit()
         db.refresh(profile)
 
+    completed_jobs = 0
+    active_jobs = 0
+    average_rating = 0
+    review_count = 0
+    total_earnings = 0
+
+    if current_user.role == "worker":
+        completed_jobs = db.query(func.count(Job.id)).filter(
+            Job.worker_id == current_user.id,
+            Job.status == "COMPLETED",
+        ).scalar() or 0
+        active_jobs = db.query(func.count(Job.id)).filter(
+            Job.worker_id == current_user.id,
+            Job.status.in_(["ACCEPTED", "IN_PROGRESS"]),
+        ).scalar() or 0
+        average_rating = db.query(func.avg(Rating.rating)).filter(
+            Rating.worker_id == current_user.id
+        ).scalar() or 0
+        review_count = db.query(func.count(Rating.id)).filter(
+            Rating.worker_id == current_user.id
+        ).scalar() or 0
+        total_earnings = db.query(func.sum(Payment.worker_amount)).filter(
+            Payment.worker_id == current_user.id
+        ).scalar() or 0
+    elif current_user.role == "customer":
+        completed_jobs = db.query(func.count(Job.id)).filter(
+            Job.customer_id == current_user.id,
+            Job.status == "COMPLETED",
+        ).scalar() or 0
+        active_jobs = db.query(func.count(Job.id)).filter(
+            Job.customer_id == current_user.id,
+            Job.status.in_(["OPEN", "OFFERED", "ACCEPTED", "IN_PROGRESS"]),
+        ).scalar() or 0
+
+    disputes_count = db.query(func.count(Dispute.id)).filter(
+        (Dispute.reporter_id == current_user.id) | (Dispute.target_user_id == current_user.id)
+    ).scalar() or 0
+    unread_notifications = db.query(func.count(Notification.id)).filter(
+        Notification.user_id == current_user.id,
+        Notification.is_read == 0,
+    ).scalar() or 0
+    availability_count = db.query(func.count(Availability.id)).filter(
+        Availability.worker_id == current_user.id
+    ).scalar() or 0
+
     return {
         "id": current_user.id,
         "name": current_user.name,
@@ -246,11 +293,27 @@ def get_my_profile(
         "avatar_url": profile.avatar_url or "",
         "service_area": profile.service_area or "",
         "portfolio": profile.portfolio or "",
+        "stats": {
+            "completed_jobs": completed_jobs,
+            "active_jobs": active_jobs,
+            "average_rating": round(average_rating, 2),
+            "review_count": review_count,
+            "total_earnings": total_earnings,
+            "disputes_count": disputes_count,
+            "unread_notifications": unread_notifications,
+            "availability_count": availability_count,
+        },
     }
 
 
 @router.get("/workers")
-def list_public_workers(db: Session = Depends(get_db)):
+def list_public_workers(
+    search: str | None = Query(default=None),
+    city: str | None = Query(default=None),
+    min_rating: float | None = Query(default=None),
+    sort_by: str | None = Query(default="top_rated"),
+    db: Session = Depends(get_db),
+):
     workers = db.query(User).filter(User.role == "worker", User.is_active == True).all()  # noqa: E712
     worker_ids = [worker.id for worker in workers] or [0]
     profiles = {
@@ -263,6 +326,13 @@ def list_public_workers(db: Session = Depends(get_db)):
         profile = profiles.get(worker.id)
         average_rating = db.query(func.avg(Rating.rating)).filter(Rating.worker_id == worker.id).scalar() or 0
         review_count = db.query(func.count(Rating.id)).filter(Rating.worker_id == worker.id).scalar() or 0
+        completed_jobs = db.query(func.count(Job.id)).filter(
+            Job.worker_id == worker.id,
+            Job.status == "COMPLETED",
+        ).scalar() or 0
+        availability_count = db.query(func.count(Availability.id)).filter(
+            Availability.worker_id == worker.id
+        ).scalar() or 0
         result.append({
             "id": worker.id,
             "name": worker.name,
@@ -275,9 +345,52 @@ def list_public_workers(db: Session = Depends(get_db)):
             "average_rating": round(average_rating, 2),
             "review_count": review_count,
             "id_verified": worker.id_verified,
+            "completed_jobs": completed_jobs,
+            "availability_count": availability_count,
         })
 
-    return result
+    search_term = (search or "").strip().lower()
+    city_term = (city or "").strip().lower()
+    filtered = []
+    for worker in result:
+        text = " ".join(
+            [
+                worker["name"],
+                worker["city"],
+                worker["service_area"],
+                worker["skills"],
+                worker["portfolio"],
+            ]
+        ).lower()
+        if search_term and search_term not in text:
+            continue
+        if city_term and city_term not in f'{worker["city"]} {worker["service_area"]}'.lower():
+            continue
+        if min_rating is not None and worker["average_rating"] < min_rating:
+            continue
+        filtered.append(worker)
+
+    if sort_by == "reviews":
+        filtered.sort(key=lambda worker: (worker["review_count"], worker["average_rating"]), reverse=True)
+    elif sort_by == "completed":
+        filtered.sort(key=lambda worker: (worker["completed_jobs"], worker["average_rating"]), reverse=True)
+    elif sort_by == "price_low":
+        filtered.sort(key=lambda worker: (worker["hourly_rate"] or 10**9, worker["name"]))
+    elif sort_by == "price_high":
+        filtered.sort(key=lambda worker: (worker["hourly_rate"] or 0, worker["average_rating"]), reverse=True)
+    elif sort_by == "name":
+        filtered.sort(key=lambda worker: worker["name"].lower())
+    else:
+        filtered.sort(
+            key=lambda worker: (
+                worker["average_rating"],
+                worker["completed_jobs"],
+                worker["review_count"],
+            ),
+            reverse=True,
+        )
+
+    return filtered
 
 
 @router.get("/workers/{worker_id}")
@@ -297,6 +410,17 @@ def get_public_worker_profile(worker_id: int, db: Session = Depends(get_db)):
     ).all()
     average_rating = db.query(func.avg(Rating.rating)).filter(Rating.worker_id == worker.id).scalar() or 0
     review_count = db.query(func.count(Rating.id)).filter(Rating.worker_id == worker.id).scalar() or 0
+    completed_jobs = db.query(func.count(Job.id)).filter(
+        Job.worker_id == worker.id,
+        Job.status == "COMPLETED",
+    ).scalar() or 0
+    active_jobs = db.query(func.count(Job.id)).filter(
+        Job.worker_id == worker.id,
+        Job.status.in_(["ACCEPTED", "IN_PROGRESS"]),
+    ).scalar() or 0
+    total_earnings = db.query(func.sum(Payment.worker_amount)).filter(
+        Payment.worker_id == worker.id
+    ).scalar() or 0
 
     return {
         "id": worker.id,
@@ -311,6 +435,9 @@ def get_public_worker_profile(worker_id: int, db: Session = Depends(get_db)):
         "average_rating": round(average_rating, 2),
         "review_count": review_count,
         "id_verified": worker.id_verified,
+        "completed_jobs": completed_jobs,
+        "active_jobs": active_jobs,
+        "total_earnings": total_earnings,
         "reviews": [
             {"rating": review.rating, "review": review.review}
             for review in reviews
@@ -328,6 +455,13 @@ def update_my_profile(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    cleaned_name = payload.name.strip()
+    cleaned_phone = payload.phone.strip()
+    if cleaned_name:
+        current_user.name = cleaned_name
+    if cleaned_phone:
+        current_user.phone = cleaned_phone
+
     profile = db.query(UserProfile).filter(UserProfile.user_id == current_user.id).first()
     if not profile:
         profile = UserProfile(user_id=current_user.id)
@@ -346,6 +480,8 @@ def update_my_profile(
     return {
         "message": "Profile updated successfully",
         "profile": {
+            "name": current_user.name,
+            "phone": current_user.phone,
             "bio": profile.bio or "",
             "city": profile.city or "",
             "skills": profile.skills or "",
@@ -388,18 +524,48 @@ async def upload_avatar(
 
 @router.get("/admin/users")
 def list_users_for_admin(
+    search: str | None = Query(default=None),
+    role: str | None = Query(default=None),
+    status: str | None = Query(default=None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     if current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
 
-    users = db.query(User).order_by(User.id.asc()).all()
+    users_query = db.query(User)
+    if search:
+        search_term = f"%{search.strip()}%"
+        users_query = users_query.filter(
+            (User.name.ilike(search_term)) | (User.email.ilike(search_term)) | (User.phone.ilike(search_term))
+        )
+    if role:
+        users_query = users_query.filter(User.role == role.strip().lower())
+    if status == "active":
+        users_query = users_query.filter(User.is_active == True)  # noqa: E712
+    elif status == "inactive":
+        users_query = users_query.filter(User.is_active == False)  # noqa: E712
+
+    users = users_query.order_by(User.id.asc()).all()
     profiles = {
         profile.user_id: profile
         for profile in db.query(UserProfile).filter(
             UserProfile.user_id.in_([user.id for user in users] or [0])
         ).all()
+    }
+    worker_ids = [user.id for user in users if user.role == "worker"] or [0]
+    completed_jobs = {
+        worker_id: count
+        for worker_id, count in db.query(Job.worker_id, func.count(Job.id)).filter(
+            Job.worker_id.in_(worker_ids),
+            Job.status == "COMPLETED",
+        ).group_by(Job.worker_id).all()
+    }
+    dispute_counts = {
+        user_id: count
+        for user_id, count in db.query(Dispute.reporter_id, func.count(Dispute.id)).filter(
+            Dispute.reporter_id.in_([user.id for user in users] or [0])
+        ).group_by(Dispute.reporter_id).all()
     }
 
     return [
@@ -412,6 +578,8 @@ def list_users_for_admin(
             "is_active": bool(user.is_active),
             "city": profiles.get(user.id).city if profiles.get(user.id) else "",
             "service_area": profiles.get(user.id).service_area if profiles.get(user.id) else "",
+            "completed_jobs": completed_jobs.get(user.id, 0),
+            "reported_disputes": dispute_counts.get(user.id, 0),
         }
         for user in users
     ]

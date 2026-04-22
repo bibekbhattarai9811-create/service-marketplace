@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Navbar from '../components/Navbar';
-import { apiClient } from '../api';
+import { apiClient, handleAssetImageError, resolveAssetUrl } from '../api';
 
 function Profile() {
     const [profile, setProfile] = useState(null);
     const [form, setForm] = useState({
+        name: '',
+        phone: '',
         bio: '',
         city: '',
         skills: '',
@@ -19,11 +21,19 @@ function Profile() {
 
     const role = localStorage.getItem('role');
 
+    const profileStats = useMemo(() => ([
+        { label: 'Completed Jobs', value: profile?.stats?.completed_jobs || 0 },
+        { label: role === 'worker' ? 'Average Rating' : 'Active Jobs', value: role === 'worker' ? (profile?.stats?.average_rating || 0) : (profile?.stats?.active_jobs || 0) },
+        { label: role === 'worker' ? 'Total Earnings' : 'Unread Alerts', value: role === 'worker' ? `$${profile?.stats?.total_earnings || 0}` : (profile?.stats?.unread_notifications || 0) },
+    ]), [profile, role]);
+
     const fetchProfile = async () => {
         try {
             const response = await apiClient.get('/me');
             setProfile(response.data);
             setForm({
+                name: response.data.name || '',
+                phone: response.data.phone || '',
                 bio: response.data.bio || '',
                 city: response.data.city || '',
                 skills: response.data.skills || '',
@@ -60,6 +70,8 @@ function Profile() {
     const handleSave = async () => {
         try {
             const payload = {
+                name: form.name,
+                phone: form.phone,
                 bio: form.bio,
                 city: form.city,
                 skills: form.skills,
@@ -124,6 +136,7 @@ function Profile() {
             await apiClient.post('/availability/me', availability);
             setMessageIsError(false);
             setMessage('Availability updated successfully.');
+            fetchProfile();
         } catch (error) {
             setMessageIsError(true);
             setMessage(error.response?.data?.detail || 'Failed to update availability.');
@@ -137,28 +150,42 @@ function Profile() {
             <div className="page-wrap">
                 <div className="page-hero">
                     <section className="hero-panel">
-                        <span className="hero-label">Your profile</span>
-                        <h1>Keep your account details polished and easy to trust.</h1>
+                        <span className="hero-label">Profile hub</span>
+                        <h1>Build trust with a stronger profile, clearer contact info, and cleaner availability.</h1>
                         <p>
-                            Add the information customers, workers, or admins need to understand
-                            your role in the marketplace at a glance.
+                            Better profiles help customers book faster, help workers stand out, and give admins a cleaner view of each account.
                         </p>
                     </section>
 
                     <aside className="hero-side-panel">
                         <h3>Profile summary</h3>
-                        <p>{profile ? `${profile.name} • ${profile.role}` : 'Loading profile details...'}</p>
-                        <p>{profile?.email || ''}</p>
-                        <p>{profile?.phone || ''}</p>
-                        <div className="hero-metrics">
-                            <div className="hero-metric">
-                                <strong>{role === 'worker' ? 'Public trust matters' : 'Keep it current'}</strong>
-                                <span>
-                                    {role === 'worker'
-                                        ? 'A clear service area, skills list, and polished portfolio help customers choose faster.'
-                                        : 'A complete profile makes job conversations and account management easier.'}
-                                </span>
+                        <div className="profile-identity">
+                            {profile?.avatar_url ? (
+                                <img
+                                    src={resolveAssetUrl(profile.avatar_url)}
+                                    alt={`${profile.name} avatar`}
+                                    data-fallback-label={profile.name}
+                                    className="profile-avatar"
+                                    onError={handleAssetImageError}
+                                />
+                            ) : (
+                                <div className="profile-avatar profile-avatar-fallback">
+                                    {(profile?.name || 'M').slice(0, 1).toUpperCase()}
+                                </div>
+                            )}
+                            <div>
+                                <strong>{profile ? profile.name : 'Loading profile...'}</strong>
+                                <p>{profile ? `${profile.role} • ${profile.email}` : ''}</p>
+                                <p>{profile?.phone || ''}</p>
                             </div>
+                        </div>
+                        <div className="job-meta">
+                            {profile?.city && <span className="job-meta-chip">{profile.city}</span>}
+                            {profile?.service_area && <span className="job-meta-chip">{profile.service_area}</span>}
+                            {profile?.id_verified && <span className="status-badge status-open">ID Verified</span>}
+                            {role === 'worker' && profile?.stats?.availability_count > 0 && (
+                                <span className="job-meta-chip">{profile.stats.availability_count} availability slots</span>
+                            )}
                         </div>
                     </aside>
                 </div>
@@ -169,25 +196,27 @@ function Profile() {
                     </div>
                 )}
 
+                <div className="stats-grid">
+                    {profileStats.map((item) => (
+                        <div key={item.label} className="stat-card">
+                            <span>{item.label}</span>
+                            <strong>{item.value}</strong>
+                        </div>
+                    ))}
+                </div>
+
                 <section className="section-card form-card section-card-accent">
                     <div className="section-header">
                         <div>
                             <h2>Profile Details</h2>
                             <p className="section-subtitle">
-                                Customers can add a city and bio. Workers can also add service area, skills, portfolio details, and an hourly rate.
+                                Keep your public identity clean and your operational details ready. Workers can showcase skills, pricing, and portfolio notes.
                             </p>
                         </div>
                     </div>
 
                     <div className="page-form">
-                        {profile?.avatar_url && (
-                            <img
-                                src={profile.avatar_url.startsWith('http') ? profile.avatar_url : `${apiClient.defaults.baseURL}${profile.avatar_url}`}
-                                alt={`${profile.name} avatar`}
-                                className="profile-avatar"
-                            />
-                        )}
-                        <div className="compact-form">
+                        <div className="compact-form compact-form-profile">
                             <input
                                 type="file"
                                 accept=".png,.jpg,.jpeg,.webp"
@@ -197,9 +226,19 @@ function Profile() {
                                 Upload Avatar
                             </button>
                         </div>
-                        <input type="text" value={profile?.name || ''} disabled placeholder="Name" />
+                        <input
+                            type="text"
+                            placeholder="Full name"
+                            value={form.name}
+                            onChange={(e) => handleChange('name', e.target.value)}
+                        />
+                        <input
+                            type="text"
+                            placeholder="Phone"
+                            value={form.phone}
+                            onChange={(e) => handleChange('phone', e.target.value)}
+                        />
                         <input type="text" value={profile?.email || ''} disabled placeholder="Email" />
-                        <input type="text" value={profile?.phone || ''} disabled placeholder="Phone" />
                         <input type="text" value={profile?.role || ''} disabled placeholder="Role" />
                         <input
                             type="text"
@@ -227,7 +266,7 @@ function Profile() {
                                     onChange={(e) => handleChange('skills', e.target.value)}
                                 />
                                 <textarea
-                                    placeholder="Portfolio highlights or past projects"
+                                    placeholder="Portfolio highlights, project types, or before/after notes"
                                     value={form.portfolio}
                                     onChange={(e) => handleChange('portfolio', e.target.value)}
                                 />
@@ -252,13 +291,23 @@ function Profile() {
                         <div className="section-header">
                             <div>
                                 <h2>Availability</h2>
-                                <p className="section-subtitle">Share the days and times you are available for new jobs.</p>
+                                <p className="section-subtitle">Share the days and times customers can expect you to work.</p>
                             </div>
                         </div>
 
+                        {availability.length > 0 && (
+                            <div className="job-meta" style={{ marginBottom: '14px' }}>
+                                {availability.map((slot, index) => (
+                                    <span key={`${slot.day}-${index}`} className="job-meta-chip">
+                                        {slot.day}: {slot.start_time} - {slot.end_time}
+                                    </span>
+                                ))}
+                            </div>
+                        )}
+
                         <div className="page-form">
                             {availability.map((slot, index) => (
-                                <div key={`${slot.day}-${index}`} className="compact-form">
+                                <div key={`${slot.day}-${index}`} className="compact-form compact-form-availability">
                                     <select
                                         value={slot.day}
                                         onChange={(e) => updateAvailabilitySlot(index, 'day', e.target.value)}

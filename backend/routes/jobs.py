@@ -691,15 +691,50 @@ def get_my_disputes(
     disputes = db.query(Dispute).filter(
         (Dispute.reporter_id == current_user.id) | (Dispute.target_user_id == current_user.id)
     ).order_by(Dispute.id.desc()).all()
-    return disputes
+    jobs = {
+        job.id: job
+        for job in db.query(Job).filter(Job.id.in_([dispute.job_id for dispute in disputes] or [0])).all()
+    }
+    users = {
+        user.id: user
+        for user in db.query(User).filter(
+            User.id.in_(
+                (
+                    [dispute.reporter_id for dispute in disputes] +
+                    [dispute.target_user_id for dispute in disputes if dispute.target_user_id]
+                ) or [0]
+            )
+        ).all()
+    }
+    return [
+        {
+            "id": dispute.id,
+            "job_id": dispute.job_id,
+            "job_title": jobs.get(dispute.job_id).title if jobs.get(dispute.job_id) else "Unknown",
+            "reporter_id": dispute.reporter_id,
+            "reporter_name": users.get(dispute.reporter_id).name if users.get(dispute.reporter_id) else "Unknown",
+            "target_user_id": dispute.target_user_id,
+            "target_name": users.get(dispute.target_user_id).name if users.get(dispute.target_user_id) else "",
+            "reason": dispute.reason,
+            "details": dispute.details,
+            "status": dispute.status,
+            "resolution_note": dispute.resolution_note,
+        }
+        for dispute in disputes
+    ]
 
 
 @router.get("/admin/disputes")
 def get_admin_disputes(
+    status: str | None = Query(default=None),
+    search: str | None = Query(default=None),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin")),
 ):
-    disputes = db.query(Dispute).order_by(Dispute.id.desc()).all()
+    disputes_query = db.query(Dispute)
+    if status:
+        disputes_query = disputes_query.filter(Dispute.status == status.strip().upper())
+    disputes = disputes_query.order_by(Dispute.id.desc()).all()
     dispute_user_ids = (
         [dispute.reporter_id for dispute in disputes] +
         [dispute.target_user_id for dispute in disputes if dispute.target_user_id]
@@ -713,7 +748,7 @@ def get_admin_disputes(
         for user in db.query(User).filter(User.id.in_(dispute_user_ids or [0])).all()
     }
 
-    return [
+    result = [
         {
             "id": dispute.id,
             "job_id": dispute.job_id,
@@ -727,6 +762,21 @@ def get_admin_disputes(
         }
         for dispute in disputes
     ]
+    if search:
+        search_term = search.strip().lower()
+        result = [
+            dispute for dispute in result
+            if search_term in " ".join(
+                [
+                    dispute["job_title"],
+                    dispute["reporter_name"],
+                    dispute["target_name"],
+                    dispute["reason"],
+                    dispute["details"],
+                ]
+            ).lower()
+        ]
+    return result
 
 
 @router.put("/admin/disputes/{dispute_id}")

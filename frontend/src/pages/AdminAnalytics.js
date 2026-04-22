@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Navbar from '../components/Navbar';
 import { apiClient } from '../api';
 
@@ -8,25 +8,42 @@ function AdminAnalytics() {
     const [disputes, setDisputes] = useState([]);
     const [resolutionNotes, setResolutionNotes] = useState({});
     const [message, setMessage] = useState('');
+    const [userSearch, setUserSearch] = useState('');
+    const [userRole, setUserRole] = useState('');
+    const [userStatus, setUserStatus] = useState('');
+    const [disputeSearch, setDisputeSearch] = useState('');
+    const [disputeStatus, setDisputeStatus] = useState('');
 
-    const fetchAnalytics = async () => {
+    const fetchAnalytics = useCallback(async () => {
         try {
             const [summaryResponse, usersResponse, disputesResponse] = await Promise.all([
                 apiClient.get('/jobs/admin/summary'),
-                apiClient.get('/admin/users'),
-                apiClient.get('/jobs/admin/disputes'),
+                apiClient.get('/admin/users', {
+                    params: {
+                        search: userSearch || undefined,
+                        role: userRole || undefined,
+                        status: userStatus || undefined,
+                    },
+                }),
+                apiClient.get('/jobs/admin/disputes', {
+                    params: {
+                        search: disputeSearch || undefined,
+                        status: disputeStatus || undefined,
+                    },
+                }),
             ]);
             setData(summaryResponse.data);
             setUsers(usersResponse.data);
             setDisputes(disputesResponse.data);
+            setMessage('');
         } catch (error) {
             setMessage(error.response?.data?.detail || 'Failed to load admin analytics.');
         }
-    };
+    }, [disputeSearch, disputeStatus, userRole, userSearch, userStatus]);
 
     useEffect(() => {
         fetchAnalytics();
-    }, []);
+    }, [fetchAnalytics]);
 
     const updateUser = async (userId, payload) => {
         try {
@@ -53,6 +70,7 @@ function AdminAnalytics() {
 
     const maxStatusValue = Math.max(...(data?.status_breakdown?.map((item) => item.value) || [1]));
     const maxRevenueValue = Math.max(...(data?.revenue_breakdown?.map((item) => item.value) || [1]));
+    const openDisputeCount = useMemo(() => disputes.filter((dispute) => dispute.status !== 'RESOLVED').length, [disputes]);
 
     return (
         <div className="app-shell">
@@ -62,27 +80,23 @@ function AdminAnalytics() {
                 <div className="page-hero">
                     <section className="hero-panel">
                         <span className="hero-label">Admin analytics</span>
-                        <h1>Watch platform health, worker performance, and job flow trends.</h1>
+                        <h1>Watch platform health, user operations, moderation, and marketplace flow in one workspace.</h1>
                         <p>
-                            This page gives admins a quick view of marketplace activity without
-                            needing to inspect the database directly.
+                            This page now combines marketplace metrics with stronger user management and dispute controls so you can operate the app faster.
                         </p>
                     </section>
 
                     <aside className="hero-side-panel">
                         <h3>Admin view</h3>
-                        <p>
-                            See user totals, payment flow, job status counts, top workers, and
-                            the most recent jobs from one panel.
-                        </p>
+                        <p>See job health, payment flow, search across users, and resolve disputes without leaving the admin panel.</p>
                         <div className="hero-metrics">
                             <div className="hero-metric">
                                 <strong>{data?.summary?.total_users || 0} users tracked</strong>
                                 <span>Customers, workers, and admins stay visible in one operating layer.</span>
                             </div>
                             <div className="hero-metric">
-                                <strong>{disputes.length} active disputes</strong>
-                                <span>Moderation and resolution live beside platform metrics instead of in a separate tool.</span>
+                                <strong>{openDisputeCount} open disputes</strong>
+                                <span>Moderation, filters, and resolution notes live right beside platform metrics.</span>
                             </div>
                         </div>
                     </aside>
@@ -119,11 +133,27 @@ function AdminAnalytics() {
                             <div className="section-header">
                                 <div>
                                     <h2>Disputes & Moderation</h2>
-                                    <p className="section-subtitle">Review reported issues and mark the outcome.</p>
+                                    <p className="section-subtitle">Review reported issues, filter them, and mark the outcome.</p>
                                 </div>
                             </div>
+                            <div className="filter-toolbar">
+                                <input
+                                    className="filter-toolbar-wide"
+                                    type="text"
+                                    placeholder="Search disputes by job, reporter, target, or reason"
+                                    value={disputeSearch}
+                                    onChange={(e) => setDisputeSearch(e.target.value)}
+                                />
+                                <select value={disputeStatus} onChange={(e) => setDisputeStatus(e.target.value)}>
+                                    <option value="">All dispute statuses</option>
+                                    <option value="OPEN">Open</option>
+                                    <option value="UNDER_REVIEW">Under review</option>
+                                    <option value="RESOLVED">Resolved</option>
+                                    <option value="REJECTED">Rejected</option>
+                                </select>
+                            </div>
                             {disputes.length === 0 ? (
-                                <div className="empty-state">No disputes reported yet.</div>
+                                <div className="empty-state">No disputes match those filters.</div>
                             ) : (
                                 <div className="card-grid">
                                     {disputes.map((dispute) => (
@@ -133,16 +163,18 @@ function AdminAnalytics() {
                                                     <h3>{dispute.job_title}</h3>
                                                     <p>{dispute.reason}</p>
                                                 </div>
-                                                <span className={`status-badge ${dispute.status === 'RESOLVED' ? 'status-completed' : 'status-open'}`}>
+                                                <span className={`status-badge ${dispute.status === 'RESOLVED' ? 'status-completed' : dispute.status === 'REJECTED' ? 'status-cancelled' : 'status-open'}`}>
                                                     {dispute.status}
                                                 </span>
                                             </div>
-                                            <p>Reporter: {dispute.reporter_name}</p>
-                                            {dispute.target_name && <p>Against: {dispute.target_name}</p>}
+                                            <div className="job-meta">
+                                                <span className="job-meta-chip">Reporter: {dispute.reporter_name}</span>
+                                                {dispute.target_name && <span className="job-meta-chip">Against: {dispute.target_name}</span>}
+                                            </div>
                                             {dispute.details && <p>{dispute.details}</p>}
                                             <textarea
                                                 placeholder="Resolution note"
-                                                value={resolutionNotes[dispute.id] || dispute.resolution_note || ''}
+                                                value={resolutionNotes[dispute.id] ?? dispute.resolution_note ?? ''}
                                                 onChange={(e) => setResolutionNotes({ ...resolutionNotes, [dispute.id]: e.target.value })}
                                             />
                                             <div className="button-row">
@@ -277,8 +309,28 @@ function AdminAnalytics() {
                             <div className="section-header">
                                 <div>
                                     <h2>User Management</h2>
-                                    <p className="section-subtitle">Promote roles or disable accounts without touching the database.</p>
+                                    <p className="section-subtitle">Search by name or email, filter by role or account status, and manage access safely.</p>
                                 </div>
+                            </div>
+                            <div className="filter-toolbar">
+                                <input
+                                    className="filter-toolbar-wide"
+                                    type="text"
+                                    placeholder="Search users by name, email, or phone"
+                                    value={userSearch}
+                                    onChange={(e) => setUserSearch(e.target.value)}
+                                />
+                                <select value={userRole} onChange={(e) => setUserRole(e.target.value)}>
+                                    <option value="">All roles</option>
+                                    <option value="customer">Customer</option>
+                                    <option value="worker">Worker</option>
+                                    <option value="admin">Admin</option>
+                                </select>
+                                <select value={userStatus} onChange={(e) => setUserStatus(e.target.value)}>
+                                    <option value="">All statuses</option>
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                </select>
                             </div>
                             <div className="table-wrap">
                                 <table className="data-table">
@@ -288,6 +340,8 @@ function AdminAnalytics() {
                                             <th>Email</th>
                                             <th>Role</th>
                                             <th>Status</th>
+                                            <th>City</th>
+                                            <th>Stats</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
@@ -298,6 +352,12 @@ function AdminAnalytics() {
                                                 <td>{user.email}</td>
                                                 <td>{user.role}</td>
                                                 <td>{user.is_active ? 'Active' : 'Inactive'}</td>
+                                                <td>{user.city || user.service_area || '—'}</td>
+                                                <td>
+                                                    {user.role === 'worker'
+                                                        ? `${user.completed_jobs} completed jobs`
+                                                        : `${user.reported_disputes} disputes reported`}
+                                                </td>
                                                 <td>
                                                     <div className="button-row">
                                                         <button
