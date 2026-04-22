@@ -113,6 +113,7 @@ function Workers() {
                                             <img
                                                 src={resolveAssetUrl(worker.avatar_url)}
                                                 alt={worker.name}
+                                                data-fallback-label={worker.name}
                                                 className="job-photo"
                                                 onError={handleAssetImageError}
                                             />

@@ -310,6 +310,7 @@ function Dashboard() {
                                             <img
                                                 src={resolveAssetUrl(job.image_url)}
                                                 alt={job.title}
+                                                data-fallback-label={job.title}
                                                 className="job-photo"
                                                 onError={handleAssetImageError}
                                             />
@@ -378,6 +379,7 @@ function Dashboard() {
                                         <img
                                             src={resolveAssetUrl(job.image_url)}
                                             alt={job.title}
+                                            data-fallback-label={job.title}
                                             className="job-photo"
                                             onError={handleAssetImageError}
                                         />
