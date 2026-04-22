@@ -6,10 +6,18 @@ function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [message, setMessage] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const navigate = useNavigate();
 
-    const handleLogin = async () => {
+    const handleLogin = async (event) => {
+        event?.preventDefault();
+        if (isSubmitting) {
+            return;
+        }
+
         try {
+            setIsSubmitting(true);
+            setMessage('');
             const normalizedEmail = email.trim().toLowerCase();
             const normalizedPassword = password.trim();
             const response = await apiClient.post('/login', {
@@ -25,14 +33,13 @@ function Login() {
             if (!localStorage.getItem('onboarding_complete')) {
                 localStorage.setItem('onboarding_complete', 'false');
             }
-            setMessage('Login successful! Redirecting...');
-            setTimeout(() => {
-                navigate(localStorage.getItem('onboarding_complete') === 'true'
-                    ? (role === 'customer' ? '/customer-dashboard' : role === 'admin' ? '/admin' : '/dashboard')
-                    : '/welcome');
-            }, 1000);
+            navigate(localStorage.getItem('onboarding_complete') === 'true'
+                ? (role === 'customer' ? '/customer-dashboard' : role === 'admin' ? '/admin' : '/dashboard')
+                : '/welcome');
         } catch (error) {
             setMessage(error.response?.data?.detail || 'Login failed. Please try again.');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -74,7 +81,7 @@ function Login() {
                 <div className="auth-card">
                     <h2>Sign In</h2>
                     <p className="auth-subtitle">Use your email and password to open your workspace.</p>
-                    <div className="auth-form">
+                    <form className="auth-form" onSubmit={handleLogin}>
                         <input
                             type="email"
                             placeholder="Email"
@@ -103,13 +110,13 @@ function Login() {
                             </label>
                             <Link to="/reset-password" className="auth-inline-link">Forgot password?</Link>
                         </div>
-                        <button className="auth-button" onClick={handleLogin}>
-                            Sign In
+                        <button className="auth-button" type="submit" disabled={isSubmitting}>
+                            {isSubmitting ? 'Signing In...' : 'Sign In'}
                         </button>
                         <button type="button" className="auth-outline-button">
                             Google sign-in coming soon
                         </button>
-                    </div>
+                    </form>
                     <p className="auth-message">{message}</p>
                     <p className="auth-switch">Need an account? <Link to="/register">Create one</Link></p>
                 </div>
