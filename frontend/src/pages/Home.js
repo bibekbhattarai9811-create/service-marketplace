@@ -1,34 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
+import HomeFeaturedWorkers from '../components/HomeFeaturedWorkers';
+import HomeFooter from '../components/HomeFooter';
+import HomeHero from '../components/HomeHero';
+import HomeHowItWorks from '../components/HomeHowItWorks';
+import HomeServiceCategories from '../components/HomeServiceCategories';
 import { apiClient } from '../api';
-
-const SERVICE_OPTIONS = ['Plumbing', 'Electrical', 'Cleaning', 'Carpentry', 'Moving', 'Handyman'];
-
-const POPULAR_SERVICES = [
-    { title: 'Plumbing', icon: 'PL', description: 'Leak repairs, pipe fixes, and bathroom upgrades.' },
-    { title: 'Electrical', icon: 'EL', description: 'Lighting, wiring, outlets, and appliance setup.' },
-    { title: 'Cleaning', icon: 'CL', description: 'Deep cleaning, move-out cleaning, and weekly care.' },
-    { title: 'Carpentry', icon: 'CA', description: 'Furniture repairs, trim work, and custom builds.' },
-];
-
-const HOW_IT_WORKS = [
-    {
-        step: '01',
-        title: 'Post a Job',
-        description: 'Share the task, budget, and location so workers know exactly what you need.',
-    },
-    {
-        step: '02',
-        title: 'Get Matched',
-        description: 'Compare local workers, ratings, and availability without leaving the platform.',
-    },
-    {
-        step: '03',
-        title: 'Get it Done',
-        description: 'Chat, track progress, pay securely, and leave a review when the job is complete.',
-    },
-];
 
 const MOCK_WORKERS = [
     {
@@ -68,11 +45,6 @@ function serviceLabelForWorker(worker) {
         if (firstSkill) return firstSkill;
     }
     return worker.service_area || 'General Services';
-}
-
-function buildStarString(ratingValue) {
-    const rating = Math.max(0, Math.min(5, Math.round(Number(ratingValue) || 0)));
-    return `${'★'.repeat(rating)}${'☆'.repeat(5 - rating)}`;
 }
 
 function Home() {
@@ -155,189 +127,24 @@ function Home() {
         [jobs]
     );
 
-    const heroSearchSubmit = () => {
-        setFilters((current) => ({
-            ...current,
-            search: heroSearch.search,
-            category: heroSearch.category,
-        }));
-    };
-
     return (
         <div className="app-shell">
             <Navbar />
 
             <div className="page-wrap homepage-wrap">
-                <section className="landing-hero">
-                    <div className="landing-hero-copy">
-                        <span className="landing-kicker">Local services made simple</span>
-                        <h1>Find Skilled Workers Near You</h1>
-                        <p>
-                            Hire trusted local workers for urgent repairs, routine jobs, and custom projects.
-                            Search by service, compare worker quality, and move from request to completion faster.
-                        </p>
+                <HomeHero
+                    role={role}
+                    jobsCount={jobs.length}
+                    featuredWorkerCount={featuredWorkers.length}
+                    completedJobCount={completedJobCount}
+                    heroSearch={heroSearch}
+                    setHeroSearch={setHeroSearch}
+                    setFilters={setFilters}
+                />
 
-                        <div className="landing-search-card">
-                            <div className="landing-search-grid">
-                                <input
-                                    type="text"
-                                    placeholder="What do you need help with?"
-                                    value={heroSearch.search}
-                                    onChange={(e) => setHeroSearch((current) => ({ ...current, search: e.target.value }))}
-                                />
-                                <select
-                                    value={heroSearch.category}
-                                    onChange={(e) => setHeroSearch((current) => ({ ...current, category: e.target.value }))}
-                                >
-                                    <option value="">All categories</option>
-                                    {SERVICE_OPTIONS.map((service) => (
-                                        <option key={service} value={service}>
-                                            {service}
-                                        </option>
-                                    ))}
-                                </select>
-                                <button type="button" className="landing-search-button" onClick={heroSearchSubmit}>
-                                    Search
-                                </button>
-                            </div>
-                            <div className="landing-search-tags">
-                                {SERVICE_OPTIONS.slice(0, 4).map((service) => (
-                                    <button
-                                        key={service}
-                                        type="button"
-                                        className="landing-tag"
-                                        onClick={() => {
-                                            setHeroSearch((current) => ({ ...current, category: service }));
-                                            setFilters((current) => ({ ...current, category: service }));
-                                        }}
-                                    >
-                                        {service}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        <div className="button-row">
-                            {role === 'customer' ? (
-                                <>
-                                    <Link to="/post-job" className="primary-button">Post a Job</Link>
-                                    <Link to="/customer-dashboard" className="ghost-button">Open Dashboard</Link>
-                                </>
-                            ) : role === 'admin' ? (
-                                <>
-                                    <Link to="/admin" className="primary-button">Open Admin</Link>
-                                    <Link to="/workers" className="ghost-button">View Workers</Link>
-                                </>
-                            ) : (
-                                <>
-                                    <Link to="/dashboard" className="primary-button">Open Worker Dashboard</Link>
-                                    <Link to="/workers" className="ghost-button">Browse Workers</Link>
-                                </>
-                            )}
-                        </div>
-                    </div>
-
-                    <aside className="landing-hero-panel">
-                        <div className="landing-hero-stat">
-                            <span>Open jobs</span>
-                            <strong>{jobs.length}</strong>
-                            <small>Fresh requests across the marketplace</small>
-                        </div>
-                        <div className="landing-hero-stat">
-                            <span>Featured workers</span>
-                            <strong>{featuredWorkers.length}</strong>
-                            <small>Curated professionals ready to book</small>
-                        </div>
-                        <div className="landing-hero-stat">
-                            <span>Completed jobs tracked</span>
-                            <strong>{completedJobCount}</strong>
-                            <small>Jobs already moved through the platform</small>
-                        </div>
-                    </aside>
-                </section>
-
-                <section className="landing-section">
-                    <div className="landing-section-head">
-                        <div>
-                            <span className="landing-section-kicker">How it works</span>
-                            <h2>Move from request to finished job without the guesswork</h2>
-                        </div>
-                    </div>
-                    <div className="how-grid">
-                        {HOW_IT_WORKS.map((item) => (
-                            <article key={item.step} className="how-card">
-                                <div className="how-step">{item.step}</div>
-                                <h3>{item.title}</h3>
-                                <p>{item.description}</p>
-                            </article>
-                        ))}
-                    </div>
-                </section>
-
-                <section className="landing-section">
-                    <div className="landing-section-head">
-                        <div>
-                            <span className="landing-section-kicker">Popular services</span>
-                            <h2>Book common home and business services in a few clicks</h2>
-                        </div>
-                    </div>
-                    <div className="services-grid">
-                        {POPULAR_SERVICES.map((service) => (
-                            <article
-                                key={service.title}
-                                className="service-card"
-                                onClick={() => setFilters((current) => ({ ...current, category: service.title }))}
-                            >
-                                <div className="service-icon">{service.icon}</div>
-                                <h3>{service.title}</h3>
-                                <p>{service.description}</p>
-                                <span className="service-link">Explore service</span>
-                            </article>
-                        ))}
-                    </div>
-                </section>
-
-                <section className="landing-section landing-section-featured">
-                    <div className="landing-section-head">
-                        <div>
-                            <span className="landing-section-kicker">Featured workers</span>
-                            <h2>Trusted professionals customers can book right now</h2>
-                        </div>
-                        <Link to="/workers" className="ghost-button">View all workers</Link>
-                    </div>
-
-                    {workerMessage && <div className="message-banner success">{workerMessage}</div>}
-
-                    <div className="featured-workers-grid">
-                        {featuredWorkers.map((worker) => (
-                            <article key={worker.id} className="featured-worker-card">
-                                {worker.avatar_url ? (
-                                    <img
-                                        src={worker.avatar_url.startsWith('http') ? worker.avatar_url : `${apiClient.defaults.baseURL}${worker.avatar_url}`}
-                                        alt={worker.name}
-                                        className="featured-worker-avatar-image"
-                                    />
-                                ) : (
-                                    <div className="featured-worker-avatar">
-                                        {worker.name.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase()}
-                                    </div>
-                                )}
-                                <div className="featured-worker-content">
-                                    <h3>{worker.name}</h3>
-                                    <p className="featured-worker-category">{worker.category}</p>
-                                    <div className="featured-worker-rating">
-                                        <span className="featured-worker-stars">{buildStarString(worker.rating)}</span>
-                                        <span>{worker.rating.toFixed(1)} / 5</span>
-                                    </div>
-                                    <p className="featured-worker-area">{worker.service_area}</p>
-                                    <Link to={`/workers/${worker.id}`} className="secondary-button">
-                                        Book Now
-                                    </Link>
-                                </div>
-                            </article>
-                        ))}
-                    </div>
-                </section>
+                <HomeHowItWorks />
+                <HomeServiceCategories setFilters={setFilters} />
+                <HomeFeaturedWorkers featuredWorkers={featuredWorkers} workerMessage={workerMessage} />
 
                 {message && <div className="message-banner error">{message}</div>}
 
@@ -469,25 +276,7 @@ function Home() {
                     </div>
                 </section>
 
-                <footer className="site-footer">
-                    <div className="site-footer-brand">
-                        <span className="site-footer-logo">SM</span>
-                        <div>
-                            <strong>Service Marketplace</strong>
-                            <p>Hire skilled local workers with a cleaner, faster booking flow.</p>
-                        </div>
-                    </div>
-                    <div className="site-footer-links">
-                        <Link to="/home">About</Link>
-                        <Link to="/notifications">Contact</Link>
-                        <Link to="/profile">Terms</Link>
-                    </div>
-                    <div className="site-footer-social">
-                        <a href="https://facebook.com" target="_blank" rel="noreferrer" aria-label="Facebook">FB</a>
-                        <a href="https://instagram.com" target="_blank" rel="noreferrer" aria-label="Instagram">IG</a>
-                        <a href="https://linkedin.com" target="_blank" rel="noreferrer" aria-label="LinkedIn">LI</a>
-                    </div>
-                </footer>
+                <HomeFooter />
             </div>
         </div>
     );
