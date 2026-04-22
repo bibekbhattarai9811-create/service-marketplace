@@ -34,6 +34,7 @@ class CreateJobRequest(BaseModel):
     category: str = ""
     service_date: str = ""
     service_window: str = ""
+    target_worker_id: int | None = None
 
 
 class PaymentRequest(BaseModel):
@@ -185,38 +186,56 @@ async def create_job(
         category=payload.category.strip(),
         service_date=payload.service_date.strip(),
         service_window=payload.service_window.strip(),
+        worker_id=payload.target_worker_id,
+        status="OFFERED" if payload.target_worker_id else "OPEN",
     )
 
     db.add(new_job)
     db.commit()
     db.refresh(new_job)
 
-    workers = db.query(User).filter(User.role == "worker", User.is_active == True).all()  # noqa: E712
-    profiles = {p.user_id: p for p in db.query(UserProfile).filter(UserProfile.user_id.in_([w.id for w in workers] or [0])).all()}
-    
-    matched_worker_ids = set()
-
-    for worker in workers:
-        profile = profiles.get(worker.id)
-        if not profile:
-            continue
+    if payload.target_worker_id:
+        target_worker = db.query(User).filter(User.id == payload.target_worker_id).first()
+        if target_worker:
+            stored_notification = create_notification(
+                db,
+                user_id=target_worker.id,
+                title="Exclusive Private Job Offer!",
+                message=f"{current_user.name} offered you a private job: {new_job.title} for ${new_job.price}.",
+                notification_type="private_offer",
+                action_url="/dashboard",
+            )
+            worker_ids_to_notify = [target_worker.id]
+        else:
+            worker_ids_to_notify = []
+    else:
+        workers = db.query(User).filter(User.role == "worker", User.is_active == True).all()  # noqa: E712
+        profiles = {p.user_id: p for p in db.query(UserProfile).filter(UserProfile.user_id.in_([w.id for w in workers] or [0])).all()}
+        worker_ids_to_notify = []
+        for worker in workers:
+            profile = profiles.get(worker.id)
+            if not profile:
+                continue
+            worker_skills = (profile.skills or "").lower()
+            job_category = new_job.category.lower()
+            if job_category and job_category not in worker_skills:
+                continue
+            worker_ids_to_notify.append(worker.id)
             
-        worker_skills = (profile.skills or "").lower()
-        job_category = new_job.category.lower()
-        if job_category and job_category not in worker_skills:
-            continue
-            
-        # Save ID to broadcast websocket later
-        matched_worker_ids.add(worker.id)
+    matched_worker_ids = set(worker_ids_to_notify)
 
-        stored_notification = create_notification(
-            db,
-            user_id=worker.id,
-            title="New job matched your skills!",
-            message=f"{new_job.title} is open in {new_job.location} for ${new_job.price}.",
-            notification_type="new_job",
-            action_url="/home",
-        )
+    # Dispatch notifications targeting matched or directly offered workers
+    for w_id in matched_worker_ids:
+        worker = db.query(User).filter(User.id == w_id).first()
+        if not payload.target_worker_id:
+            stored_notification = create_notification(
+                db,
+                user_id=worker.id,
+                title="New job matched your skills!",
+                message=f"{new_job.title} is open in {new_job.location} for ${new_job.price}.",
+                notification_type="new_job",
+                action_url="/home",
+            )
         await push_notification(
             worker.id,
             {
@@ -230,9 +249,9 @@ async def create_job(
         )
         notify_user_channels(
             worker,
-            subject="New Job Matched Your Profile!",
-            body=f"{new_job.title} is now available in {new_job.location} for ${new_job.price}.",
-            sms_message=f"New Matched Job: {new_job.title} in {new_job.location}",
+            subject="Private Offer!" if payload.target_worker_id else "New Job Matched Your Profile!",
+            body=f"{new_job.title} is available for ${new_job.price}.",
+            sms_message=f"Private Offer: {new_job.title}" if payload.target_worker_id else f"Matched Job: {new_job.title}",
         )
 
     notification = {
@@ -272,7 +291,10 @@ async def accept_job(
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
 
-    if job.status != "OPEN" or job.worker_id is not None:
+    if job.status == "OFFERED":
+        if job.worker_id != current_user.id:
+            raise HTTPException(status_code=400, detail="This is a private job offer for a different worker")
+    elif job.status != "OPEN" or job.worker_id is not None:
         raise HTTPException(status_code=400, detail="Job is no longer available")
 
     job.worker_id = current_user.id
@@ -678,18 +700,17 @@ def get_admin_disputes(
     current_user: User = Depends(require_role("admin")),
 ):
     disputes = db.query(Dispute).order_by(Dispute.id.desc()).all()
+    dispute_user_ids = (
+        [dispute.reporter_id for dispute in disputes] +
+        [dispute.target_user_id for dispute in disputes if dispute.target_user_id]
+    )
     jobs = {
         job.id: job
         for job in db.query(Job).filter(Job.id.in_([dispute.job_id for dispute in disputes] or [0])).all()
     }
     users = {
         user.id: user
-        for user in db.query(User).filter(
-            User.id.in_(
-                [dispute.reporter_id for dispute in disputes] +
-                [dispute.target_user_id for dispute in disputes if dispute.target_user_id]
-            ) if disputes else [0]
-        ).all()
+        for user in db.query(User).filter(User.id.in_(dispute_user_ids or [0])).all()
     }
 
     return [
