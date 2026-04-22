@@ -619,7 +619,7 @@
 
 .page-wrap {
   margin-left: 280px;
-  padding: 126px 24px 52px;
+  padding: 172px 24px 52px;
   width: auto;
 }
 
@@ -1558,6 +1558,10 @@
 @media (max-width: 1180px) {
   .app-header-search {
     min-width: 220px;
+  }
+
+  .page-wrap {
+    padding-top: 156px;
   }
 }
 
