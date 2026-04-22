@@ -4,7 +4,7 @@ import re
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from pydantic import BaseModel
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import func
+from sqlalchemy import func, inspect, text
 from sqlalchemy.orm import Session
 from auth import get_current_user, require_role
 from database import SessionLocal
@@ -91,6 +91,17 @@ def validate_password_strength(password: str):
             status_code=400,
             detail="Password must be at least 8 characters and include uppercase, lowercase, and a number",
         )
+
+
+def get_table_columns(db: Session, table_name: str) -> set[str]:
+    try:
+        return {column["name"] for column in inspect(db.bind).get_columns(table_name)}
+    except Exception:
+        return set()
+
+
+def scalar_count(db: Session, sql: str, params: dict | None = None) -> int:
+    return int(db.execute(text(sql), params or {}).scalar() or 0)
 
 
 # Register user
@@ -314,37 +325,63 @@ def list_public_workers(
     sort_by: str | None = Query(default="top_rated"),
     db: Session = Depends(get_db),
 ):
-    workers = db.query(User).filter(User.role == "worker", User.is_active == True).all()  # noqa: E712
-    worker_ids = [worker.id for worker in workers] or [0]
-    profiles = {
-        profile.user_id: profile
-        for profile in db.query(UserProfile).filter(UserProfile.user_id.in_(worker_ids)).all()
-    }
+    user_columns = get_table_columns(db, "users")
+    profile_columns = get_table_columns(db, "user_profiles")
+    has_availability_table = bool(get_table_columns(db, "availability"))
+
+    worker_select = ["id", "name", "role"]
+    if "id_verified" in user_columns:
+        worker_select.append("id_verified")
+    if "is_active" in user_columns:
+        worker_select.append("is_active")
+
+    worker_sql = f"SELECT {', '.join(worker_select)} FROM users WHERE role = :role"
+    if "is_active" in user_columns:
+        worker_sql += " AND COALESCE(is_active, TRUE) = TRUE"
+
+    workers = db.execute(text(worker_sql), {"role": "worker"}).mappings().all()
+    worker_ids = [worker["id"] for worker in workers] or [0]
+
+    profiles = {}
+    if profile_columns:
+        profile_select = ["user_id"]
+        for optional_column in ["city", "service_area", "skills", "portfolio", "hourly_rate", "avatar_url"]:
+            if optional_column in profile_columns:
+                profile_select.append(optional_column)
+        profile_rows = db.execute(
+            text(f"SELECT {', '.join(profile_select)} FROM user_profiles"),
+        ).mappings().all()
+        profiles = {profile["user_id"]: profile for profile in profile_rows}
 
     result = []
     for worker in workers:
-        profile = profiles.get(worker.id)
-        average_rating = db.query(func.avg(Rating.rating)).filter(Rating.worker_id == worker.id).scalar() or 0
-        review_count = db.query(func.count(Rating.id)).filter(Rating.worker_id == worker.id).scalar() or 0
+        worker_id = worker["id"]
+        profile = profiles.get(worker_id, {})
+        average_rating = db.query(func.avg(Rating.rating)).filter(Rating.worker_id == worker_id).scalar() or 0
+        review_count = db.query(func.count(Rating.id)).filter(Rating.worker_id == worker_id).scalar() or 0
         completed_jobs = db.query(func.count(Job.id)).filter(
-            Job.worker_id == worker.id,
+            Job.worker_id == worker_id,
             Job.status == "COMPLETED",
         ).scalar() or 0
-        availability_count = db.query(func.count(Availability.id)).filter(
-            Availability.worker_id == worker.id
-        ).scalar() or 0
+        availability_count = 0
+        if has_availability_table:
+            availability_count = scalar_count(
+                db,
+                "SELECT COUNT(id) FROM availability WHERE worker_id = :worker_id",
+                {"worker_id": worker_id},
+            )
         result.append({
-            "id": worker.id,
-            "name": worker.name,
-            "city": profile.city if profile else "",
-            "service_area": profile.service_area if profile else "",
-            "skills": profile.skills if profile else "",
-            "portfolio": profile.portfolio if profile else "",
-            "hourly_rate": profile.hourly_rate if profile else None,
-            "avatar_url": profile.avatar_url if profile else "",
+            "id": worker_id,
+            "name": worker.get("name", ""),
+            "city": profile.get("city", ""),
+            "service_area": profile.get("service_area", ""),
+            "skills": profile.get("skills", ""),
+            "portfolio": profile.get("portfolio", ""),
+            "hourly_rate": profile.get("hourly_rate"),
+            "avatar_url": profile.get("avatar_url", ""),
             "average_rating": round(average_rating, 2),
             "review_count": review_count,
-            "id_verified": worker.id_verified,
+            "id_verified": bool(worker.get("id_verified", False)),
             "completed_jobs": completed_jobs,
             "availability_count": availability_count,
         })
@@ -395,46 +432,72 @@ def list_public_workers(
 
 @router.get("/workers/{worker_id}")
 def get_public_worker_profile(worker_id: int, db: Session = Depends(get_db)):
-    worker = db.query(User).filter(
-        User.id == worker_id,
-        User.role == "worker",
-        User.is_active == True,  # noqa: E712
-    ).first()
+    user_columns = get_table_columns(db, "users")
+    profile_columns = get_table_columns(db, "user_profiles")
+    has_availability_table = bool(get_table_columns(db, "availability"))
+
+    worker_select = ["id", "name", "role"]
+    if "id_verified" in user_columns:
+        worker_select.append("id_verified")
+    if "is_active" in user_columns:
+        worker_select.append("is_active")
+
+    worker_sql = f"SELECT {', '.join(worker_select)} FROM users WHERE id = :worker_id AND role = :role"
+    if "is_active" in user_columns:
+        worker_sql += " AND COALESCE(is_active, TRUE) = TRUE"
+
+    worker = db.execute(
+        text(worker_sql),
+        {"worker_id": worker_id, "role": "worker"},
+    ).mappings().first()
     if not worker:
         raise HTTPException(status_code=404, detail="Worker not found")
 
-    profile = db.query(UserProfile).filter(UserProfile.user_id == worker.id).first()
-    reviews = db.query(Rating).filter(Rating.worker_id == worker.id).order_by(Rating.id.desc()).limit(5).all()
-    availability = db.query(Availability).filter(Availability.worker_id == worker.id).order_by(
-        Availability.day.asc(), Availability.start_time.asc()
-    ).all()
-    average_rating = db.query(func.avg(Rating.rating)).filter(Rating.worker_id == worker.id).scalar() or 0
-    review_count = db.query(func.count(Rating.id)).filter(Rating.worker_id == worker.id).scalar() or 0
+    profile = {}
+    if profile_columns:
+        profile_select = ["user_id"]
+        for optional_column in ["city", "service_area", "skills", "portfolio", "hourly_rate", "bio", "avatar_url"]:
+            if optional_column in profile_columns:
+                profile_select.append(optional_column)
+        profile_row = db.execute(
+            text(f"SELECT {', '.join(profile_select)} FROM user_profiles WHERE user_id = :worker_id"),
+            {"worker_id": worker_id},
+        ).mappings().first()
+        if profile_row:
+            profile = dict(profile_row)
+    reviews = db.query(Rating).filter(Rating.worker_id == worker_id).order_by(Rating.id.desc()).limit(5).all()
+    availability = []
+    if has_availability_table:
+        availability = db.query(Availability).filter(Availability.worker_id == worker_id).order_by(
+            Availability.day.asc(), Availability.start_time.asc()
+        ).all()
+    average_rating = db.query(func.avg(Rating.rating)).filter(Rating.worker_id == worker_id).scalar() or 0
+    review_count = db.query(func.count(Rating.id)).filter(Rating.worker_id == worker_id).scalar() or 0
     completed_jobs = db.query(func.count(Job.id)).filter(
-        Job.worker_id == worker.id,
+        Job.worker_id == worker_id,
         Job.status == "COMPLETED",
     ).scalar() or 0
     active_jobs = db.query(func.count(Job.id)).filter(
-        Job.worker_id == worker.id,
+        Job.worker_id == worker_id,
         Job.status.in_(["ACCEPTED", "IN_PROGRESS"]),
     ).scalar() or 0
     total_earnings = db.query(func.sum(Payment.worker_amount)).filter(
-        Payment.worker_id == worker.id
+        Payment.worker_id == worker_id
     ).scalar() or 0
 
     return {
-        "id": worker.id,
-        "name": worker.name,
-        "city": profile.city if profile else "",
-        "service_area": profile.service_area if profile else "",
-        "skills": profile.skills if profile else "",
-        "portfolio": profile.portfolio if profile else "",
-        "hourly_rate": profile.hourly_rate if profile else None,
-        "bio": profile.bio if profile else "",
-        "avatar_url": profile.avatar_url if profile else "",
+        "id": worker_id,
+        "name": worker.get("name", ""),
+        "city": profile.get("city", ""),
+        "service_area": profile.get("service_area", ""),
+        "skills": profile.get("skills", ""),
+        "portfolio": profile.get("portfolio", ""),
+        "hourly_rate": profile.get("hourly_rate"),
+        "bio": profile.get("bio", ""),
+        "avatar_url": profile.get("avatar_url", ""),
         "average_rating": round(average_rating, 2),
         "review_count": review_count,
-        "id_verified": worker.id_verified,
+        "id_verified": bool(worker.get("id_verified", False)),
         "completed_jobs": completed_jobs,
         "active_jobs": active_jobs,
         "total_earnings": total_earnings,
