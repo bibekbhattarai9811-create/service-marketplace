@@ -68,103 +68,42 @@ if AUTO_CREATE_TABLES:
 @app.on_event("startup")
 def run_migrations():
     from sqlalchemy import text
+
+    def ensure_column(db, table_name: str, column_sql: str):
+        try:
+            db.execute(text(f"ALTER TABLE {table_name} ADD COLUMN {column_sql}"))
+            db.commit()
+        except Exception:
+            db.rollback()
+
     db = SessionLocal()
     try:
-        db.execute(text('ALTER TABLE users ADD COLUMN stripe_account_id VARCHAR DEFAULT \'\''))
-        db.commit()
-    except Exception:
-        db.rollback()
+        ensure_column(db, "users", "stripe_account_id VARCHAR DEFAULT ''")
+        ensure_column(db, "users", "id_verified BOOLEAN DEFAULT FALSE")
+        ensure_column(db, "users", "is_active BOOLEAN DEFAULT TRUE")
 
-    try:
-        db.execute(text('ALTER TABLE users ADD COLUMN id_verified BOOLEAN DEFAULT FALSE'))
-        db.commit()
-    except Exception:
-        db.rollback()
+        ensure_column(db, "user_profiles", "avatar_url VARCHAR DEFAULT ''")
+        ensure_column(db, "user_profiles", "service_area VARCHAR DEFAULT ''")
+        ensure_column(db, "user_profiles", "portfolio VARCHAR DEFAULT ''")
 
-    try:
-        db.execute(text('ALTER TABLE jobs ADD COLUMN category VARCHAR DEFAULT \'\''))
-        db.commit()
-    except Exception:
-        db.rollback()
+        ensure_column(db, "jobs", "image_url VARCHAR DEFAULT ''")
+        ensure_column(db, "jobs", "category VARCHAR DEFAULT ''")
+        ensure_column(db, "jobs", "service_date VARCHAR DEFAULT ''")
+        ensure_column(db, "jobs", "service_window VARCHAR DEFAULT ''")
 
-    try:
-        db.execute(text('ALTER TABLE jobs ADD COLUMN service_date VARCHAR DEFAULT \'\''))
-        db.commit()
-    except Exception:
-        db.rollback()
+        ensure_column(db, "notifications", "user_id INTEGER DEFAULT 0")
+        ensure_column(db, "notifications", "message VARCHAR DEFAULT ''")
+        ensure_column(db, "notifications", "location VARCHAR DEFAULT ''")
+        ensure_column(db, "notifications", "action_url VARCHAR DEFAULT ''")
+        ensure_column(db, "notifications", "notification_type VARCHAR DEFAULT 'general'")
+        ensure_column(db, "notifications", "title VARCHAR DEFAULT ''")
 
-    try:
-        db.execute(text('ALTER TABLE jobs ADD COLUMN service_window VARCHAR DEFAULT \'\''))
-        db.commit()
-    except Exception:
-        db.rollback()
+        ensure_column(db, "chat_messages", "image_url VARCHAR DEFAULT ''")
 
-    try:
-        db.execute(text('ALTER TABLE notifications ADD COLUMN message VARCHAR DEFAULT \'\''))
-        db.commit()
-    except Exception:
-        db.rollback()
-
-    try:
-        db.execute(text('ALTER TABLE notifications ADD COLUMN location VARCHAR DEFAULT \'\''))
-        db.commit()
-    except Exception:
-        db.rollback()
-
-    try:
-        db.execute(text('ALTER TABLE notifications ADD COLUMN action_url VARCHAR DEFAULT \'\''))
-        db.commit()
-    except Exception:
-        db.rollback()
-        
-    try:
-        db.execute(text('ALTER TABLE notifications ADD COLUMN notification_type VARCHAR DEFAULT \'general\''))
-        db.commit()
-    except Exception:
-        db.rollback()
-        
-    try:
-        db.execute(text('ALTER TABLE notifications ADD COLUMN title VARCHAR DEFAULT \'\''))
-        db.commit()
-    except Exception:
-        db.rollback()
-
-    try:
-        db.execute(text('ALTER TABLE notifications ADD COLUMN location VARCHAR DEFAULT \'\''))
-        db.commit()
-    except Exception:
-        db.rollback()
-
-    try:
-        db.execute(text('ALTER TABLE chat_messages ADD COLUMN image_url VARCHAR DEFAULT \'\''))
-        db.commit()
-    except Exception:
-        db.rollback()
-
-    try:
-        db.execute(text('ALTER TABLE payments ADD COLUMN worker_id INTEGER DEFAULT 0'))
-        db.commit()
-    except Exception:
-        db.rollback()
-
-    try:
-        db.execute(text('ALTER TABLE payments ADD COLUMN platform_fee INTEGER DEFAULT 0'))
-        db.commit()
-    except Exception:
-        db.rollback()
-
-    try:
-        db.execute(text('ALTER TABLE payments ADD COLUMN worker_amount INTEGER DEFAULT 0'))
-        db.commit()
-    except Exception:
-        db.rollback()
-
-    try:
-        db.execute(text('ALTER TABLE payments ADD COLUMN stripe_payment_intent_id VARCHAR DEFAULT \'\''))
-        db.commit()
-    except Exception:
-        db.rollback()
-    
+        ensure_column(db, "payments", "worker_id INTEGER DEFAULT 0")
+        ensure_column(db, "payments", "platform_fee INTEGER DEFAULT 0")
+        ensure_column(db, "payments", "worker_amount INTEGER DEFAULT 0")
+        ensure_column(db, "payments", "stripe_payment_intent_id VARCHAR DEFAULT ''")
     finally:
         db.close()
 
