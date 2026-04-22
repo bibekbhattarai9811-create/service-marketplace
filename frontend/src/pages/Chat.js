@@ -25,6 +25,8 @@ function Chat() {
     const localVideoRef = useRef(null);
     const remoteVideoRef = useRef(null);
     const activeCallUserIdRef = useRef(null);
+    const callStateRef = useRef('idle');
+    const socketReadyRef = useRef(false);
 
     const jobId = Number(new URLSearchParams(window.location.search).get('job_id') || 0);
     const receiverId = Number(new URLSearchParams(window.location.search).get('receiver_id') || 0);
@@ -174,12 +176,25 @@ function Chat() {
     }, [fetchMessages]);
 
     useEffect(() => {
+        callStateRef.current = callState;
+    }, [callState]);
+
+    useEffect(() => {
         if (!token) {
             return undefined;
         }
 
         const socket = new WebSocket(`${WS_API}?token=${encodeURIComponent(token)}`);
         socketRef.current = socket;
+        socketReadyRef.current = false;
+
+        socket.onopen = () => {
+            socketReadyRef.current = true;
+        };
+
+        socket.onclose = () => {
+            socketReadyRef.current = false;
+        };
 
         socket.onmessage = async (event) => {
             try {
@@ -201,7 +216,7 @@ function Chat() {
                 }
 
                 if (payload.type === 'video_call_invite') {
-                    if (callState !== 'idle') {
+                    if (callStateRef.current !== 'idle') {
                         sendSocketPayload({
                             type: 'video_call_reject',
                             job_id: jobId,
@@ -292,9 +307,10 @@ function Chat() {
         return () => {
             socket.close();
             socketRef.current = null;
+            socketReadyRef.current = false;
             cleanupCall();
         };
-    }, [callState, cleanupCall, ensurePeerConnection, fetchMessages, jobId, sendSocketPayload, token]);
+    }, [cleanupCall, ensurePeerConnection, fetchMessages, jobId, sendSocketPayload, token]);
 
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -361,15 +377,21 @@ function Chat() {
 
     const startVideoCall = async () => {
         try {
+            if (!socketReadyRef.current) {
+                throw new Error('Live call connection is still starting. Please wait a second and try again.');
+            }
             await ensureLocalStream();
             activeCallUserIdRef.current = receiverId;
             setCallState('calling');
             setMessage('Calling other user...');
-            sendSocketPayload({
+            const sent = sendSocketPayload({
                 type: 'video_call_invite',
                 job_id: jobId,
                 target_user_id: receiverId,
             });
+            if (!sent) {
+                throw new Error('Could not send the call invite. Please try again.');
+            }
         } catch (error) {
             cleanupCall();
             setMessage(error.message || 'Failed to start video call.');
@@ -381,16 +403,22 @@ function Chat() {
             return;
         }
         try {
+            if (!socketReadyRef.current) {
+                throw new Error('Live call connection is still starting. Please wait a second and try again.');
+            }
             await ensureLocalStream();
             activeCallUserIdRef.current = incomingCall.senderId;
             setIncomingCall(null);
             setCallState('connecting');
             setMessage('Connecting video...');
-            sendSocketPayload({
+            const sent = sendSocketPayload({
                 type: 'video_call_accept',
                 job_id: jobId,
                 target_user_id: incomingCall.senderId,
             });
+            if (!sent) {
+                throw new Error('Could not accept the call. Please try again.');
+            }
         } catch (error) {
             cleanupCall();
             setMessage(error.message || 'Failed to access camera and microphone.');
