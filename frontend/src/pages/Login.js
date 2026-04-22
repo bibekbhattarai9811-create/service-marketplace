@@ -11,7 +11,7 @@ function Login() {
     const handleLogin = async () => {
         try {
             const response = await apiClient.post('/login', {
-                email,
+                email: email.trim().toLowerCase(),
                 password,
             });
             const userId = response.data.user_id;
@@ -78,12 +78,21 @@ function Login() {
                             placeholder="Email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
+                            autoCapitalize="none"
+                            autoCorrect="off"
+                            autoComplete="email"
+                            inputMode="email"
+                            spellCheck={false}
                         />
                         <input
                             type="password"
                             placeholder="Password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
+                            autoCapitalize="none"
+                            autoCorrect="off"
+                            autoComplete="current-password"
+                            spellCheck={false}
                         />
                         <div className="auth-row">
                             <label className="auth-check">

@@ -1,8 +1,26 @@
 import axios from 'axios';
 
-const defaultApi = 'http://127.0.0.1:8000';
+const LOCAL_API = 'http://127.0.0.1:8000';
+const PRODUCTION_API = 'https://service-marketplace-16.onrender.com';
 
-export const API = process.env.REACT_APP_API_URL || defaultApi;
+function resolveApiBase() {
+  if (process.env.REACT_APP_API_URL) {
+    return process.env.REACT_APP_API_URL;
+  }
+
+  if (typeof window === 'undefined') {
+    return LOCAL_API;
+  }
+
+  const hostname = window.location.hostname;
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return LOCAL_API;
+  }
+
+  return PRODUCTION_API;
+}
+
+export const API = resolveApiBase();
 export const WS_API = process.env.REACT_APP_WS_URL || API.replace(/^http/i, 'ws') + '/ws';
 
 export const apiClient = axios.create({
