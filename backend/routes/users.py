@@ -182,7 +182,9 @@ def request_password_reset(payload: PasswordResetRequest, db: Session = Depends(
     reset_link = os.getenv(
         "SERVICE_MARKETPLACE_PASSWORD_RESET_URL",
         "http://127.0.0.1:3000/reset-password",
-    ).rstrip("/")
+    )
+    # Render env values can accidentally include line breaks when pasted in manually.
+    reset_link = re.sub(r"\s+", "", reset_link).rstrip("/")
     reset_url = f"{reset_link}?token={token}"
     body = (
         f"Hello {user.name},\n\n"
