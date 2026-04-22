@@ -32,6 +32,7 @@ function Navbar() {
     const location = useLocation();
     const [isOpen, setIsOpen] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
+    const [isScrolled, setIsScrolled] = useState(false);
 
     const navLinks = useMemo(() => {
         const links = [
@@ -56,6 +57,19 @@ function Navbar() {
     useEffect(() => {
         setIsOpen(false);
     }, [location.pathname]);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            setIsScrolled(window.scrollY > 24);
+        };
+
+        handleScroll();
+        window.addEventListener("scroll", handleScroll, { passive: true });
+
+        return () => {
+            window.removeEventListener("scroll", handleScroll);
+        };
+    }, []);
 
     useEffect(() => {
         let isMounted = true;
@@ -162,7 +176,7 @@ function Navbar() {
                 </div>
             </aside>
 
-            <header className="app-header-bar">
+            <header className={`app-header-bar ${isScrolled ? "is-condensed" : ""}`.trim()}>
                 <div className="app-header-copy">
                     <span className="app-header-kicker">Workspace</span>
                     <strong>{meta.title}</strong>

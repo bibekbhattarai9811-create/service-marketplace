@@ -474,6 +474,7 @@
   border: 1px solid rgba(255, 255, 255, 0.88);
   box-shadow: 0 18px 44px rgba(15, 23, 42, 0.06);
   backdrop-filter: blur(20px);
+  transition: padding 180ms ease, gap 180ms ease, box-shadow 180ms ease, transform 180ms ease;
 }
 
 .app-header-copy {
@@ -502,6 +503,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  transition: gap 180ms ease;
 }
 
 .app-header-search {
@@ -514,6 +516,15 @@
   background: #ffffff;
   border: 1px solid rgba(17, 24, 39, 0.06);
   color: #64748b;
+  overflow: hidden;
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease,
+    max-width 180ms ease,
+    min-width 180ms ease,
+    padding 180ms ease,
+    margin 180ms ease,
+    border-width 180ms ease;
 }
 
 .app-header-search-icon,
@@ -581,6 +592,7 @@
   border-radius: 999px;
   background: #ffffff;
   border: 1px solid rgba(17, 24, 39, 0.06);
+  transition: padding 180ms ease, gap 180ms ease;
 }
 
 .app-user-avatar {
@@ -597,6 +609,7 @@
 .app-user-copy {
   display: grid;
   gap: 2px;
+  transition: opacity 180ms ease, max-width 180ms ease;
 }
 
 .app-user-copy strong {
@@ -621,6 +634,47 @@
   margin-left: 280px;
   padding: 172px 24px 52px;
   width: auto;
+}
+
+.app-header-bar.is-condensed {
+  padding: 12px 18px;
+  gap: 12px;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+}
+
+.app-header-bar.is-condensed .app-header-copy {
+  gap: 0;
+}
+
+.app-header-bar.is-condensed .app-header-kicker,
+.app-header-bar.is-condensed .app-header-copy small,
+.app-header-bar.is-condensed .app-user-copy small {
+  display: none;
+}
+
+.app-header-bar.is-condensed .app-header-copy strong {
+  font-size: 1.15rem;
+  line-height: 1.1;
+}
+
+.app-header-bar.is-condensed .app-header-search {
+  opacity: 0;
+  transform: scaleX(0.92);
+  min-width: 0;
+  max-width: 0;
+  padding: 0;
+  margin: 0;
+  border-width: 0;
+  pointer-events: none;
+}
+
+.app-header-bar.is-condensed .app-header-tools {
+  gap: 8px;
+}
+
+.app-header-bar.is-condensed .app-user-pill {
+  gap: 8px;
+  padding: 6px 10px 6px 6px;
 }
 
 .homepage-wrap {
