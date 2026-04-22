@@ -60,19 +60,19 @@ function Workers() {
                 <div className="page-hero">
                     <section className="hero-panel">
                         <span className="hero-label">Worker directory</span>
-                        <h1>Compare trust, pricing, availability, and experience before you book.</h1>
+                        <h1>Compare workers by skill, rating, price, and location.</h1>
                         <p>
-                            Search by skill or city, sort by rating or completed work, and open stronger public profiles before sending a private offer.
+                            Find the right fit fast, then open the full profile before booking or sending a private request.
                         </p>
                     </section>
 
                     <aside className="hero-side-panel">
-                        <h3>Hiring shortcuts</h3>
-                        <p>Use search, city, rating, and sort controls to narrow the list before opening a full worker profile.</p>
+                        <h3>Directory overview</h3>
+                        <p>Use search, city, rating, and sort controls to narrow the list quickly.</p>
                         <div className="hero-metrics">
                             <div className="hero-metric">
                                 <strong>{workers.length} workers shown</strong>
-                                <span>Profiles now include review counts, completed jobs, service area, and availability signals.</span>
+                                <span>Profiles include reviews, completed jobs, and service area details.</span>
                             </div>
                         </div>
                     </aside>
@@ -84,18 +84,18 @@ function Workers() {
                     <div className="section-header">
                         <div>
                             <h2>Available Workers</h2>
-                            <p className="section-subtitle">Search by expertise, city, trust signals, and work history.</p>
+                            <p className="section-subtitle">Browse by expertise, city, and trust signals.</p>
                         </div>
                     </div>
 
                     <div className="filter-toolbar">
-                        <input
-                            className="filter-toolbar-wide"
-                            type="text"
-                            placeholder="Search workers by name, skill, service area, or portfolio"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                        />
+                            <input
+                                className="filter-toolbar-wide"
+                                type="text"
+                                placeholder="Search by name, skill, or service area"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                            />
                         <input
                             type="text"
                             placeholder="City or area"

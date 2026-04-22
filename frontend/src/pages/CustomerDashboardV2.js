@@ -147,27 +147,25 @@ function CustomerDashboardV2() {
                 <div className="page-hero">
                     <section className="hero-panel">
                         <span className="hero-label">Customer dashboard</span>
-                        <h1>Track jobs, payments, and ratings without losing the thread.</h1>
+                        <h1>Track jobs, pay securely, and leave feedback from one place.</h1>
                         <p>
-                            Keep active jobs, completed work, payment steps, and worker feedback
-                            organized in one clear view.
+                            Follow each request from posting to payment without digging through extra screens.
                         </p>
                     </section>
 
                     <aside className="hero-side-panel">
-                        <h3>Quick actions</h3>
+                        <h3>Overview</h3>
                         <p>
-                            Post new work, jump into chat, complete payments, and leave ratings
-                            once a job is done.
+                            Post new work, jump into chat, and finish payments when a job is complete.
                         </p>
                         <div className="hero-metrics">
                             <div className="hero-metric">
                                 <strong>{myJobs.length} jobs tracked</strong>
-                                <span>Open requests, active jobs, and completed work all stay together.</span>
+                                <span>Open, active, and completed jobs in one view.</span>
                             </div>
                             <div className="hero-metric">
                                 <strong>${totalPaid} total paid</strong>
-                                <span>Payment progress and ratings stay visible right beside each job.</span>
+                                <span>Payments and ratings stay tied to each job.</span>
                             </div>
                         </div>
                         <Link to="/post-job" className="primary-button">Post a New Job</Link>
@@ -199,7 +197,7 @@ function CustomerDashboardV2() {
                     <div className="section-header">
                         <div>
                             <h2>My Posted Jobs</h2>
-                            <p className="section-subtitle">Manage each job from posting to payment and rating.</p>
+                            <p className="section-subtitle">Manage every job from request to rating.</p>
                         </div>
                     </div>
 
@@ -236,10 +234,10 @@ function CustomerDashboardV2() {
                                         {job.worker_id && <span className="job-meta-chip">Worker ID: {job.worker_id}</span>}
                                     </div>
 
-                                    <div className="button-row">
-                                        <a className="ghost-button" href={mapLink(job.location)} target="_blank" rel="noreferrer">
-                                            View Map
-                                        </a>
+                                        <div className="button-row">
+                                            <a className="ghost-button" href={mapLink(job.location)} target="_blank" rel="noreferrer">
+                                                View Map
+                                            </a>
                                         {job.worker_id && (
                                             <Link to={chatLink(job)} className="secondary-button">Chat with Worker</Link>
                                         )}
@@ -252,12 +250,10 @@ function CustomerDashboardV2() {
                                     </div>
 
                                     {job.status === 'COMPLETED' && !job.paid && (
-                                        <div className="summary-card">
+                                        <div className="summary-card summary-card-soft">
                                             <h3>Pay Worker</h3>
                                             <p className="muted-text">Total: ${job.price}</p>
-                                            <p className="muted-text">
-                                                The worker receives ${Number(job.price * 0.9).toFixed(2)} and the platform fee is ${Number(job.price * 0.1).toFixed(2)}.
-                                            </p>
+                                            <p className="muted-text">Worker gets ${Number(job.price * 0.9).toFixed(2)}. Platform fee: ${Number(job.price * 0.1).toFixed(2)}.</p>
                                             <div className="button-row">
                                                 <button className="primary-button" onClick={() => handlePayClick(job)}>
                                                     Pay Now
@@ -273,11 +269,11 @@ function CustomerDashboardV2() {
                                     )}
 
                                     {job.status === 'COMPLETED' && job.paid && !job.rating && (
-                                        <div className="section-card" style={{ padding: '18px', marginBottom: 0 }}>
+                                        <div className="section-card section-card-inline">
                                             <div className="section-header">
                                                 <div>
-                                                    <h3>Rate this Worker</h3>
-                                                    <p className="section-subtitle">Leave a rating and short review for the completed job.</p>
+                                                    <h3>Leave a Rating</h3>
+                                                    <p className="section-subtitle">Rate the completed job and add a short review.</p>
                                                 </div>
                                             </div>
                                             <div className="page-form">
@@ -308,11 +304,11 @@ function CustomerDashboardV2() {
                                     )}
 
                                     {(job.status === 'ACCEPTED' || job.status === 'COMPLETED') && (
-                                        <div className="section-card" style={{ padding: '18px', marginBottom: 0 }}>
+                                        <div className="section-card section-card-inline">
                                             <div className="section-header">
                                                 <div>
-                                                    <h3>Report an issue</h3>
-                                                    <p className="section-subtitle">Use this if there is a dispute with the job or the worker.</p>
+                                                    <h3>Report an Issue</h3>
+                                                    <p className="section-subtitle">Open a dispute for this job if something went wrong.</p>
                                                 </div>
                                             </div>
                                             <div className="page-form">
@@ -335,11 +331,11 @@ function CustomerDashboardV2() {
                                     )}
 
                                     {disputesByJob[job.id]?.length > 0 && (
-                                        <div className="section-card" style={{ padding: '18px', marginBottom: 0 }}>
+                                        <div className="section-card section-card-inline">
                                             <div className="section-header">
                                                 <div>
                                                     <h3>Issue status</h3>
-                                                    <p className="section-subtitle">Track dispute progress for this job.</p>
+                                                    <p className="section-subtitle">Dispute progress for this job.</p>
                                                 </div>
                                             </div>
                                             <div className="stack-list">
@@ -363,7 +359,7 @@ function CustomerDashboardV2() {
                     <div className="section-header">
                         <div>
                             <h2>Payment History</h2>
-                            <p className="section-subtitle">See what you paid, what workers received, and platform fees.</p>
+                            <p className="section-subtitle">Paid totals, worker payouts, and platform fees.</p>
                         </div>
                     </div>
 

@@ -116,12 +116,12 @@
   z-index: 1;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
+  gap: 14px;
 }
 
 .auth-feature-card {
-  padding: 18px;
-  border-radius: 22px;
+  padding: 16px;
+  border-radius: 20px;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(14px);
@@ -129,16 +129,16 @@
 
 .auth-feature-card strong {
   display: block;
-  margin-bottom: 8px;
-  font-size: 0.98rem;
+  margin-bottom: 6px;
+  font-size: 0.94rem;
   color: #fff;
 }
 
 .auth-feature-card span {
   display: block;
   color: rgba(255, 255, 255, 0.72);
-  line-height: 1.55;
-  font-size: 0.93rem;
+  line-height: 1.45;
+  font-size: 0.88rem;
 }
 
 .auth-panel {
@@ -212,6 +212,13 @@
 .auth-button:hover {
   transform: translateY(-2px);
   box-shadow: 0 24px 48px rgba(17, 24, 39, 0.24);
+}
+
+.auth-button:disabled {
+  opacity: 0.72;
+  cursor: wait;
+  transform: none;
+  box-shadow: 0 12px 24px rgba(17, 24, 39, 0.12);
 }
 
 .auth-outline-button {
@@ -739,6 +746,15 @@
   margin-bottom: 20px;
 }
 
+.section-card-inline {
+  padding: 18px;
+  margin-bottom: 0;
+  border-radius: 20px;
+  background: rgba(248, 250, 252, 0.82);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  box-shadow: none;
+}
+
 .section-card-accent {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(247, 249, 252, 0.84)),
@@ -784,6 +800,12 @@
 .stat-card,
 .summary-card {
   padding: 18px;
+}
+
+.summary-card-soft {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 20px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
 }
 
 .stat-card span,
@@ -1255,6 +1277,14 @@
   display: grid;
   grid-template-columns: auto 1fr auto;
   gap: 12px;
+}
+
+.chat-card .message-banner {
+  margin-bottom: 16px;
+}
+
+.chat-card .section-header {
+  margin-bottom: 14px;
 }
 
 .job-progress {

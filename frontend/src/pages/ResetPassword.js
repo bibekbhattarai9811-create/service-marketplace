@@ -57,9 +57,9 @@ function ResetPassword() {
                     </div>
                     <div className="auth-copy">
                         <p className="auth-kicker">Account recovery</p>
-                        <h1>Recover access without losing your work.</h1>
+                        <h1>Reset your password and get back in quickly.</h1>
                         <p>
-                            Request a reset link or finish your password reset from one page.
+                            Request a reset link or finish your new password from one screen.
                         </p>
                     </div>
                 </div>
@@ -69,7 +69,7 @@ function ResetPassword() {
                 <div className="auth-card">
                     <h2>{token ? 'Set a new password' : 'Reset password'}</h2>
                     <p className="auth-subtitle">
-                        {token ? 'Choose a new password for your account.' : 'Enter your email and we will generate a reset link.'}
+                        {token ? 'Choose a new password for your account.' : 'Enter your email to generate a reset link.'}
                     </p>
                     <div className="auth-form">
                         {token ? (

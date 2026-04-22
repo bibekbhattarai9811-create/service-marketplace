@@ -48,26 +48,25 @@ function Register() {
                     </div>
                     <div className="auth-copy">
                         <p className="auth-kicker">Create your account</p>
-                        <h1>Join the marketplace with a setup that feels clear and fast.</h1>
+                        <h1>Create your account and get started fast.</h1>
                         <p>
-                            Sign up as a customer to post jobs or as a worker to accept jobs,
-                            build trust, and manage everything from one place.
+                            Join as a customer to post work or as a worker to accept jobs and manage everything in one place.
                         </p>
                     </div>
                 </div>
 
                 <div className="auth-feature-grid">
                     <div className="auth-feature-card">
-                        <strong>Customer tools</strong>
-                        <span>Post jobs, review progress, pay securely, and leave ratings.</span>
+                        <strong>Post and track</strong>
+                        <span>Create jobs, review progress, and pay securely.</span>
                     </div>
                     <div className="auth-feature-card">
-                        <strong>Worker tools</strong>
-                        <span>Browse available jobs, accept work, and track your earnings.</span>
+                        <strong>Accept and earn</strong>
+                        <span>Browse jobs, accept work, and track payouts.</span>
                     </div>
                     <div className="auth-feature-card">
-                        <strong>Built-in chat</strong>
-                        <span>Keep customers and workers aligned without leaving the app.</span>
+                        <strong>Stay in sync</strong>
+                        <span>Use built-in chat to keep every job aligned.</span>
                     </div>
                 </div>
             </section>

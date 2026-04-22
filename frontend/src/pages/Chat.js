@@ -3,7 +3,12 @@ import { Link } from 'react-router-dom';
 import { apiClient, resolveAssetUrl, WS_API } from '../api';
 
 const RTC_CONFIGURATION = {
-    iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
+    iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
+        { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
+        { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' }
+    ],
 };
 
 function Chat() {
@@ -468,8 +473,8 @@ function Chat() {
                     <div className="chat-header">
                         <div>
                             <span className="hero-label">Conversation</span>
-                            <h2>Job Chat</h2>
-                            <p className="section-subtitle">Job ID: {jobId}</p>
+                            <h2>Messages</h2>
+                            <p className="section-subtitle">Job #{jobId}</p>
                         </div>
                         <div className="button-row">
                             <button
@@ -492,7 +497,7 @@ function Chat() {
                         <div className="chat-call-banner">
                             <div>
                                 <strong>Incoming video call</strong>
-                                <span>Accept to open your camera and microphone for this job chat.</span>
+                                <span>Accept to join the live call for this job.</span>
                             </div>
                             <div className="button-row">
                                 <button type="button" className="secondary-button" onClick={acceptVideoCall}>
@@ -511,10 +516,10 @@ function Chat() {
                                 <div>
                                     <h3>Video Call</h3>
                                     <p className="section-subtitle">
-                                        {callState === 'calling' && 'Waiting for the other user to accept.'}
-                                        {callState === 'connecting' && 'Setting up the secure peer-to-peer connection.'}
+                                        {callState === 'calling' && 'Waiting for the other user.'}
+                                        {callState === 'connecting' && 'Connecting the call.'}
                                         {callState === 'connected' && 'Video chat is live.'}
-                                        {callState === 'incoming' && 'An incoming call is waiting for your response.'}
+                                        {callState === 'incoming' && 'Respond to the incoming call.'}
                                     </p>
                                 </div>
                             </div>
@@ -524,7 +529,7 @@ function Chat() {
                                     {localStreamState ? (
                                         <video ref={localVideoRef} className="chat-video-feed" autoPlay muted playsInline />
                                     ) : (
-                                        <div className="chat-video-placeholder">Camera preview will appear here.</div>
+                                        <div className="chat-video-placeholder">Camera preview</div>
                                     )}
                                 </div>
                                 <div className="chat-video-card">
@@ -532,7 +537,7 @@ function Chat() {
                                     {remoteStreamState ? (
                                         <video ref={remoteVideoRef} className="chat-video-feed" autoPlay playsInline />
                                     ) : (
-                                        <div className="chat-video-placeholder">Waiting for the other user to join.</div>
+                                        <div className="chat-video-placeholder">Waiting for the other user</div>
                                     )}
                                 </div>
                             </div>
@@ -552,7 +557,7 @@ function Chat() {
 
                     <div className="chat-thread">
                         {messages.length === 0 ? (
-                            <div className="empty-state">No messages yet. Start the conversation.</div>
+                            <div className="empty-state">No messages yet.</div>
                         ) : (
                             messages.map((msg) => (
                                 <div
