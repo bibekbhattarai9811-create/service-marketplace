@@ -126,11 +126,11 @@ function Notifications() {
                 <Navbar />
 
                 <div className="page-wrap worker-mobile-shell">
-                    <section className="worker-mobile-header-card">
+                    <section className="worker-mobile-header-card worker-notif-header-card">
                         <div>
                             <span className="worker-mobile-kicker">Notifications</span>
-                            <h1>Stay on top of new work and updates.</h1>
-                            <p>Job requests, payouts, reviews, and system notices all show up here.</p>
+                            <h1>Notifications</h1>
+                            <p>{unreadCount} unread messages</p>
                         </div>
                         <button type="button" className="ghost-button" onClick={markAllRead}>
                             Mark all read
@@ -168,17 +168,18 @@ function Notifications() {
                                         {items.map((notification) => (
                                             <article key={notification.id} className={`worker-notification-card worker-notification-card-${notificationVisual(notification).tone}`.trim()}>
                                                 <div className="worker-notification-head">
-                                                    <div className={`worker-notification-icon worker-notification-icon-${notificationVisual(notification).tone}`.trim()}>
-                                                        {notificationVisual(notification).icon}
+                                                    <div className={`worker-notification-avatar worker-notification-icon-${notificationVisual(notification).tone}`.trim()}>
+                                                        {notification.notification_type === 'job'
+                                                            ? (notification.sender_name || notificationTitle(notification)).slice(0, 2).toUpperCase()
+                                                            : notificationVisual(notification).icon}
                                                     </div>
-                                                    <div className="worker-notification-title-row">
+                                                    <div className="worker-notification-title-row worker-notification-title-row-wide">
                                                         {!notification.is_read && <span className="worker-unread-dot" />}
                                                         <div className="worker-notification-copy">
-                                                            <span className="worker-notification-label">{notificationVisual(notification).label}</span>
                                                             <strong>{notificationTitle(notification)}</strong>
+                                                            <span className="worker-notification-time-inline">{notificationTimeLabel(notification.created_at)}</span>
                                                         </div>
                                                     </div>
-                                                    <span>{notificationTimeLabel(notification.created_at)}</span>
                                                 </div>
                                                 <p>{notification.message}</p>
                                                 <div className="worker-notification-actions">

@@ -43,6 +43,16 @@ function serviceTypeForJob(job) {
     return job.category || job.title || 'General Service';
 }
 
+function iconForJob(job) {
+    const label = `${job.category || ''} ${job.title || ''}`.toLowerCase();
+    if (label.includes('plumb') || label.includes('pipe') || label.includes('leak')) return '🔧';
+    if (label.includes('electric') || label.includes('fan') || label.includes('wire')) return '⚡';
+    if (label.includes('clean')) return '🧹';
+    if (label.includes('paint')) return '🎨';
+    if (label.includes('carp')) return '🪚';
+    return '🛠';
+}
+
 function clientNameForJob(job) {
     return job.customer_name || job.client_name || 'New client';
 }
@@ -188,7 +198,7 @@ function Home() {
                         <div>
                             <span className="worker-mobile-kicker">Worker home</span>
                             <h1>Good morning, {workerName}</h1>
-                            <p>Review nearby requests and respond quickly while you are available.</p>
+                            <p>{workerVisibleJobs.length} new jobs near you</p>
                         </div>
                         <button
                             type="button"
@@ -233,11 +243,12 @@ function Home() {
                     </section>
 
                     <section className="worker-tab-section">
-                        <div className="section-header">
+                        <div className="section-header worker-reference-section-header">
                             <div>
                                 <h2>Available jobs</h2>
                                 <p className="section-subtitle">Requests that match your current worker view.</p>
                             </div>
+                            <span className="worker-sort-link">Sort by</span>
                         </div>
 
                         {workerVisibleJobs.length === 0 ? (
@@ -247,24 +258,28 @@ function Home() {
                                 {workerVisibleJobs.map((job) => (
                                     <article key={job.id} className="worker-job-card">
                                         <div className="worker-job-card-top">
-                                            <div>
-                                                <span className="worker-service-type">{serviceTypeForJob(job)}</span>
-                                                <h3>{job.title}</h3>
+                                            <div className="worker-job-category">
+                                                <div className={`worker-job-icon ${urgencyForJob(job) === 'Urgent' ? 'urgent' : 'scheduled'}`.trim()}>
+                                                    {iconForJob(job)}
+                                                </div>
+                                                <div>
+                                                    <div className="worker-job-type">{serviceTypeForJob(job)}</div>
+                                                    <div className="worker-job-client-name">Client: {clientNameForJob(job)}</div>
+                                                </div>
                                             </div>
                                             <span className={`worker-urgency-badge ${urgencyForJob(job) === 'Urgent' ? 'urgent' : 'scheduled'}`.trim()}>
                                                 {urgencyForJob(job)}
                                             </span>
                                         </div>
                                         <div className="worker-job-client">
-                                            <strong>{clientNameForJob(job)}</strong>
                                             <span>{job.location || 'Local area'} | {distanceForJob(job)}</span>
+                                            <span>{job.service_date || 'Available today'}{job.service_window ? ` | ${job.service_window}` : ''}</span>
                                         </div>
                                         <div className="worker-job-price-row">
                                             <div>
                                                 <span className="worker-job-price-label">Offered price</span>
                                                 <strong>${job.price}</strong>
                                             </div>
-                                            {job.service_date && <span className="job-meta-chip">{job.service_date}</span>}
                                         </div>
                                         <div className="worker-job-actions">
                                             <button type="button" className="secondary-button" onClick={() => declineWorkerJob(job.id)}>

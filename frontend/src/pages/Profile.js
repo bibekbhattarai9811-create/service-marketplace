@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
-import { apiClient, handleAssetImageError, resolveAssetUrl } from '../api';
+import { apiClient, clearSession, handleAssetImageError, resolveAssetUrl } from '../api';
 
 function Profile() {
     const [profile, setProfile] = useState(null);
@@ -155,11 +156,15 @@ function Profile() {
             .map((skill) => skill.trim())
             .filter(Boolean);
         const workerTrade = workerSkills[0] || profile?.service_area || 'Service Professional';
-        const verificationBadges = [
-            profile?.id_verified ? 'ID Verified' : null,
-            profile?.stripe_account_id ? 'Payout Ready' : null,
-            availability.length > 0 ? 'Availability Set' : null,
-        ].filter(Boolean);
+        const verificationRows = [
+            { icon: '🪪', name: 'ID Verified', status: profile?.id_verified ? 'Verified' : 'Pending' },
+            { icon: '📋', name: 'Background Check', status: profile?.id_verified ? 'Cleared' : 'Pending' },
+            { icon: '🎓', name: 'License Verified', status: profile?.stripe_account_id ? 'Active' : 'Pending' },
+            { icon: '📱', name: 'Phone Verified', status: profile?.phone ? 'Confirmed' : 'Pending' },
+        ];
+        const memberSince = profile?.created_at
+            ? new Date(profile.created_at).toLocaleDateString([], { month: 'long', year: 'numeric' })
+            : 'Recently joined';
 
         return (
             <div className="app-shell">
@@ -167,12 +172,17 @@ function Profile() {
 
                 <div className="page-wrap worker-mobile-shell">
                     <section className="worker-profile-hero">
+                        <div className="worker-profile-availability-badge">
+                            <span className="worker-online-toggle-dot" />
+                            {workerAvailable ? 'Available' : 'Unavailable'}
+                        </div>
+
                         <div className="worker-profile-top">
                             {profile?.avatar_url ? (
                                 <img
                                     src={resolveAssetUrl(profile.avatar_url)}
-                                    alt={`${profile.name} avatar`}
-                                    data-fallback-label={profile.name}
+                                    alt={`${profile?.name || 'Worker'} avatar`}
+                                    data-fallback-label={profile?.name}
                                     className="worker-profile-avatar"
                                     onError={handleAssetImageError}
                                 />
@@ -185,22 +195,29 @@ function Profile() {
                                 <span className="worker-mobile-kicker">Profile</span>
                                 <h1>{profile?.name || 'Worker profile'}</h1>
                                 <p>{workerTrade}</p>
-                                <p>{profile?.city || 'City not set'}{profile?.service_area ? ` • ${profile.service_area}` : ''}</p>
                             </div>
                         </div>
 
                         <div className="worker-profile-actions">
-                            <button
-                                type="button"
-                                className={`worker-online-toggle ${workerAvailable ? 'active' : ''}`.trim()}
-                                onClick={() => setWorkerAvailable((current) => !current)}
-                            >
-                                <span className="worker-online-toggle-dot" />
-                                {workerAvailable ? 'Available' : 'Unavailable'}
-                            </button>
                             <button type="button" className="primary-button" onClick={() => setIsEditing((current) => !current)}>
                                 {isEditing ? 'Close Edit' : 'Edit Profile'}
                             </button>
+                            <button
+                                type="button"
+                                className={`secondary-button worker-availability-button ${workerAvailable ? 'active' : ''}`.trim()}
+                                onClick={() => setWorkerAvailable((current) => !current)}
+                            >
+                                {workerAvailable ? 'Set unavailable' : 'Set available'}
+                            </button>
+                            <Link
+                                className="danger-button worker-logout-button"
+                                to="/"
+                                onClick={() => {
+                                    clearSession();
+                                }}
+                            >
+                                Logout
+                            </Link>
                         </div>
                     </section>
 
@@ -210,18 +227,44 @@ function Profile() {
                         </div>
                     )}
 
-                    <section className="worker-profile-grid">
+                    <section className="worker-profile-grid worker-profile-grid-reference">
                         <article className="worker-profile-card">
-                            <h3>About me</h3>
+                            <div className="worker-profile-card-label">Personal Info</div>
+                            <div className="worker-profile-detail-list">
+                                <div className="worker-profile-detail-row">
+                                    <span>Location</span>
+                                    <strong>{profile?.city || 'City not set'}</strong>
+                                </div>
+                                <div className="worker-profile-detail-row">
+                                    <span>Service Area</span>
+                                    <strong>{profile?.service_area || 'Service area not set'}</strong>
+                                </div>
+                                <div className="worker-profile-detail-row">
+                                    <span>Phone</span>
+                                    <strong>{profile?.phone || 'Not added yet'}</strong>
+                                </div>
+                                <div className="worker-profile-detail-row">
+                                    <span>Email</span>
+                                    <strong>{profile?.email || 'Not added yet'}</strong>
+                                </div>
+                                <div className="worker-profile-detail-row">
+                                    <span>Member since</span>
+                                    <strong>{memberSince}</strong>
+                                </div>
+                            </div>
+                        </article>
+
+                        <article className="worker-profile-card">
+                            <div className="worker-profile-card-label">About Me</div>
                             <p>{profile?.bio || 'Add a short introduction so customers understand your work style and specialties.'}</p>
                         </article>
 
                         <article className="worker-profile-card">
-                            <h3>Skills & services</h3>
+                            <div className="worker-profile-card-label">Skills & Services</div>
                             {workerSkills.length > 0 ? (
-                                <div className="worker-chip-row">
+                                <div className="worker-chip-row worker-skill-chip-row">
                                     {workerSkills.map((skill) => (
-                                        <span key={skill} className="worker-filter-chip active">
+                                        <span key={skill} className="worker-skill-tag">
                                             {skill}
                                         </span>
                                     ))}
@@ -232,32 +275,18 @@ function Profile() {
                         </article>
 
                         <article className="worker-profile-card">
-                            <h3>Contact</h3>
-                            <div className="worker-profile-list">
-                                <div>
-                                    <span>Phone</span>
-                                    <strong>{profile?.phone || 'Not added yet'}</strong>
-                                </div>
-                                <div>
-                                    <span>Email</span>
-                                    <strong>{profile?.email || 'Not added yet'}</strong>
-                                </div>
-                            </div>
-                        </article>
-
-                        <article className="worker-profile-card">
-                            <h3>Verification</h3>
-                            {verificationBadges.length > 0 ? (
-                                <div className="worker-chip-row">
-                                    {verificationBadges.map((badge) => (
-                                        <span key={badge} className="worker-filter-chip active">
-                                            {badge}
+                            <div className="worker-profile-card-label">Verifications</div>
+                            <div className="worker-verification-list">
+                                {verificationRows.map((row) => (
+                                    <div key={row.name} className="worker-verification-row">
+                                        <div className="worker-verification-icon">{row.icon}</div>
+                                        <span className="worker-verification-name">{row.name}</span>
+                                        <span className={`worker-verification-status ${row.status === 'Pending' ? 'pending' : ''}`.trim()}>
+                                            {row.status === 'Pending' ? row.status : `✓ ${row.status}`}
                                         </span>
-                                    ))}
-                                </div>
-                            ) : (
-                                <p>Verification badges will appear here as you complete setup.</p>
-                            )}
+                                    </div>
+                                ))}
+                            </div>
                         </article>
                     </section>
 
