@@ -1581,7 +1581,12 @@
     padding: 18px;
   }
 
+  .auth-panel {
+    order: 1;
+  }
+
   .auth-showcase {
+    order: 2;
     min-height: 320px;
   }
 
