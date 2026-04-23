@@ -2767,13 +2767,19 @@
   }
 
   .app-topbar {
-    top: 14px;
-    left: 14px;
+    top: 12px;
+    left: 12px;
     bottom: auto;
-    width: calc(100% - 28px);
-    max-height: calc(100vh - 28px);
+    width: calc(100% - 24px);
+    max-height: calc(100vh - 24px);
     transform: translateY(-140%);
-    transition: transform 180ms ease;
+    border-radius: 34px;
+    background:
+      radial-gradient(circle at 16% 0%, rgba(99, 102, 241, 0.08), transparent 30%),
+      #fbfbfe;
+    border: 1px solid rgba(255, 255, 255, 0.96);
+    box-shadow: 0 30px 80px rgba(15, 23, 42, 0.18);
+    transition: transform 220ms ease, opacity 220ms ease;
   }
 
   .app-topbar.open {
@@ -2786,6 +2792,84 @@
 
   .app-nav-shell {
     overflow: auto;
+  }
+
+  .app-topbar.open .app-nav-shell {
+    padding-top: 8px;
+  }
+
+  .app-topbar.open .app-nav-group,
+  .app-topbar.open .app-sidebar-foot {
+    gap: 16px;
+  }
+
+  .app-topbar.open .app-nav-link {
+    position: relative;
+    min-height: 92px;
+    padding: 18px 20px 18px 18px;
+    border-radius: 28px;
+    background: rgba(255, 255, 255, 0.96);
+    color: #111827;
+    box-shadow: 0 20px 48px rgba(15, 23, 42, 0.07);
+  }
+
+  .app-topbar.open .app-nav-link::after {
+    content: ">";
+    margin-left: auto;
+    color: #a1a1aa;
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .app-topbar.open .app-nav-link.active,
+  .app-topbar.open .app-nav-link-primary.active {
+    background: linear-gradient(135deg, #111733 0%, #26196f 100%);
+    color: #ffffff;
+    box-shadow: 0 26px 58px rgba(35, 31, 99, 0.3);
+    transform: none;
+  }
+
+  .app-topbar.open .app-nav-link.active::after {
+    color: #ffffff;
+  }
+
+  .app-topbar.open .app-nav-icon {
+    width: 62px;
+    height: 62px;
+    border-radius: 22px;
+    background: #f4f3fb;
+    color: #4f46e5;
+    font-size: 1.35rem;
+    box-shadow: 0 16px 30px rgba(15, 23, 42, 0.06);
+  }
+
+  .app-topbar.open .app-nav-link.active .app-nav-icon {
+    background: rgba(99, 102, 241, 0.46);
+    color: #ffffff;
+    box-shadow: none;
+  }
+
+  .app-topbar.open .app-nav-text {
+    font-size: clamp(1.45rem, 5.6vw, 2.25rem);
+    font-weight: 900;
+    letter-spacing: 0.02em;
+  }
+
+  .app-topbar.open .nav-badge {
+    min-width: 42px;
+    height: 42px;
+    padding: 0 13px;
+    border-radius: 999px;
+    background: #ef4444;
+    color: #ffffff;
+    font-size: 1.15rem;
+    font-weight: 900;
+    box-shadow: 0 14px 28px rgba(239, 68, 68, 0.28);
+  }
+
+  .app-topbar.open .app-nav-logout {
+    color: #dc2626;
   }
 
   .app-header-bar {
