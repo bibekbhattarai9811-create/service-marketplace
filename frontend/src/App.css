@@ -505,6 +505,14 @@
   transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease;
 }
 
+.app-nav-icon svg,
+.mobile-quick-icon svg,
+.app-header-bell-label svg {
+  width: 1em;
+  height: 1em;
+  display: block;
+}
+
 .app-nav-link:hover .app-nav-icon,
 .app-nav-link.active .app-nav-icon {
   transform: scale(1.05);
@@ -2786,6 +2794,17 @@
     transform: translateY(0);
   }
 
+  .app-topbar.open {
+    inset: 0;
+    width: auto;
+    max-height: none;
+    min-height: 100vh;
+    padding: clamp(22px, 5vw, 42px);
+    border-radius: 0;
+    background: #fbfbff;
+    overflow-y: auto;
+  }
+
   .app-menu-toggle {
     display: inline-flex;
   }
@@ -2794,30 +2813,53 @@
     overflow: auto;
   }
 
+  .app-topbar.open .app-sidebar-head {
+    max-width: 760px;
+    margin: 0 auto 18px;
+    padding: 0;
+  }
+
+  .app-topbar.open .app-brand {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .app-topbar.open .app-menu-toggle {
+    width: 52px;
+    height: 52px;
+    border-radius: 18px;
+    background: #ffffff;
+    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
+  }
+
   .app-topbar.open .app-nav-shell {
-    padding-top: 8px;
+    width: min(100%, 760px);
+    margin: 0 auto;
+    padding: 0 0 34px;
+    overflow: visible;
   }
 
   .app-topbar.open .app-nav-group,
   .app-topbar.open .app-sidebar-foot {
-    gap: 16px;
+    gap: clamp(18px, 4vw, 28px);
   }
 
   .app-topbar.open .app-nav-link {
     position: relative;
-    min-height: 92px;
-    padding: 18px 20px 18px 18px;
-    border-radius: 28px;
+    min-height: clamp(106px, 18vw, 146px);
+    padding: clamp(18px, 4vw, 28px) clamp(22px, 5vw, 34px) clamp(18px, 4vw, 28px) clamp(18px, 4vw, 28px);
+    border-radius: clamp(28px, 6vw, 42px);
     background: rgba(255, 255, 255, 0.96);
     color: #111827;
-    box-shadow: 0 20px 48px rgba(15, 23, 42, 0.07);
+    box-shadow: 0 26px 70px rgba(15, 23, 42, 0.055);
+    border: 1px solid rgba(248, 250, 252, 0.95);
   }
 
   .app-topbar.open .app-nav-link::after {
-    content: ">";
+    content: "\203A";
     margin-left: auto;
-    color: #a1a1aa;
-    font-size: 2rem;
+    color: #a6a7b8;
+    font-size: clamp(2.4rem, 7vw, 3.4rem);
     font-weight: 700;
     line-height: 1;
   }
@@ -2826,7 +2868,7 @@
   .app-topbar.open .app-nav-link-primary.active {
     background: linear-gradient(135deg, #111733 0%, #26196f 100%);
     color: #ffffff;
-    box-shadow: 0 26px 58px rgba(35, 31, 99, 0.3);
+    box-shadow: 0 30px 76px rgba(35, 31, 99, 0.28);
     transform: none;
   }
 
@@ -2835,35 +2877,37 @@
   }
 
   .app-topbar.open .app-nav-icon {
-    width: 62px;
-    height: 62px;
-    border-radius: 22px;
-    background: #f4f3fb;
+    width: clamp(64px, 16vw, 92px);
+    height: clamp(64px, 16vw, 92px);
+    border-radius: clamp(24px, 6vw, 34px);
+    background: #f5f4fb;
     color: #4f46e5;
-    font-size: 1.35rem;
-    box-shadow: 0 16px 30px rgba(15, 23, 42, 0.06);
+    font-size: clamp(1.8rem, 6vw, 2.8rem);
+    box-shadow: 0 18px 36px rgba(15, 23, 42, 0.055);
   }
 
   .app-topbar.open .app-nav-link.active .app-nav-icon {
-    background: rgba(99, 102, 241, 0.46);
+    background: #4d45a9;
     color: #ffffff;
     box-shadow: none;
   }
 
   .app-topbar.open .app-nav-text {
-    font-size: clamp(1.45rem, 5.6vw, 2.25rem);
+    flex: 0 1 auto;
+    font-size: clamp(1.8rem, 7vw, 3.35rem);
     font-weight: 900;
     letter-spacing: 0.02em;
+    line-height: 1;
   }
 
   .app-topbar.open .nav-badge {
-    min-width: 42px;
-    height: 42px;
-    padding: 0 13px;
+    min-width: clamp(44px, 10vw, 64px);
+    height: clamp(44px, 10vw, 64px);
+    padding: 0 14px;
     border-radius: 999px;
     background: #ef4444;
     color: #ffffff;
-    font-size: 1.15rem;
+    font-size: clamp(1.2rem, 4.8vw, 2rem);
     font-weight: 900;
     box-shadow: 0 14px 28px rgba(239, 68, 68, 0.28);
   }

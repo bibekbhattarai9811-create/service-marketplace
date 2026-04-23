@@ -16,16 +16,83 @@ const PAGE_META = {
 };
 
 const ICONS = {
-    home: "\u2302",
-    profile: "\u263A",
-    workers: "\u2692",
-    notifications: "\u25CF",
-    customer: "\u25A3",
-    post: "+",
-    admin: "\u2699",
-    dashboard: "\u25A5",
-    logout: "\u2192",
+    home: "home",
+    profile: "profile",
+    workers: "workers",
+    notifications: "notifications",
+    customer: "dashboard",
+    post: "post",
+    admin: "admin",
+    dashboard: "dashboard",
+    logout: "logout",
 };
+
+function NavIcon({ name }) {
+    const paths = {
+        home: (
+            <>
+                <path d="M4 11.5 12 4l8 7.5" />
+                <path d="M6.5 10.5V20h11v-9.5" />
+                <path d="M10 20v-5h4v5" />
+            </>
+        ),
+        notifications: (
+            <>
+                <path d="M18 9.5a6 6 0 0 0-12 0c0 6-2.5 6.5-2.5 6.5h17S18 15.5 18 9.5Z" />
+                <path d="M9.7 20a2.6 2.6 0 0 0 4.6 0" />
+            </>
+        ),
+        dashboard: (
+            <>
+                <path d="M4 4h6.5v6.5H4z" />
+                <path d="M13.5 4H20v6.5h-6.5z" />
+                <path d="M4 13.5h6.5V20H4z" />
+                <path d="M13.5 13.5H20V20h-6.5z" />
+            </>
+        ),
+        profile: (
+            <>
+                <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
+                <path d="M4.5 20c1.15-4 4-6 7.5-6s6.35 2 7.5 6" />
+            </>
+        ),
+        workers: (
+            <>
+                <path d="M14 5 19 10" />
+                <path d="m12 7 5 5" />
+                <path d="M3.5 20.5 13 11" />
+                <path d="m5 14 5 5" />
+            </>
+        ),
+        post: (
+            <>
+                <path d="M12 5v14" />
+                <path d="M5 12h14" />
+            </>
+        ),
+        admin: (
+            <>
+                <path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z" />
+                <path d="M19.4 15a8 8 0 0 0 .1-1.1 8 8 0 0 0-.1-1.1l2-1.5-2-3.5-2.4 1a7.8 7.8 0 0 0-1.9-1.1L14.8 5H9.2l-.4 2.7A7.8 7.8 0 0 0 7 8.8l-2.5-1-2 3.5 2 1.5a8 8 0 0 0-.1 1.1A8 8 0 0 0 4.5 15l-2 1.5 2 3.5 2.5-1a7.8 7.8 0 0 0 1.8 1.1l.4 2.7h5.6l.3-2.7A7.8 7.8 0 0 0 17 19l2.4 1 2-3.5-2-1.5Z" />
+            </>
+        ),
+        logout: (
+            <>
+                <path d="M10 6H5v12h5" />
+                <path d="M13 8l4 4-4 4" />
+                <path d="M8 12h9" />
+            </>
+        ),
+    };
+
+    return (
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2">
+                {paths[name] || paths.home}
+            </g>
+        </svg>
+    );
+}
 
 function Navbar() {
     const role = localStorage.getItem("role");
@@ -175,7 +242,7 @@ function Navbar() {
                                     to={link.to}
                                     onClick={() => setIsOpen(false)}
                                 >
-                                    <span className="app-nav-icon">{link.icon}</span>
+                                    <span className="app-nav-icon"><NavIcon name={link.icon} /></span>
                                     <span className="app-nav-text">{link.label}</span>
                                     {link.to === "/notifications" && unreadCount > 0 && <span className="nav-badge">{unreadCount}</span>}
                                 </Link>
@@ -192,7 +259,7 @@ function Navbar() {
                                 setIsOpen(false);
                             }}
                         >
-                            <span className="app-nav-icon">{ICONS.logout}</span>
+                            <span className="app-nav-icon"><NavIcon name={ICONS.logout} /></span>
                             <span className="app-nav-text">Logout</span>
                         </Link>
                     </div>
@@ -207,7 +274,7 @@ function Navbar() {
 
                 <div className="app-header-tools">
                     <Link to="/notifications" className="app-header-bell" aria-label="Open notifications">
-                        <span className="app-header-bell-label">{ICONS.notifications}</span>
+                        <span className="app-header-bell-label"><NavIcon name={ICONS.notifications} /></span>
                         {unreadCount > 0 && <em>{unreadCount}</em>}
                     </Link>
                     <div className="app-user-pill">
@@ -225,7 +292,7 @@ function Navbar() {
                     const isActive = location.pathname === link.to;
                     return (
                         <Link key={link.to} className={`mobile-quick-link ${isActive ? "active" : ""}`.trim()} to={link.to}>
-                            <span className="mobile-quick-icon">{link.icon}</span>
+                            <span className="mobile-quick-icon"><NavIcon name={link.icon} /></span>
                             <span className="mobile-quick-text">{link.label}</span>
                         </Link>
                     );
@@ -236,7 +303,7 @@ function Navbar() {
                             className={`mobile-quick-link ${location.pathname === quickActionLink ? "active" : ""}`.trim()}
                             to={quickActionLink}
                         >
-                            <span className="mobile-quick-icon">{quickActionIcon}</span>
+                            <span className="mobile-quick-icon"><NavIcon name={quickActionIcon} /></span>
                             <span className="mobile-quick-text">{quickActionLabel}</span>
                         </Link>
                         <Link
@@ -247,7 +314,7 @@ function Navbar() {
                                 setIsOpen(false);
                             }}
                         >
-                            <span className="mobile-quick-icon">{ICONS.logout}</span>
+                            <span className="mobile-quick-icon"><NavIcon name={ICONS.logout} /></span>
                             <span className="mobile-quick-text">Logout</span>
                         </Link>
                     </>
