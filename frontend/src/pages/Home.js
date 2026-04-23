@@ -320,83 +320,84 @@ function Home() {
         const customerName = localStorage.getItem('user_name') || 'Customer';
 
         return (
-            <div className="app-shell">
+            <div className="app-shell customer-home-reference-shell">
                 <Navbar />
 
-                <div className="page-wrap worker-mobile-shell customer-mobile-shell">
-                    <section className="worker-mobile-header-card customer-mobile-header-card">
+                <div className="page-wrap customer-home-reference">
+                    <section className="customer-reference-hero">
                         <div>
-                            <span className="worker-mobile-kicker">Customer home</span>
                             <h1>Welcome back, {customerName}</h1>
                             <p>{customerJobs.length} jobs in your account</p>
                         </div>
-                        <Link to="/post-job" className="primary-button">
+                        <Link to="/post-job" className="customer-reference-button">
                             Post Job
                         </Link>
                     </section>
 
-                    <section className="worker-tab-section">
-                        <div className="section-header">
+                    <section className="customer-reference-panel">
+                        <div className="customer-reference-section-head">
                             <div>
                                 <h2>Quick actions</h2>
-                                <p className="section-subtitle">Start a request or manage existing jobs.</p>
+                                <p>Start a request or manage existing jobs.</p>
                             </div>
                         </div>
 
-                        <div className="worker-stat-grid">
-                            <Link to="/post-job" className="worker-stat-card customer-action-card">
-                                <span>New request</span>
-                                <strong>Post</strong>
+                        <div className="customer-reference-actions">
+                            <Link to="/post-job" className="customer-reference-action-card">
+                                <span className="customer-reference-action-icon">
+                                    <span>+</span>
+                                </span>
+                                <span className="customer-reference-action-copy">
+                                    <small>New request</small>
+                                    <strong>Post</strong>
+                                </span>
+                                <em aria-hidden="true">&gt;</em>
                             </Link>
-                            <Link to="/customer-dashboard" className="worker-stat-card customer-action-card">
-                                <span>Track jobs</span>
-                                <strong>Open</strong>
-                            </Link>
-                            <Link to="/notifications" className="worker-stat-card customer-action-card">
-                                <span>Updates</span>
-                                <strong>Inbox</strong>
-                            </Link>
-                            <Link to="/profile" className="worker-stat-card customer-action-card">
-                                <span>Account</span>
-                                <strong>Profile</strong>
+                            <Link to="/customer-dashboard" className="customer-reference-action-card">
+                                <span className="customer-reference-action-icon">
+                                    <span>[]</span>
+                                </span>
+                                <span className="customer-reference-action-copy">
+                                    <small>Track jobs</small>
+                                    <strong>Open</strong>
+                                </span>
+                                <em aria-hidden="true">&gt;</em>
                             </Link>
                         </div>
                     </section>
 
-                    <section className="worker-tab-section">
-                        <div className="section-header">
+                    <section className="customer-reference-panel">
+                        <div className="customer-reference-section-head">
                             <div>
                                 <h2>Recent jobs</h2>
-                                <p className="section-subtitle">Your latest service requests.</p>
+                                <p>Your latest service requests.</p>
                             </div>
                         </div>
 
                         {customerJobs.length === 0 ? (
                             <div className="empty-state">You have not posted any jobs yet.</div>
                         ) : (
-                            <div className="customer-job-list">
-                                {customerJobs.slice(0, 4).map((job) => (
-                                    <article key={job.id} className="worker-job-card customer-job-card">
-                                        <div className="worker-job-card-top">
-                                            <div>
-                                                <div className="worker-job-type">{job.title}</div>
-                                                <div className="worker-job-client-name">{job.description}</div>
+                            <div className="customer-reference-job-list">
+                                {customerJobs.slice(0, 4).map((job) => {
+                                    const isCompleted = job.status === 'COMPLETED';
+                                    return (
+                                        <article key={job.id} className="customer-reference-job-card">
+                                            <div className="customer-reference-job-copy">
+                                                <h3>{job.title}</h3>
+                                                <p>{job.description}</p>
+                                                <span>{job.location} | ${job.price}</span>
                                             </div>
-                                            <span className={`worker-urgency-badge ${job.status === 'COMPLETED' ? 'scheduled' : 'urgent'}`.trim()}>
-                                                {job.status}
-                                            </span>
-                                        </div>
-                                        <div className="worker-job-client">
-                                            <span>{job.location} | ${job.price}</span>
-                                            {job.service_date && <span>{job.service_date}</span>}
-                                        </div>
-                                        <div className="worker-job-actions">
-                                            <Link to="/customer-dashboard" className="secondary-button">
-                                                Open Dashboard
-                                            </Link>
-                                        </div>
-                                    </article>
-                                ))}
+                                            <div className="customer-reference-job-actions">
+                                                <span className={`customer-reference-status ${isCompleted ? 'completed' : 'active'}`.trim()}>
+                                                    {job.status}
+                                                </span>
+                                                <Link to="/customer-dashboard" className="customer-reference-small-button">
+                                                    Open Dashboard
+                                                </Link>
+                                            </div>
+                                        </article>
+                                    );
+                                })}
                             </div>
                         )}
                     </section>

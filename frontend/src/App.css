@@ -2722,6 +2722,344 @@
   color: #9a3412;
 }
 
+.customer-home-reference-shell {
+  background: #f7f6f4;
+}
+
+.customer-home-reference-shell .app-header-bar {
+  display: none;
+}
+
+.customer-home-reference-shell .app-topbar {
+  top: 24px;
+  left: 24px;
+  bottom: 24px;
+  width: 334px;
+  padding: 28px 24px;
+  border-radius: 24px;
+  background: #ffffff;
+  border: 1px solid rgba(229, 231, 235, 0.72);
+  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.045);
+}
+
+.customer-home-reference-shell .app-sidebar-head {
+  padding: 0;
+  margin-bottom: 36px;
+}
+
+.customer-home-reference-shell .app-brand {
+  gap: 16px;
+}
+
+.customer-home-reference-shell .auth-brand-badge {
+  width: 68px;
+  height: 68px;
+  border-radius: 18px;
+  background: #f0f0f2;
+  color: #111827;
+  box-shadow: none;
+  font-size: 1.35rem;
+}
+
+.customer-home-reference-shell .app-brand-copy strong {
+  color: #111827;
+  font-size: 1.2rem;
+  letter-spacing: -0.02em;
+}
+
+.customer-home-reference-shell .app-brand-copy small {
+  margin-top: 8px;
+  color: #667085;
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.customer-home-reference-shell .app-nav-shell {
+  gap: 24px;
+}
+
+.customer-home-reference-shell .app-nav-group,
+.customer-home-reference-shell .app-sidebar-foot {
+  gap: 18px;
+}
+
+.customer-home-reference-shell .app-nav-link {
+  min-height: 70px;
+  padding: 0 18px;
+  border-radius: 16px;
+  color: #4b5563;
+  font-size: 1rem;
+  font-weight: 800;
+  background: transparent;
+  box-shadow: none;
+}
+
+.customer-home-reference-shell .app-nav-link:hover,
+.customer-home-reference-shell .app-nav-link.active {
+  color: #11118f;
+  background: #f4f2ff;
+  transform: none;
+  box-shadow: none;
+}
+
+.customer-home-reference-shell .app-nav-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: #f5f5f7;
+  color: #111827;
+  font-size: 1.28rem;
+}
+
+.customer-home-reference-shell .app-nav-link.active .app-nav-icon {
+  background: transparent;
+  color: #11118f;
+}
+
+.customer-home-reference-shell .app-nav-text {
+  font-size: 1.05rem;
+}
+
+.customer-home-reference-shell .nav-badge {
+  min-width: 30px;
+  height: 30px;
+  background: #ff5630;
+  color: #ffffff;
+  font-size: 0.92rem;
+}
+
+.customer-home-reference-shell .app-nav-logout {
+  color: #ef4444;
+}
+
+.customer-home-reference-shell .app-nav-logout .app-nav-icon {
+  background: #fff1f2;
+  color: #ef4444;
+}
+
+.customer-home-reference {
+  margin-left: 368px;
+  padding: 32px 28px 48px;
+  display: grid;
+  gap: 24px;
+}
+
+.customer-reference-hero,
+.customer-reference-panel {
+  background: #ffffff;
+  border: 1px solid rgba(229, 231, 235, 0.72);
+  border-radius: 24px;
+  box-shadow: 0 16px 34px rgba(15, 23, 42, 0.035);
+}
+
+.customer-reference-hero {
+  min-height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 36px 36px;
+}
+
+.customer-reference-hero h1,
+.customer-reference-section-head h2,
+.customer-reference-job-copy h3 {
+  margin: 0;
+  color: #111827;
+  letter-spacing: -0.035em;
+}
+
+.customer-reference-hero h1 {
+  font-size: clamp(2rem, 3vw, 2.7rem);
+  font-weight: 900;
+}
+
+.customer-reference-hero p,
+.customer-reference-section-head p,
+.customer-reference-job-copy p,
+.customer-reference-job-copy span,
+.customer-reference-action-copy small {
+  margin: 12px 0 0;
+  color: #58657a;
+  font-size: 1.08rem;
+  line-height: 1.55;
+}
+
+.customer-reference-button,
+.customer-reference-small-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  text-decoration: none;
+  color: #ffffff;
+  background: #a83206;
+  font-weight: 900;
+  box-shadow: none;
+  transition: transform 160ms ease, background 160ms ease;
+}
+
+.customer-reference-button {
+  min-width: 186px;
+  min-height: 62px;
+  padding: 0 32px;
+  border-radius: 14px;
+  font-size: 1.18rem;
+}
+
+.customer-reference-small-button {
+  min-width: 202px;
+  min-height: 52px;
+  padding: 0 22px;
+  border-radius: 12px;
+  font-size: 1rem;
+}
+
+.customer-reference-button:hover,
+.customer-reference-small-button:hover {
+  color: #ffffff;
+  background: #8f2904;
+  transform: translateY(-1px);
+}
+
+.customer-reference-panel {
+  padding: 32px 26px 26px;
+}
+
+.customer-reference-section-head {
+  margin-bottom: 24px;
+}
+
+.customer-reference-section-head h2 {
+  font-size: 1.75rem;
+  font-weight: 900;
+}
+
+.customer-reference-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28px;
+}
+
+.customer-reference-action-card {
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  padding: 24px 26px;
+  border-radius: 16px;
+  border: 1px solid rgba(229, 231, 235, 0.96);
+  color: #111827;
+  background: #ffffff;
+  text-decoration: none;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.025);
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.customer-reference-action-card:hover {
+  color: #111827;
+  transform: translateY(-2px);
+  border-color: rgba(168, 50, 6, 0.18);
+  box-shadow: 0 18px 34px rgba(15, 23, 42, 0.055);
+}
+
+.customer-reference-action-icon {
+  width: 72px;
+  height: 72px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  border-radius: 14px;
+  background: #fff0e3;
+  color: #a83206;
+  font-size: 1.45rem;
+  font-weight: 900;
+}
+
+.customer-reference-action-copy {
+  display: grid;
+  gap: 8px;
+}
+
+.customer-reference-action-copy small {
+  margin: 0;
+}
+
+.customer-reference-action-copy strong {
+  color: #9a2d05;
+  font-size: 1.55rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+.customer-reference-action-card em {
+  margin-left: auto;
+  color: #a83206;
+  font-style: normal;
+  font-size: 2rem;
+  font-weight: 500;
+}
+
+.customer-reference-job-list {
+  display: grid;
+  gap: 14px;
+}
+
+.customer-reference-job-card {
+  min-height: 162px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 24px;
+  align-items: center;
+  padding: 24px 24px;
+  border-radius: 16px;
+  border: 1px solid rgba(229, 231, 235, 0.96);
+  background: #ffffff;
+}
+
+.customer-reference-job-copy h3 {
+  font-size: 1.3rem;
+  font-weight: 900;
+}
+
+.customer-reference-job-copy p {
+  max-width: 720px;
+}
+
+.customer-reference-job-copy span {
+  display: block;
+  margin-top: 18px;
+}
+
+.customer-reference-job-actions {
+  display: grid;
+  justify-items: end;
+  gap: 34px;
+}
+
+.customer-reference-status {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 20px;
+  border-radius: 999px;
+  font-size: 0.92rem;
+  font-weight: 900;
+}
+
+.customer-reference-status.completed {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.customer-reference-status.active {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
 .mobile-quick-nav {
   display: none;
 }
