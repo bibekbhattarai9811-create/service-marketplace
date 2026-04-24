@@ -3060,6 +3060,364 @@
   color: #dc2626;
 }
 
+.workspace-reference-shell {
+  background: #f7f6f4;
+}
+
+.workspace-reference-shell .app-header-bar {
+  display: none;
+}
+
+.workspace-reference-shell .app-topbar {
+  top: 24px;
+  left: 24px;
+  bottom: 24px;
+  width: 334px;
+  padding: 28px 24px;
+  border-radius: 24px;
+  background: #ffffff;
+  border: 1px solid rgba(229, 231, 235, 0.72);
+  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.045);
+}
+
+.workspace-reference-shell .app-sidebar-head {
+  padding: 0;
+  margin-bottom: 36px;
+}
+
+.workspace-reference-shell .app-brand {
+  gap: 16px;
+}
+
+.workspace-reference-shell .auth-brand-badge {
+  width: 68px;
+  height: 68px;
+  border-radius: 18px;
+  background: #f0f0f2;
+  color: #111827;
+  box-shadow: none;
+  font-size: 1.35rem;
+}
+
+.workspace-reference-shell .app-brand-copy strong {
+  color: #111827;
+  font-size: 1.2rem;
+  letter-spacing: -0.02em;
+}
+
+.workspace-reference-shell .app-brand-copy small {
+  margin-top: 8px;
+  color: #667085;
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.workspace-reference-shell .app-nav-shell {
+  gap: 24px;
+}
+
+.workspace-reference-shell .app-nav-group,
+.workspace-reference-shell .app-sidebar-foot {
+  gap: 18px;
+}
+
+.workspace-reference-shell .app-nav-link {
+  min-height: 70px;
+  padding: 0 18px;
+  border-radius: 16px;
+  color: #4b5563;
+  font-size: 1rem;
+  font-weight: 800;
+  background: transparent;
+  box-shadow: none;
+}
+
+.workspace-reference-shell .app-nav-link:hover,
+.workspace-reference-shell .app-nav-link.active {
+  color: #11118f;
+  background: #f4f2ff;
+  transform: none;
+  box-shadow: none;
+}
+
+.workspace-reference-shell .app-nav-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: #f5f5f7;
+  color: #111827;
+  font-size: 1.28rem;
+}
+
+.workspace-reference-shell .app-nav-link.active .app-nav-icon {
+  background: transparent;
+  color: #11118f;
+}
+
+.workspace-reference-shell .app-nav-text {
+  font-size: 1.05rem;
+}
+
+.workspace-reference-shell .nav-badge {
+  min-width: 30px;
+  height: 30px;
+  background: #ff5630;
+  color: #ffffff;
+  font-size: 0.92rem;
+}
+
+.workspace-reference-shell .app-nav-logout {
+  color: #ef4444;
+}
+
+.workspace-reference-shell .app-nav-logout .app-nav-icon {
+  background: #fff1f2;
+  color: #ef4444;
+}
+
+.workspace-reference-shell .page-wrap {
+  margin-left: 368px;
+  padding: 32px 28px 48px;
+}
+
+.workspace-reference-shell .worker-mobile-shell {
+  display: grid;
+  gap: 24px;
+}
+
+.workspace-reference-shell .page-hero,
+.workspace-reference-shell .worker-mobile-header-card,
+.workspace-reference-shell .worker-profile-hero,
+.workspace-reference-shell .worker-notif-header-card,
+.workspace-reference-shell .worker-earnings-panel,
+.workspace-reference-shell .worker-tab-section,
+.workspace-reference-shell .worker-filter-card,
+.workspace-reference-shell .section-card,
+.workspace-reference-shell .hero-panel,
+.workspace-reference-shell .hero-side-panel {
+  background: #ffffff;
+  border: 1px solid rgba(229, 231, 235, 0.72);
+  border-radius: 24px;
+  box-shadow: 0 16px 34px rgba(15, 23, 42, 0.035);
+}
+
+.workspace-reference-shell .page-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(300px, 0.75fr);
+  gap: 24px;
+  margin-bottom: 24px;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.workspace-reference-shell .worker-mobile-header-card,
+.workspace-reference-shell .worker-profile-hero,
+.workspace-reference-shell .worker-notif-header-card,
+.workspace-reference-shell .hero-panel,
+.workspace-reference-shell .hero-side-panel {
+  padding: 36px;
+  background: #ffffff;
+  color: #111827;
+}
+
+.workspace-reference-shell .worker-mobile-header-card h1,
+.workspace-reference-shell .worker-profile-hero h1,
+.workspace-reference-shell .worker-notif-header-card h1,
+.workspace-reference-shell .hero-panel h1 {
+  margin: 0;
+  max-width: 780px;
+  color: #111827;
+  font-size: clamp(2rem, 3vw, 2.65rem);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1.08;
+}
+
+.workspace-reference-shell .worker-mobile-header-card p,
+.workspace-reference-shell .worker-profile-hero p,
+.workspace-reference-shell .worker-notif-header-card p,
+.workspace-reference-shell .hero-panel p,
+.workspace-reference-shell .hero-side-panel p,
+.workspace-reference-shell .section-subtitle {
+  color: #58657a;
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+.workspace-reference-shell .worker-mobile-kicker,
+.workspace-reference-shell .hero-label {
+  color: #667085;
+  font-size: 0.82rem;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+}
+
+.workspace-reference-shell .worker-filter-card {
+  padding: 24px;
+}
+
+.workspace-reference-shell .worker-filter-card,
+.workspace-reference-shell .worker-filter-card .worker-filter-row strong {
+  color: #111827;
+}
+
+.workspace-reference-shell .worker-filter-card select,
+.workspace-reference-shell .filter-toolbar input,
+.workspace-reference-shell .filter-toolbar select,
+.workspace-reference-shell textarea,
+.workspace-reference-shell .page-form input,
+.workspace-reference-shell .page-form select,
+.workspace-reference-shell .page-form textarea {
+  border: 1px solid rgba(229, 231, 235, 0.96);
+  background: #ffffff;
+  color: #111827;
+  border-radius: 14px;
+}
+
+.workspace-reference-shell .primary-button,
+.workspace-reference-shell .secondary-button,
+.workspace-reference-shell .ghost-button,
+.workspace-reference-shell .customer-reference-button,
+.workspace-reference-shell .customer-reference-small-button {
+  min-height: 52px;
+  border-radius: 12px;
+  font-weight: 900;
+}
+
+.workspace-reference-shell .primary-button,
+.workspace-reference-shell .secondary-button {
+  background: #a83206;
+  color: #ffffff;
+  border-color: #a83206;
+}
+
+.workspace-reference-shell .primary-button:hover,
+.workspace-reference-shell .secondary-button:hover {
+  background: #8f2904;
+  color: #ffffff;
+}
+
+.workspace-reference-shell .ghost-button {
+  background: #ffffff;
+  color: #a83206;
+  border: 1px solid rgba(168, 50, 6, 0.18);
+}
+
+.workspace-reference-shell .danger-button {
+  background: #fff1f2;
+  color: #dc2626;
+  border-color: rgba(220, 38, 38, 0.16);
+}
+
+.workspace-reference-shell .worker-stat-grid,
+.workspace-reference-shell .stats-grid,
+.workspace-reference-shell .summary-grid {
+  gap: 18px;
+}
+
+.workspace-reference-shell .worker-stat-card,
+.workspace-reference-shell .stat-card,
+.workspace-reference-shell .summary-card,
+.workspace-reference-shell .worker-setup-card,
+.workspace-reference-shell .worker-job-card,
+.workspace-reference-shell .worker-activity-card,
+.workspace-reference-shell .worker-notification-card,
+.workspace-reference-shell .job-card {
+  background: #ffffff;
+  border: 1px solid rgba(229, 231, 235, 0.96);
+  border-radius: 16px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.025);
+}
+
+.workspace-reference-shell .worker-stat-card strong,
+.workspace-reference-shell .stat-card strong,
+.workspace-reference-shell .summary-card strong,
+.workspace-reference-shell .worker-job-type,
+.workspace-reference-shell .worker-activity-head strong,
+.workspace-reference-shell .worker-notification-card strong,
+.workspace-reference-shell .job-card h3,
+.workspace-reference-shell .section-header h2 {
+  color: #111827;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+.workspace-reference-shell .worker-stat-card span,
+.workspace-reference-shell .stat-card span,
+.workspace-reference-shell .summary-card span,
+.workspace-reference-shell .worker-job-client-name,
+.workspace-reference-shell .worker-job-client span,
+.workspace-reference-shell .worker-activity-head span,
+.workspace-reference-shell .worker-notification-card p,
+.workspace-reference-shell .job-card p {
+  color: #58657a;
+}
+
+.workspace-reference-shell .worker-earnings-panel,
+.workspace-reference-shell .worker-tab-section,
+.workspace-reference-shell .section-card {
+  padding: 32px 26px 26px;
+}
+
+.workspace-reference-shell .worker-earnings-bar-fill,
+.workspace-reference-shell .chart-bar {
+  background: linear-gradient(90deg, #a83206, #f97316);
+}
+
+.workspace-reference-shell .chart-bar-secondary {
+  background: linear-gradient(90deg, #11118f, #4f46e5);
+}
+
+.workspace-reference-shell .worker-profile-card {
+  background: #ffffff;
+  color: #111827;
+  border-color: rgba(229, 231, 235, 0.96);
+}
+
+.workspace-reference-shell .worker-profile-card p,
+.workspace-reference-shell .worker-profile-detail-row span,
+.workspace-reference-shell .worker-profile-card-label {
+  color: #58657a;
+}
+
+.workspace-reference-shell .worker-profile-detail-row,
+.workspace-reference-shell .worker-verification-row {
+  border-bottom-color: rgba(229, 231, 235, 0.84);
+}
+
+.workspace-reference-shell .worker-profile-detail-row strong,
+.workspace-reference-shell .worker-verification-name {
+  color: #111827;
+}
+
+.workspace-reference-shell .worker-profile-availability-badge {
+  background: #ecfdf5;
+  color: #166534;
+}
+
+.workspace-reference-shell .worker-skill-tag {
+  background: #f4f2ff;
+  color: #11118f;
+}
+
+.workspace-reference-shell .table-wrap {
+  border-radius: 16px;
+  border: 1px solid rgba(229, 231, 235, 0.96);
+  overflow: auto;
+}
+
+.workspace-reference-shell .data-table th {
+  background: #fafafa;
+  color: #667085;
+}
+
+.workspace-reference-shell .data-table td {
+  color: #111827;
+}
+
 .mobile-quick-nav {
   display: none;
 }
@@ -3316,6 +3674,64 @@
   .page-wrap {
     margin-left: 0;
     padding: 92px 12px 108px;
+  }
+
+  .customer-home-reference,
+  .workspace-reference-shell .page-wrap {
+    margin-left: 0;
+    padding: 92px 12px 108px;
+  }
+
+  .customer-home-reference-shell .app-topbar,
+  .workspace-reference-shell .app-topbar {
+    top: 14px;
+    left: 14px;
+    bottom: auto;
+    width: calc(100% - 28px);
+    max-height: calc(100vh - 28px);
+    padding: 18px;
+    transform: translateY(-140%);
+  }
+
+  .customer-home-reference-shell .app-topbar.open,
+  .workspace-reference-shell .app-topbar.open {
+    transform: translateY(0);
+  }
+
+  .workspace-reference-shell .page-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .workspace-reference-shell .worker-mobile-header-card,
+  .workspace-reference-shell .worker-profile-hero,
+  .workspace-reference-shell .worker-notif-header-card,
+  .workspace-reference-shell .hero-panel,
+  .workspace-reference-shell .hero-side-panel,
+  .workspace-reference-shell .worker-earnings-panel,
+  .workspace-reference-shell .worker-tab-section,
+  .workspace-reference-shell .section-card {
+    padding: 22px;
+    border-radius: 22px;
+  }
+
+  .customer-reference-hero,
+  .customer-reference-actions,
+  .customer-reference-job-card {
+    grid-template-columns: 1fr;
+  }
+
+  .customer-reference-hero {
+    align-items: flex-start;
+    padding: 24px;
+  }
+
+  .customer-reference-actions {
+    gap: 14px;
+  }
+
+  .customer-reference-job-actions {
+    justify-items: stretch;
+    gap: 14px;
   }
 
   .mobile-quick-nav {

@@ -122,7 +122,7 @@ function Notifications() {
 
     if (role === 'worker') {
         return (
-            <div className="app-shell">
+            <div className="app-shell workspace-reference-shell worker-reference-shell">
                 <Navbar />
 
                 <div className="page-wrap worker-mobile-shell">

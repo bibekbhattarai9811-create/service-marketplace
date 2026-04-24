@@ -73,7 +73,7 @@ function AdminAnalytics() {
     const openDisputeCount = useMemo(() => disputes.filter((dispute) => dispute.status !== 'RESOLVED').length, [disputes]);
 
     return (
-        <div className="app-shell">
+        <div className="app-shell workspace-reference-shell admin-reference-shell">
             <Navbar />
 
             <div className="page-wrap">

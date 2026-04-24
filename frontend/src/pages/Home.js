@@ -207,7 +207,7 @@ function Home() {
         const workerName = localStorage.getItem('user_name') || 'Worker';
 
         return (
-            <div className="app-shell">
+            <div className="app-shell workspace-reference-shell worker-reference-shell">
                 <Navbar />
 
                 <div className="page-wrap worker-mobile-shell">
